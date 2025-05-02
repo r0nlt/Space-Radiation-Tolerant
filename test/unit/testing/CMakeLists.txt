@@ -1,0 +1,4 @@
+add_executable(fault_injector_test fault_injector_test.cpp)
+target_link_libraries(fault_injector_test PRIVATE rad_ml)
+
+add_test(NAME FaultInjectorTest COMMAND fault_injector_test) 

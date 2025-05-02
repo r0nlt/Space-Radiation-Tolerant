@@ -1,0 +1,5 @@
+add_executable(memory_scrubber_test memory_scrubber_test.cpp)
+target_link_libraries(memory_scrubber_test PRIVATE rad_ml)
+target_link_libraries(memory_scrubber_test PRIVATE pthread)
+
+add_test(NAME MemoryScrubberTest COMMAND memory_scrubber_test) 
