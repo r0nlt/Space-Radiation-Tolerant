@@ -1,5 +1,10 @@
 # Radiation-Tolerant Machine Learning Framework
 
+**Author:** Rishab Nuguru  
+**Copyright:** © 2025 Rishab Nuguru  
+**License:** MIT  
+**Repository:** https://github.com/r0nlt/rad-tolerant-ml
+
 A C++ framework for implementing machine learning models that can operate reliably in radiation environments, such as space.
 
 ## Features
