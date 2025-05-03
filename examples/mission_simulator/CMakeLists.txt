@@ -1,0 +1,2 @@
+add_executable(mission_simulator mission_simulator.cpp)
+target_link_libraries(mission_simulator PRIVATE rad_ml) 

@@ -10,6 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(RAD_ML_BUILD_TESTS "Build tests" ON)
 option(RAD_ML_BUILD_EXAMPLES "Build examples" ON)
 option(RAD_ML_ENABLE_WARNINGS "Enable all warnings" ON)
+option(RAD_ML_BUILD_STRESS_TEST "Build radiation stress test" ON)
 
 # Add compiler warnings
 if(RAD_ML_ENABLE_WARNINGS)
@@ -33,4 +34,10 @@ endif()
 if(RAD_ML_BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
+endif()
+
+# Build the stress test
+if(RAD_ML_BUILD_STRESS_TEST)
+    add_executable(stress_test stress_test.cpp)
+    target_link_libraries(stress_test PRIVATE rad_ml)
 endif() 
