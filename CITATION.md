@@ -12,7 +12,7 @@ For BibTeX users:
 @software{nuguru2025radml,
   author = {Nuguru, Rishab},
   title = {Radiation-Tolerant Machine Learning Framework},
-  year = {2023},
+  year = {2025},
   url = {https://github.com/r0nlt/Space-Radiation-Tolerant}
 }
 ```
