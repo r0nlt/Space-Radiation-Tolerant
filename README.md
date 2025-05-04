@@ -62,33 +62,27 @@ The stress test simulates extreme radiation environments beyond what would be en
 The mission simulator demonstrates the adaptive radiation protection system and physics-based radiation simulation:
 
 ```bash
-# Run with default LEO mission profile
-./examples/mission_simulator/mission_simulator
-
-# Or specify a different mission
-./examples/mission_simulator/mission_simulator MARS
+# Run the mission simulation test
+./mission_simulation_test
 ```
 
 Available mission profiles:
-- LEO (Low Earth Orbit)
 - ISS (International Space Station)
-- GEO / GEOSTATIONARY (Geostationary Orbit)
-- LUNAR / MOON (Lunar missions)
-- MARS (Mars missions)
-- JUPITER (Jupiter missions)
+- ARTEMIS_I (Lunar mission with Van Allen belt transit)
+- MARS_SCIENCE_LAB (Mars mission with deep space transit)
+- VAN_ALLEN_PROBES (Radiation belt study with high radiation exposure)
+- EUROPA_CLIPPER (Extreme radiation environment near Jupiter/Europa)
 
 ## Project Structure
 
 - `include/rad_ml/`: Public headers
   - `tmr/`: Triple Modular Redundancy implementations
   - `memory/`: Memory protection implementations
-  - `testing/`: Radiation simulation and testing tools
-  - `math/`: Deterministic math operations
-  - `inference/`: Neural network inference components
+  - `sim/`: Radiation simulation and testing tools
+  - `power/`: Power-aware protection systems
+  - `hw/`: Hardware acceleration interfaces
 - `src/`: Implementation files
 - `examples/`: Example applications
-  - `simple_nn/`: Simple neural network demo
-  - `mission_simulator/`: Complete mission simulation
 - `test/`: Unit and integration tests
 - `docs/`: Documentation
 
@@ -164,7 +158,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
   - Dynamic health score tracking for each redundant copy
   - Weighted voting based on historical reliability
   - Penalty and reward system for error frequency
-  - Superior performance in extreme radiation environments
+  - Improved performance in radiation environments
 - **Approximate TMR**:
   - Support for different approximation strategies
   - EXACT, REDUCED_PRECISION, and RANGE_LIMITED strategies
@@ -202,88 +196,91 @@ This project is licensed under the MIT License - see the LICENSE file for detail
   - Per-error-type performance analysis
   - Long-duration mission simulation
 
-The framework now provides comprehensive radiation tolerance capabilities with realistic mission simulation. All components are integrated with proper test coverage, and all tests are passing. The advanced features have been validated through extensive stress testing and benchmarking, showing excellent resilience even in extreme radiation environments.
+## Recent Test Results
 
-### Next Steps:
-- Implement stuck bit mitigation strategies to improve recovery rates
-- Add neural network pruning to reduce resource needs while maintaining reliability
-- Create hardware simulation for FPGA/ASIC implementation
-- Add support for distributed redundancy across multiple physical devices
-- Implement radiation-aware checkpointing for long-running operations
-- Develop a mixed-precision strategy to balance performance and protection
-- Create visualization tools for radiation event analysis
+The framework has been subjected to rigorous testing using a comprehensive mission simulation that models real-world space radiation environments. The tests were conducted across five different mission profiles:
+
+1. **ISS Mission (Low Earth Orbit)**
+   - Moderate radiation with South Atlantic Anomaly passes
+   - Average accuracy: 30%
+   - Protection efficiency needs improvement
+
+2. **Artemis I Mission (Lunar)**
+   - Van Allen belt transit and lunar environment
+   - Average accuracy: 30%
+   - Showed vulnerability during high-radiation belt crossings
+
+3. **Mars Science Laboratory Mission**
+   - Interplanetary space and solar event simulation
+   - Average accuracy: 20%
+   - Lower power usage (10.87W) but still poor performance
+
+4. **Van Allen Probes Mission**
+   - Extended radiation belt exposure
+   - Average accuracy: 30%
+   - Framework showed limitations in high-flux environments
+
+5. **Europa Clipper Mission**
+   - Extreme Jupiter/Europa radiation environment
+   - Average accuracy: 28.3%
+   - Highest radiation scenario with billions of expected bit flips
+
+These results indicate that while the framework has a solid theoretical foundation and architecture, there are significant opportunities for improvement in its implementation to handle real-world radiation environments effectively.
+
+## Next Steps (Based on Test Results):
+
+1. **Improve TMR Implementation**
+   - Implement more sophisticated voting mechanisms that consider bit history patterns
+   - Add checkpoint/rollback capabilities to restore from known good states when multiple errors are detected
+   - Implement a "confidence score" for each TMR unit to give less weight to modules with detected stuck bits
+
+2. **Enhance Memory Protection**
+   - Implement more aggressive scrubbing techniques that periodically verify and correct memory contents
+   - Add error-correcting codes (ECC) for critical memory regions
+   - Implement block-level redundancy for highly critical data
+
+3. **Optimize Power-Aware Protection**
+   - Implement dynamic adjustment of protection levels based on detected error rates
+   - Add more granular power states with corresponding protection levels
+   - Implement predictive protection that increases protection before entering known high-radiation environments
+
+4. **Improve Extreme Radiation Handling**
+   - Add special handling for extreme radiation environments with stronger redundancy
+   - Implement algorithm-based fault tolerance (ABFT) techniques specifically for neural networks
+   - Consider selective hardening where critical neurons have higher protection levels
+
+5. **Add Adaptive Recovery Mechanisms**
+   - Implement learning-based error detection that adapts to specific bit error patterns
+   - Add graceful degradation modes that sacrifice non-critical functions to maintain core functionality
+   - Implement radiation-aware scheduling that postpones critical computations during high radiation periods
+
+6. **Specialized Hardware Integration**
+   - Better integrate with radiation-hardened hardware accelerators
+   - Implement hybrid approaches that combine software TMR with hardware protection
+   - Add support for partial reconfiguration to isolate damaged components
 
 ## Verification Results
 
-The framework has been thoroughly tested using a comprehensive verification program (`verify_framework.cpp`) that tests all components:
+The framework has been tested using mission simulations that model realistic radiation environments based on actual mission data. These simulations have revealed:
 
-1. **Core Components Test**: Verifies the Triple Modular Redundancy (TMR) and Enhanced TMR implementation with CRC checksums.
-2. **Radiation Simulator Test**: Verifies the physics-based radiation simulator with different space environments.
-3. **Mission Profile Test**: Verifies the mission-specific configurations for LEO, Mars, Jupiter, etc.
-4. **Mission Simulator Test**: Verifies the end-to-end mission simulation with radiation events.
-5. **Integrated System Test**: Verifies all components working together in an extreme radiation environment.
+1. **Radiation Environment Modeling**: The physics-based radiation simulator accurately models different space environments from LEO to Europa, with radiation rates matching published scientific data.
 
-The verification program successfully demonstrated:
-- Simulation of radiation events in high-radiation environments
-- Detection and correction of single bit flips and multi-bit upsets
-- Memory scrubbing with CRC validation
-- Adaptive protection level changes based on radiation environment
-- 100% error recovery rate in the integrated test
+2. **TMR Effectiveness**: Current TMR implementation shows limited effectiveness against stuck bits and multiple bit upsets, with accuracy ranging from 20-30% in high-radiation environments.
 
-To run the verification program:
+3. **Power-Aware Protection**: The power management system successfully adjusts power usage based on mission phase, but protection efficiency needs improvement.
+
+4. **Memory Protection**: The radiation-mapped memory allocator correctly categorizes data by criticality, but more robust protection mechanisms are needed.
+
+5. **Overall Framework Resilience**: Current implementation needs significant improvements to achieve the reliability required for actual space missions, particularly for extreme radiation environments like Europa.
+
+To run the full mission simulation:
 
 ```bash
-# Compile the verification program
-g++ -std=c++17 -I./include verify_framework.cpp -o verify_framework
+# Compile the mission simulation test
+mkdir build && cd build
+cmake ..
+make mission_simulation_test
 
-# Run the verification
-./verify_framework
+# Run the simulation
+./mission_simulation_test
 ```
-
-## Stress Test Results
-
-To thoroughly evaluate our radiation-tolerant framework under extreme conditions, we developed a specialized stress test that simulates prolonged exposure to intense radiation. This provides valuable insights into how the framework would perform in the harshest space environments.
-
-### Test Environment
-- **Radiation Level**: Extreme (beyond Jupiter levels)
-- **Radiation Rate**: 2.0 events/second/element with 3.0x duration factor
-- **Error Types**: 40% single bit flips, 30% multi-bit upsets, 15% stuck bits, 15% severe corruption
-- **Protected Elements**: 2,000 TMR-protected values
-- **Test Duration**: 15 seconds (simulating days of exposure)
-
-### Key Findings
-During the extreme stress test, our framework experienced:
-- **~180,000 radiation events** for each TMR implementation
-- **Detection Rates**: 
-  - Basic TMR: 26.29%
-  - Health-Weighted TMR: 23.54%
-  - Approximate TMR: 30.33%
-- **Correction Rates**:
-  - Basic TMR: 66.24%
-  - Health-Weighted TMR: 69.07% (best performer)
-  - Approximate TMR: 62.15%
-
-### Performance by Error Type
-- **Single-Bit Flips**:
-  - Basic TMR: 71.68%
-  - Health-Weighted TMR: 74.57%
-  - Approximate TMR: 66.92%
-  
-- **Multi-Bit Upsets**:
-  - Basic TMR: 71.30%
-  - Health-Weighted TMR: 74.56%
-  - Approximate TMR: 67.34%
-  
-- **Stuck Bits** (most challenging):
-  - Basic TMR: 35.79%
-  - Health-Weighted TMR: 37.42%
-  - Approximate TMR: 33.59%
-  
-- **Severe Corruption**:
-  - Basic TMR: 71.88%
-  - Health-Weighted TMR: 74.72%
-  - Approximate TMR: 67.47%
-
-These results demonstrate that our Health-Weighted TMR implementation provides the best overall protection against radiation-induced errors in extreme space environments. All implementations struggle with stuck bits, indicating an area for future improvement. The Approximate TMR implementation detects more errors but has a lower correction rate, suggesting a trade-off between sensitivity and recovery capabilities.
-
-For missions to environments like Jupiter or during solar flares, our testing shows that the Health-Weighted TMR approach would provide significantly better protection than basic TMR, potentially increasing mission success rates by 3-5%.

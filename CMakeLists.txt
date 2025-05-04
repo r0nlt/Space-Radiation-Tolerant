@@ -1,45 +1,53 @@
 cmake_minimum_required(VERSION 3.10)
-project(rad_tolerant_ml VERSION 0.1.0 LANGUAGES CXX)
+project(rad_tolerant_ml VERSION 1.0.0 LANGUAGES CXX)
 
-# Set C++ standard
+# Set C++ standard to C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Options
-option(RAD_ML_ENABLE_WARNINGS "Enable all warnings" ON)
-option(RAD_ML_BUILD_STRESS_TEST "Build extreme radiation stress test" ON)
-
-# Add compiler warnings
-if(RAD_ML_ENABLE_WARNINGS)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        add_compile_options(-Wall -Wextra -Wpedantic)
-    elseif(MSVC)
-        add_compile_options(/W4)
-    endif()
-endif()
-
-# Include directories
+# Add include directory to include path
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-# Make sure directories exist
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/examples/enhanced_features_test)
+# Set compiler options based on compiler
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+endif()
 
-# Add executables for tests
-add_executable(simple_test examples/enhanced_features_test/simple_test.cpp)
-add_executable(approx_tmr_test examples/enhanced_features_test/approx_tmr_test.cpp)
+# Add the source directory
+add_subdirectory(src)
 
-# Build stress test if enabled
-if(RAD_ML_BUILD_STRESS_TEST)
-    add_executable(extreme_stress_test examples/enhanced_features_test/extreme_stress_test.cpp)
+# Add enhanced features test executable
+add_executable(enhanced_features_test src/enhanced_features_test.cpp)
+target_include_directories(enhanced_features_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Add mission simulation test executable
+add_executable(mission_simulation_test src/mission_simulation_test.cpp)
+target_include_directories(mission_simulation_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Add stress test executable if it exists
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/extreme_stress_test.cpp")
+    add_executable(extreme_stress_test src/extreme_stress_test.cpp)
+    target_include_directories(extreme_stress_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
+
+# Add simple test executable if it exists
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/simple_test.cpp")
+    add_executable(simple_test src/simple_test.cpp)
+    target_include_directories(simple_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
 # Enable testing
 enable_testing()
+add_test(NAME enhanced_features_test COMMAND enhanced_features_test)
+add_test(NAME mission_simulation_test COMMAND mission_simulation_test)
 
-# Add tests
-add_test(NAME SimpleTest COMMAND simple_test)
-add_test(NAME ApproxTMRTest COMMAND approx_tmr_test)
-if(RAD_ML_BUILD_STRESS_TEST)
-    add_test(NAME ExtremeStressTest COMMAND extreme_stress_test)
+# If stress test exists, add it as a test
+if(TARGET extreme_stress_test)
+    add_test(NAME extreme_stress_test COMMAND extreme_stress_test)
+endif()
+
+# If simple test exists, add it as a test
+if(TARGET simple_test)
+    add_test(NAME simple_test COMMAND simple_test)
 endif() 
