@@ -8,6 +8,10 @@
 #include <random>
 #include <map>
 #include <string>
+#include <memory>
+#include <atomic>
+#include <mutex>
+#include <type_traits>
 
 namespace rad_ml {
 namespace tmr {
@@ -60,6 +64,50 @@ private:
     uint32_t table_[256];
 };
 
+// Forward declare for the factory
+template <typename T>
+class EnhancedTMR;
+
+/**
+ * @brief Factory for creating TMR instances
+ * 
+ * This factory ensures proper memory management and consistent initialization
+ */
+class TMRFactory {
+public:
+    /**
+     * @brief Create an EnhancedTMR instance
+     * 
+     * @tparam T Type of the data to be protected
+     * @param initial_value Initial value
+     * @param on_error_callback Optional callback for error detection
+     * @return std::shared_ptr to EnhancedTMR instance
+     */
+    template <typename T>
+    static std::shared_ptr<EnhancedTMR<T>> createEnhancedTMR(
+        const T& initial_value = T(),
+        std::function<void(const T&, const T&)> on_error_callback = nullptr) {
+        
+        return std::make_shared<EnhancedTMR<T>>(initial_value, on_error_callback);
+    }
+    
+    /**
+     * @brief Create a basic TMR instance
+     * 
+     * @tparam T Type of the data to be protected
+     * @param initial_value Initial value
+     * @param on_error_callback Optional callback for error detection
+     * @return std::shared_ptr to TMR instance
+     */
+    template <typename T>
+    static std::shared_ptr<TMR<T>> createTMR(
+        const T& initial_value = T(),
+        std::function<void(const T&, const T&)> on_error_callback = nullptr) {
+        
+        return std::make_shared<TMR<T>>(initial_value, on_error_callback);
+    }
+};
+
 /**
  * @brief Enhanced Triple Modular Redundancy with CRC checking
  * 
@@ -84,6 +132,11 @@ public:
                         std::function<void(const T&, const T&)> on_error_callback = nullptr)
         : on_error_callback_(on_error_callback), 
           last_verification_time_(std::chrono::steady_clock::now()) {
+        
+        // Static validation for types that can be safely copied
+        static_assert(std::is_copy_constructible_v<T>, 
+            "EnhancedTMR requires copy-constructible types");
+        
         // Initialize all copies with the same value
         for (size_t i = 0; i < num_copies_; i++) {
             copies_[i] = initial_value;
@@ -103,12 +156,35 @@ public:
      * 
      * @return Current value based on majority voting with health weighting
      */
-    T get() {
-        // Verify CRCs before performing operation
-        verifyCRCs();
+    T get() const {
+        // Thread safety for statistics and health scores
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        // Check if we need to verify CRCs based on time interval
+        const auto now = std::chrono::steady_clock::now();
+        if (now - last_verification_time_ >= verification_interval_) {
+            verifyCRCs();
+            last_verification_time_ = now;
+        }
         
         // Use weighted voting for enhanced resilience
-        return performWeightedVoting();
+        T result = performWeightedVoting();
+        
+        total_get_operations_++;
+        return result;
+    }
+    
+    /**
+     * @brief Try to get value with error handling
+     * 
+     * @return std::optional<T> containing value if successful, or std::nullopt if error
+     */
+    std::optional<T> tryGet() const {
+        try {
+            return get();
+        } catch (const std::exception&) {
+            return std::nullopt;
+        }
     }
     
     /**
@@ -117,6 +193,8 @@ public:
      * @param value New value
      */
     void set(const T& value) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
         for (size_t i = 0; i < num_copies_; i++) {
             copies_[i] = value;
             health_scores_[i] = 1.0; // Reset health on explicit set
@@ -133,6 +211,8 @@ public:
      * @return Raw value of the specified copy
      */
     T getRawCopy(size_t index) const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
         if (index < num_copies_) {
             return copies_[index];
         }
@@ -155,6 +235,8 @@ public:
      * @param value New value
      */
     void setRawCopy(size_t index, const T& value) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
         if (index < num_copies_) {
             copies_[index] = value;
             // Recalculate CRC for the changed copy
@@ -170,6 +252,7 @@ public:
      * @return True if verification passed, false if errors detected
      */
     bool verify() {
+        std::lock_guard<std::mutex> lock(mutex_);
         return verifyCRCs();
     }
     
@@ -179,6 +262,8 @@ public:
      * @return Human-readable string with error statistics
      */
     std::string getErrorStats() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
         std::string stats = "Enhanced TMR Error Statistics:\n";
         stats += "  Total operations: " + std::to_string(total_set_operations_ + total_get_operations_) + "\n";
         stats += "  Set operations: " + std::to_string(total_set_operations_) + "\n";
@@ -203,6 +288,7 @@ public:
      * @param interval Interval between automatic verifications
      */
     void setVerificationInterval(std::chrono::milliseconds interval) {
+        std::lock_guard<std::mutex> lock(mutex_);
         verification_interval_ = interval;
     }
     
@@ -212,6 +298,7 @@ public:
      * @return Current verification interval
      */
     std::chrono::milliseconds getVerificationInterval() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return verification_interval_;
     }
     
@@ -219,6 +306,8 @@ public:
      * @brief Reset error statistics
      */
     void resetErrorStats() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
         total_set_operations_ = 0;
         total_get_operations_ = 0;
         crc_validation_failures_ = 0;
@@ -235,6 +324,7 @@ public:
      * @param enable Whether to enable health-weighted voting
      */
     void enableHealthWeightedVoting(bool enable) {
+        std::lock_guard<std::mutex> lock(mutex_);
         use_health_weighted_voting_ = enable;
     }
     
@@ -246,9 +336,12 @@ public:
      * @return True if regeneration was performed
      */
     bool regenerateCopies() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
         // Find the most trusted copy
         size_t best_idx = 0;
         double best_health = health_scores_[0];
+        
         for (size_t i = 1; i < num_copies_; i++) {
             if (health_scores_[i] > best_health) {
                 best_health = health_scores_[i];
@@ -256,53 +349,82 @@ public:
             }
         }
         
-        // Skip regeneration if all copies are equally healthy
-        bool all_same = true;
-        for (size_t i = 0; i < num_copies_; i++) {
-            if (health_scores_[i] != best_health) {
-                all_same = false;
-                break;
-            }
+        // Only regenerate if trust is high enough
+        if (best_health < 0.6) {
+            return false; // No copy is trustworthy enough
         }
         
-        if (all_same) {
-            return false;
-        }
+        // Regenerate all copies from the most trusted one
+        T trusted_value = copies_[best_idx];
         
-        // Regenerate other copies from the most trusted one
         for (size_t i = 0; i < num_copies_; i++) {
             if (i != best_idx) {
-                copies_[i] = copies_[best_idx];
-                health_scores_[i] = best_health * 0.95; // Slightly reduce health of regenerated copies
+                copies_[i] = trusted_value;
+                health_scores_[i] = 0.9; // Slightly less than perfect
             }
         }
         
+        // Recalculate CRCs
         recalculateCRCs();
+        
         return true;
+    }
+    
+    /**
+     * @brief Create and return a deep copy of this TMR instance
+     * 
+     * @return std::unique_ptr to a new EnhancedTMR instance
+     */
+    std::unique_ptr<EnhancedTMR<T>> clone() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        // Create a new instance with the current value
+        auto result = std::make_unique<EnhancedTMR<T>>(get(), on_error_callback_);
+        
+        // Copy health scores
+        for (size_t i = 0; i < num_copies_; i++) {
+            result->health_scores_[i] = health_scores_[i];
+        }
+        
+        // Copy other settings
+        result->verification_interval_ = verification_interval_;
+        result->use_health_weighted_voting_ = use_health_weighted_voting_;
+        
+        return result;
     }
     
 private:
     static constexpr size_t num_copies_ = 3;
     T copies_[num_copies_];
-    uint32_t crcs_[num_copies_];
-    mutable double health_scores_[num_copies_];
+    uint32_t crcs_[num_copies_] = {0};
+    
+    // Thread synchronization
+    mutable std::mutex mutex_;
+    
+    // CRC calculator
     CRC32 crc_calculator_;
     
+    // Voting configuration
     bool use_health_weighted_voting_ = true;
     std::function<void(const T&, const T&)> on_error_callback_;
     
-    // Error statistics
+    // Health tracking
+    mutable double health_scores_[num_copies_] = {1.0, 1.0, 1.0};
+    
+    // Performance tracking
     mutable size_t total_set_operations_ = 0;
     mutable size_t total_get_operations_ = 0;
     mutable size_t crc_validation_failures_ = 0;
     mutable size_t voting_disagreements_ = 0;
     
-    // Timing for periodic verification
+    // Verification timing
     mutable std::chrono::steady_clock::time_point last_verification_time_;
     std::chrono::milliseconds verification_interval_{5000}; // 5 seconds by default
     
     /**
-     * @brief Recalculate CRCs for all copies
+     * @brief Recalculate CRC values for all copies
+     * 
+     * Must be called with mutex_ held
      */
     void recalculateCRCs() {
         for (size_t i = 0; i < num_copies_; i++) {
@@ -311,29 +433,31 @@ private:
     }
     
     /**
-     * @brief Verify CRC values for all copies
+     * @brief Verify integrity of all copies using CRC
      * 
-     * @return True if all CRCs match, false otherwise
+     * Must be called with mutex_ held
+     * 
+     * @return True if all checks passed, false if errors detected
      */
-    bool verifyCRCs() {
-        auto now = std::chrono::steady_clock::now();
-        
-        // Only perform periodic verification if enough time has passed
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(
-                now - last_verification_time_) < verification_interval_) {
-            return true;
-        }
-        
-        last_verification_time_ = now;
-        
+    bool verifyCRCs() const {
         bool all_valid = true;
         
         for (size_t i = 0; i < num_copies_; i++) {
             uint32_t current_crc = crc_calculator_.calculate(&copies_[i], sizeof(T));
             if (current_crc != crcs_[i]) {
+                // CRC validation failed
                 all_valid = false;
-                health_scores_[i] *= 0.7; // Reduce health score for corrupted copy
                 crc_validation_failures_++;
+                
+                // Penalize health score for CRC failures
+                health_scores_[i] = std::max(0.1, health_scores_[i] - 0.3);
+                
+                // Log or notify about the error
+                if (on_error_callback_) {
+                    // Get the most likely correct value from the other copies
+                    T likely_correct = (i == 0) ? copies_[1] : copies_[0];
+                    on_error_callback_(likely_correct, copies_[i]);
+                }
             }
         }
         
@@ -341,128 +465,102 @@ private:
     }
     
     /**
-     * @brief Perform majority voting considering health scores
+     * @brief Perform weighted voting to determine correct value
      * 
-     * @return Voted value
+     * Must be called with mutex_ held
+     * 
+     * @return Result of voting
      */
-    T performWeightedVoting() {
-        total_get_operations_++;
-        
-        // Skip voting if health scores are very skewed - use most trusted copy
-        double max_health = 0.0;
-        double min_health = 1.0;
-        size_t best_index = 0;
-        
-        for (size_t i = 0; i < num_copies_; i++) {
-            if (health_scores_[i] > max_health) {
-                max_health = health_scores_[i];
-                best_index = i;
+    T performWeightedVoting() const {
+        // Special case: if all values are the same, return any copy
+        if (copies_[0] == copies_[1] && copies_[1] == copies_[2]) {
+            // Update all health scores positively
+            for (size_t i = 0; i < num_copies_; i++) {
+                health_scores_[i] = std::min(1.0, health_scores_[i] + 0.05);
             }
-            if (health_scores_[i] < min_health) {
-                min_health = health_scores_[i];
-            }
-        }
-        
-        // If one copy is much more trusted than others, just use it
-        if (max_health > 3.0 * min_health) {
-            return copies_[best_index];
-        }
-        
-        // Normal case: perform voting
-        bool disagreement = false;
-        
-        // Check if there's a disagreement
-        for (size_t i = 1; i < num_copies_; i++) {
-            if (copies_[i] != copies_[0]) {
-                disagreement = true;
-                break;
-            }
-        }
-        
-        // Fast path when all copies agree
-        if (!disagreement) {
             return copies_[0];
         }
         
-        // There's a disagreement - perform weighted voting
+        // We have a disagreement
         voting_disagreements_++;
         
         if (use_health_weighted_voting_) {
-            // Count occurrences of each value, weighted by health
-            std::map<T, double> value_scores;
-            for (size_t i = 0; i < num_copies_; i++) {
-                value_scores[copies_[i]] += health_scores_[i];
-            }
+            // Health-weighted voting
             
-            // Find most common value
-            T best_value = copies_[0];
-            double best_score = value_scores[copies_[0]];
+            // Check if any two copies agree
+            bool copy_0_1_agree = (copies_[0] == copies_[1]);
+            bool copy_0_2_agree = (copies_[0] == copies_[2]);
+            bool copy_1_2_agree = (copies_[1] == copies_[2]);
             
-            for (const auto& pair : value_scores) {
-                if (pair.second > best_score) {
-                    best_score = pair.second;
-                    best_value = pair.first;
+            if (copy_0_1_agree || copy_0_2_agree || copy_1_2_agree) {
+                // Two copies agree, use that value
+                if (copy_0_1_agree) {
+                    // First and second copies agree
+                    health_scores_[0] = std::min(1.0, health_scores_[0] + 0.05);
+                    health_scores_[1] = std::min(1.0, health_scores_[1] + 0.05);
+                    health_scores_[2] = std::max(0.1, health_scores_[2] - 0.2);
+                    return copies_[0];
+                } 
+                else if (copy_0_2_agree) {
+                    // First and third copies agree
+                    health_scores_[0] = std::min(1.0, health_scores_[0] + 0.05);
+                    health_scores_[2] = std::min(1.0, health_scores_[2] + 0.05);
+                    health_scores_[1] = std::max(0.1, health_scores_[1] - 0.2);
+                    return copies_[0];
+                } 
+                else {
+                    // Second and third copies agree
+                    health_scores_[1] = std::min(1.0, health_scores_[1] + 0.05);
+                    health_scores_[2] = std::min(1.0, health_scores_[2] + 0.05);
+                    health_scores_[0] = std::max(0.1, health_scores_[0] - 0.2);
+                    return copies_[1];
                 }
-            }
-            
-            // Penalize health scores of incorrect copies
-            for (size_t i = 0; i < num_copies_; i++) {
-                if (copies_[i] != best_value) {
-                    health_scores_[i] *= 0.8;
-                }
-            }
-            
-            // Call error callback if provided
-            if (on_error_callback_) {
-                // Find the corrupted value that differs from voted value
+            } else {
+                // All three copies disagree - use health-weighted selection
+                double total_health = 0.0;
                 for (size_t i = 0; i < num_copies_; i++) {
-                    if (copies_[i] != best_value) {
-                        on_error_callback_(best_value, copies_[i]);
-                        break;
+                    total_health += health_scores_[i];
+                }
+                
+                // If we somehow have zero total health, just return first copy
+                if (total_health <= 0.0) {
+                    return copies_[0];
+                }
+                
+                // Use health scores to pick most trusted copy
+                double r = std::uniform_real_distribution<double>(0.0, total_health)(
+                    random_engine_);
+                
+                double cumulative = 0.0;
+                for (size_t i = 0; i < num_copies_; i++) {
+                    cumulative += health_scores_[i];
+                    if (r <= cumulative) {
+                        // Slightly boost the selected copy's health
+                        health_scores_[i] = std::min(1.0, health_scores_[i] + 0.02);
+                        return copies_[i];
                     }
                 }
+                
+                // Fallback (should not reach here)
+                return copies_[0];
             }
-            
-            return best_value;
         } else {
-            // Simple majority voting without health weighting
-            std::map<T, int> value_counts;
-            for (size_t i = 0; i < num_copies_; i++) {
-                value_counts[copies_[i]]++;
+            // Standard TMR voting (no health weighting)
+            if (copies_[0] == copies_[1]) {
+                return copies_[0];
+            } else if (copies_[0] == copies_[2]) {
+                return copies_[0];
+            } else if (copies_[1] == copies_[2]) {
+                return copies_[1];
+            } else {
+                // All three disagree - return the first copy as fallback
+                return copies_[0];
             }
-            
-            // Find most common value
-            T best_value = copies_[0];
-            int best_count = value_counts[copies_[0]];
-            
-            for (const auto& pair : value_counts) {
-                if (pair.second > best_count) {
-                    best_count = pair.second;
-                    best_value = pair.first;
-                }
-            }
-            
-            // Penalize health scores of incorrect copies
-            for (size_t i = 0; i < num_copies_; i++) {
-                if (copies_[i] != best_value) {
-                    health_scores_[i] *= 0.8;
-                }
-            }
-            
-            // Call error callback if provided
-            if (on_error_callback_) {
-                // Find the corrupted value that differs from voted value
-                for (size_t i = 0; i < num_copies_; i++) {
-                    if (copies_[i] != best_value) {
-                        on_error_callback_(best_value, copies_[i]);
-                        break;
-                    }
-                }
-            }
-            
-            return best_value;
         }
     }
+    
+    // Random engine for weighted voting
+    inline static thread_local std::mt19937 random_engine_{std::random_device{}()};
 };
 
 } // namespace tmr

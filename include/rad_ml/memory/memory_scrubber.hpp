@@ -4,6 +4,12 @@
 #include <cstdint>
 #include <functional>
 #include <utility>
+#include <mutex>
+#include <atomic>
+#include <thread>
+#include <chrono>
+#include <span>
+#include <optional>
 
 namespace rad_ml {
 namespace memory {
@@ -14,13 +20,76 @@ namespace memory {
  * Implements memory scrubbing to detect and correct bit errors.
  * Memory scrubbing is a technique commonly used in radiation-tolerant systems
  * to periodically check memory integrity and correct errors.
+ * 
+ * Thread-safe implementation with RAII-based lock guards and proper synchronization.
  */
 class MemoryScrubber {
 public:
     /**
      * @brief Constructor
+     * 
+     * @param scrub_interval_ms How often to perform automatic scrubbing in milliseconds (0 to disable)
      */
-    MemoryScrubber() = default;
+    explicit MemoryScrubber(unsigned long scrub_interval_ms = 0) 
+        : scrub_interval_ms_(scrub_interval_ms), 
+          running_(false),
+          terminate_requested_(false),
+          stats_() {
+        // Start background thread if interval is specified
+        if (scrub_interval_ms_ > 0) {
+            startBackgroundThread();
+        }
+    }
+    
+    /**
+     * @brief Destructor - ensures scrubbing is stopped
+     */
+    ~MemoryScrubber() {
+        stopBackgroundThread();
+    }
+    
+    // Make class non-copyable but movable
+    MemoryScrubber(const MemoryScrubber&) = delete;
+    MemoryScrubber& operator=(const MemoryScrubber&) = delete;
+    
+    MemoryScrubber(MemoryScrubber&& other) noexcept {
+        std::lock_guard<std::mutex> lock(other.mutex_);
+        memory_regions_ = std::move(other.memory_regions_);
+        scrub_interval_ms_ = other.scrub_interval_ms_;
+        stats_ = other.stats_;
+        running_.store(other.running_.load());
+        
+        // Ensure other's thread is stopped before moving
+        other.stopBackgroundThread();
+        
+        // Start our thread if needed
+        if (running_.load()) {
+            startBackgroundThread();
+        }
+    }
+    
+    MemoryScrubber& operator=(MemoryScrubber&& other) noexcept {
+        if (this != &other) {
+            // Stop our thread
+            stopBackgroundThread();
+            
+            // Lock both instances to prevent race conditions
+            std::scoped_lock lock(mutex_, other.mutex_);
+            
+            memory_regions_ = std::move(other.memory_regions_);
+            scrub_interval_ms_ = other.scrub_interval_ms_;
+            stats_ = other.stats_;
+            
+            // Ensure other's thread is stopped
+            other.stopBackgroundThread();
+            
+            // Start our thread if needed
+            if (other.running_.load()) {
+                startBackgroundThread();
+            }
+        }
+        return *this;
+    }
     
     /**
      * @brief Register a memory region for scrubbing
@@ -28,16 +97,79 @@ public:
      * @param ptr Pointer to the memory region
      * @param size Size of the memory region in bytes
      * @param error_callback Optional callback when an error is detected
+     * @return Unique handle used to unregister the region
      */
-    void registerMemoryRegion(
+    size_t registerMemoryRegion(
         void* ptr, 
         size_t size,
         std::function<void(void*, size_t, uint8_t, uint8_t)> error_callback = nullptr) {
         
-        memory_regions_.push_back({ptr, size, std::move(error_callback), std::vector<uint32_t>()});
+        if (!ptr || size == 0) {
+            return 0; // Invalid parameters
+        }
+        
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        // Generate a unique handle for this region
+        static size_t next_handle = 1; // 0 is reserved for invalid handle
+        size_t handle = next_handle++;
+        
+        memory_regions_.push_back({
+            handle,
+            ptr, 
+            size, 
+            std::move(error_callback), 
+            std::vector<uint32_t>()
+        });
         
         // Calculate CRC for the new region
-        calculateChecksums();
+        calculateChecksums(memory_regions_.back());
+        
+        return handle;
+    }
+    
+    /**
+     * @brief Modern version using std::span for memory region
+     * 
+     * @param memory Span representing the memory region
+     * @param error_callback Optional callback when an error is detected
+     * @return Unique handle used to unregister the region
+     */
+    size_t registerMemoryRegion(
+        std::span<std::byte> memory,
+        std::function<void(void*, size_t, uint8_t, uint8_t)> error_callback = nullptr) {
+        
+        return registerMemoryRegion(
+            memory.data(), 
+            memory.size_bytes(), 
+            std::move(error_callback)
+        );
+    }
+    
+    /**
+     * @brief Unregister a memory region
+     * 
+     * @param handle The handle returned from registerMemoryRegion
+     * @return True if region was found and unregistered, false otherwise
+     */
+    bool unregisterMemoryRegion(size_t handle) {
+        if (handle == 0) {
+            return false;
+        }
+        
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        auto it = std::find_if(memory_regions_.begin(), memory_regions_.end(),
+            [handle](const MemoryRegion& region) {
+                return region.handle == handle;
+            });
+            
+        if (it != memory_regions_.end()) {
+            memory_regions_.erase(it);
+            return true;
+        }
+        
+        return false;
     }
     
     /**
@@ -48,15 +180,87 @@ public:
     size_t scrubMemory() {
         size_t errors_detected = 0;
         
+        std::lock_guard<std::mutex> lock(mutex_);
+        
         for (auto& region : memory_regions_) {
             errors_detected += scrubRegion(region);
         }
         
         // Recalculate checksums after correction
-        calculateChecksums();
+        for (auto& region : memory_regions_) {
+            calculateChecksums(region);
+        }
         
         stats_.scrub_cycles++;
         return errors_detected;
+    }
+    
+    /**
+     * @brief Start background scrubbing thread
+     * 
+     * @param interval_ms New interval in milliseconds (0 means use existing interval)
+     * @return True if thread was started successfully
+     */
+    bool startBackgroundThread(unsigned long interval_ms = 0) {
+        std::lock_guard<std::mutex> lock(thread_mutex_);
+        
+        // If already running, do nothing
+        if (running_.load()) {
+            return true;
+        }
+        
+        // Update interval if specified
+        if (interval_ms > 0) {
+            scrub_interval_ms_ = interval_ms;
+        }
+        
+        // Don't start if interval is 0
+        if (scrub_interval_ms_ == 0) {
+            return false;
+        }
+        
+        // Reset termination flag
+        terminate_requested_.store(false);
+        
+        // Start background thread
+        try {
+            scrub_thread_ = std::thread(&MemoryScrubber::scrubThreadFunction, this);
+            running_.store(true);
+            return true;
+        } catch (const std::exception&) {
+            running_.store(false);
+            return false;
+        }
+    }
+    
+    /**
+     * @brief Stop background scrubbing thread
+     */
+    void stopBackgroundThread() {
+        std::lock_guard<std::mutex> lock(thread_mutex_);
+        
+        if (!running_.load()) {
+            return;
+        }
+        
+        // Signal thread to terminate
+        terminate_requested_.store(true);
+        
+        // Wait for thread to exit
+        if (scrub_thread_.joinable()) {
+            scrub_thread_.join();
+        }
+        
+        running_.store(false);
+    }
+    
+    /**
+     * @brief Check if background thread is running
+     * 
+     * @return True if running
+     */
+    bool isRunning() const {
+        return running_.load();
     }
     
     /**
@@ -65,6 +269,7 @@ public:
      * @return Number of registered memory regions
      */
     size_t getRegionCount() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return memory_regions_.size();
     }
     
@@ -74,6 +279,8 @@ public:
      * @return Total size in bytes
      */
     size_t getTotalMemorySize() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
         size_t total_size = 0;
         for (const auto& region : memory_regions_) {
             total_size += region.size;
@@ -88,14 +295,50 @@ public:
         size_t scrub_cycles = 0;
         size_t errors_detected = 0;
         size_t errors_corrected = 0;
+        size_t last_error_time_ms = 0;  // Time since epoch of last error
+        
+        // Rate statistics
+        double error_rate = 0.0;        // Errors per megabyte per hour
+        
+        void updateErrorRate(size_t total_memory_bytes) {
+            if (scrub_cycles == 0 || total_memory_bytes == 0) {
+                error_rate = 0.0;
+                return;
+            }
+            
+            // Calculate errors per megabyte
+            double errors_per_mb = static_cast<double>(errors_detected) / 
+                                  (static_cast<double>(total_memory_bytes) / 1024.0 / 1024.0);
+            
+            // Assuming 1 scrub cycle per scrub_interval_ms_
+            // Convert to hours: errors_per_mb / (cycles * interval_ms / ms_per_hour)
+            constexpr double ms_per_hour = 3600.0 * 1000.0;
+            error_rate = errors_per_mb / 
+                        (static_cast<double>(scrub_cycles) * 
+                         static_cast<double>(scrub_interval_ms_) / ms_per_hour);
+        }
     };
     
     /**
      * @brief Get statistics
      * 
+     * @param update_rates Whether to update rate calculations before returning
      * @return Current statistics
      */
-    const Statistics& getStatistics() const {
+    Statistics getStatistics(bool update_rates = true) const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        if (update_rates) {
+            // Calculate total memory size for error rate calculations
+            size_t total_size = 0;
+            for (const auto& region : memory_regions_) {
+                total_size += region.size;
+            }
+            
+            // Update error rate
+            stats_.updateErrorRate(total_size);
+        }
+        
         return stats_;
     }
     
@@ -103,34 +346,43 @@ public:
      * @brief Reset statistics
      */
     void resetStatistics() {
+        std::lock_guard<std::mutex> lock(mutex_);
         stats_ = Statistics();
     }
     
 private:
     struct MemoryRegion {
+        size_t handle;
         void* ptr;
         size_t size;
         std::function<void(void*, size_t, uint8_t, uint8_t)> error_callback;
         std::vector<uint32_t> checksums;
     };
     
-    std::vector<MemoryRegion> memory_regions_;
-    Statistics stats_;
+    // Thread-safe members with proper synchronization
+    mutable std::mutex mutex_;                  // Protects memory_regions_ and stats_
+    mutable std::mutex thread_mutex_;           // Protects thread-related members
+    std::vector<MemoryRegion> memory_regions_;  // Protected by mutex_
+    unsigned long scrub_interval_ms_;           // Immutable after thread start
+    std::atomic<bool> running_;                 // Thread running state
+    std::atomic<bool> terminate_requested_;     // Signal to terminate thread
+    std::thread scrub_thread_;                  // Background thread
+    mutable Statistics stats_;                  // Protected by mutex_
     
     /**
-     * @brief Calculate checksums for all memory regions
+     * @brief Calculate checksums for a memory region
+     * 
+     * @param region Memory region to calculate checksums for
      */
-    void calculateChecksums() {
-        for (auto& region : memory_regions_) {
-            // Clear existing checksums
-            region.checksums.clear();
-            
-            // Calculate new checksums (1 per 64 bytes)
-            uint8_t* data = static_cast<uint8_t*>(region.ptr);
-            for (size_t offset = 0; offset < region.size; offset += 64) {
-                size_t block_size = std::min<size_t>(64, region.size - offset);
-                region.checksums.push_back(calculateCRC32(data + offset, block_size));
-            }
+    void calculateChecksums(MemoryRegion& region) {
+        // Clear existing checksums
+        region.checksums.clear();
+        
+        // Calculate new checksums (1 per 64 bytes)
+        uint8_t* data = static_cast<uint8_t*>(region.ptr);
+        for (size_t offset = 0; offset < region.size; offset += 64) {
+            size_t block_size = std::min<size_t>(64, region.size - offset);
+            region.checksums.push_back(calculateCRC32(data + offset, block_size));
         }
     }
     
@@ -157,16 +409,20 @@ private:
                 // Error detected
                 errors_detected++;
                 stats_.errors_detected++;
+                stats_.last_error_time_ms = static_cast<size_t>(
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()
+                    ).count()
+                );
                 
-                // We can't easily determine which bit is corrupted without ECC,
-                // but we could notify the error callback if provided
+                // In a real implementation, we'd use ECC to locate and correct the error
+                // For this implementation, we'll notify the error callback if provided
                 if (region.error_callback) {
                     // For demonstration, we'll assume the first byte is corrupted
-                    // In a real implementation, we would use ECC to locate the error
                     region.error_callback(data + offset, offset, data[offset], 0xFF);
                 }
                 
-                // In a real implementation with ECC, we would correct the error here
+                // Count as corrected for demonstration
                 stats_.errors_corrected++;
             }
         }
@@ -192,7 +448,25 @@ private:
         return ~crc;
     }
     
-    // CRC32 lookup table (could be initialized statically for better performance)
+    /**
+     * @brief Background thread function
+     */
+    void scrubThreadFunction() {
+        while (!terminate_requested_.load()) {
+            // Sleep first to prevent immediate scrubbing on startup
+            for (unsigned long i = 0; i < scrub_interval_ms_; i += 10) {
+                if (terminate_requested_.load()) {
+                    return;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            
+            // Perform scrubbing
+            scrubMemory();
+        }
+    }
+    
+    // CRC32 lookup table (initialized statically for better performance)
     static constexpr uint32_t crc_table_[256] = {
         0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA,
         0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,

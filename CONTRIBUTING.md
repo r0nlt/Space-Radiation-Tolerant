@@ -45,4 +45,4 @@ However, the original framework and core innovations remain attributed to Rishab
 
 ## Questions?
 
-If you have any questions about contributing, please reach out to the project maintainer. 
+If you have any questions about contributing, please reach out to the project maintainer (Rishab Nuguru)
