@@ -8,9 +8,16 @@
 
 #include <string>
 #include <vector>
+#include <Eigen/Dense>
 
 namespace rad_ml {
 namespace sim {
+
+// Forward declaration of Field3D template class from physics namespace
+namespace physics {
+    template<typename T>
+    class Field3D;
+}
 
 /**
  * Temperature range for mission environments
@@ -101,8 +108,8 @@ double calculateExpectedStress(
  * Set defect distribution based on radiation environment
  */
 void setDefectDistribution(
-    class Field3D<double>& vacancy_concentration,
-    class Field3D<double>& interstitial_concentration,
+    physics::Field3D<double>& vacancy_concentration,
+    physics::Field3D<double>& interstitial_concentration,
     const RadiationEnvironment& env,
     const struct MaterialProperties& material,
     double temperature_factor = 1.0,

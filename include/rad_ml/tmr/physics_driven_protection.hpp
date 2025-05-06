@@ -542,28 +542,25 @@ public:
         // Create appropriate strategy
         std::unique_ptr<TMRStrategy<T>> strategy;
         
+        // Pre-calculate any needed values for strategy initialization
+        double protection_factor = multi_scale_manager.getProtectionFactor();
+        
         // Use layer-specific protection if available, otherwise use global
         if (level != ProtectionLevel::NONE) {
-            switch (level) {
-                case ProtectionLevel::BASIC_TMR:
-                    strategy = std::make_unique<BasicTMR<T>>();
-                    break;
-                case ProtectionLevel::ENHANCED_TMR:
-                    strategy = std::make_unique<EnhancedTMR<T>>();
-                    break;
-                case ProtectionLevel::STUCK_BIT_TMR:
-                    strategy = std::make_unique<StuckBitTMR<T>>();
-                    break;
-                case ProtectionLevel::HEALTH_WEIGHTED_TMR:
-                    strategy = std::make_unique<HealthWeightedTMR<T>>();
-                    break;
-                case ProtectionLevel::HYBRID_REDUNDANCY:
-                    // Apply multi-scale protection factor to hybrid redundancy time delay
-                    double delay = 50.0 * multi_scale_manager.getProtectionFactor();
-                    strategy = std::make_unique<HybridRedundancy<T>>(delay);
-                    break;
-                default:
-                    strategy = std::make_unique<BasicTMR<T>>();
+            if (level == ProtectionLevel::BASIC_TMR) {
+                strategy = std::make_unique<BasicTMR<T>>();
+            } else if (level == ProtectionLevel::ENHANCED_TMR) {
+                strategy = std::make_unique<EnhancedTMR<T>>();
+            } else if (level == ProtectionLevel::STUCK_BIT_TMR) {
+                strategy = std::make_unique<StuckBitTMR<T>>();
+            } else if (level == ProtectionLevel::HEALTH_WEIGHTED_TMR) {
+                strategy = std::make_unique<HealthWeightedTMR<T>>();
+            } else if (level == ProtectionLevel::HYBRID_REDUNDANCY) {
+                double delay = 50.0 * protection_factor;
+                strategy = std::make_unique<HybridRedundancy<T>>(delay);
+            } else {
+                // Default case
+                strategy = std::make_unique<BasicTMR<T>>();
             }
         } else {
             // Fall back to global protection
@@ -622,14 +619,13 @@ public:
  */
 template<typename T>
 class ProtectedNeuralLayer {
-private:
+public:
     int layer_index;
     PhysicsDrivenProtection& protection;
     double criticality;
     std::vector<T> weights;
     std::vector<T> biases;
     
-public:
     ProtectedNeuralLayer(
         int idx,
         PhysicsDrivenProtection& prot,
@@ -654,12 +650,38 @@ public:
     }
     
     /**
+     * Set biases with protection
+     */
+    void setBiases(const std::vector<T>& new_biases) {
+        // Execute bias update with protection
+        auto update_op = [&]() {
+            biases = new_biases;
+            return true;
+        };
+        
+        protection.executeProtected<bool>(update_op, layer_index, criticality);
+    }
+    
+    /**
      * Forward pass with protection
      */
     std::vector<T> forward(const std::vector<T>& inputs) {
         // Create operation that computes forward pass
         auto forward_op = [&]() {
-            std::vector<T> outputs(weights.size() / inputs.size());
+            // Check if weights and biases are properly initialized
+            if (weights.empty() || biases.empty()) {
+                // Return empty vector if not initialized
+                return std::vector<T>{};
+            }
+            
+            // Calculate expected output size
+            size_t output_size = weights.size() / inputs.size();
+            if (output_size == 0 || output_size != biases.size()) {
+                // Dimensions mismatch, return empty result
+                return std::vector<T>{};
+            }
+            
+            std::vector<T> outputs(output_size);
             
             // Simple matrix multiplication (in reality would be more complex)
             for (size_t i = 0; i < outputs.size(); ++i) {

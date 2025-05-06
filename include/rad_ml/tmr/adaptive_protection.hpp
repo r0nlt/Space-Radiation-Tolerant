@@ -64,6 +64,25 @@ public:
 };
 
 /**
+ * No protection (for non-critical operations or testing)
+ */
+template<typename T>
+class NoProtection : public TMRStrategy<T> {
+public:
+    TMRResult<T> execute(const std::function<T()>& operation) override {
+        T result = operation();
+        TMRResult<T> tmr_result;
+        tmr_result.value = result;
+        tmr_result.confidence = 1.0;
+        tmr_result.error_detected = false;
+        tmr_result.error_corrected = false;
+        return tmr_result;
+    }
+    
+    ProtectionLevel getProtectionLevel() const override { return ProtectionLevel::NONE; }
+};
+
+/**
  * Basic TMR with majority voting
  */
 template<typename T>
@@ -88,8 +107,34 @@ public:
  */
 template<typename T>
 class StuckBitTMR : public TMRStrategy<T> {
+protected:
+    /**
+     * Check for stuck bits in a value
+     */
+    bool checkForStuckBits(const T& value);
+    
+    /**
+     * Attempt bit-level correction when all results have stuck bits
+     */
+    T attemptBitCorrection(const T& value1, const T& value2, const T& value3);
+    
 public:
     TMRResult<T> execute(const std::function<T()>& operation) override;
+    ProtectionLevel getProtectionLevel() const override { return ProtectionLevel::STUCK_BIT_TMR; }
+};
+
+// Specialization for vector types
+template<typename U>
+class StuckBitTMR<std::vector<U>> : public TMRStrategy<std::vector<U>> {
+protected:
+    bool checkForStuckBits(const std::vector<U>& values);
+    std::vector<U> attemptBitCorrection(
+        const std::vector<U>& values1, 
+        const std::vector<U>& values2, 
+        const std::vector<U>& values3);
+    
+public:
+    TMRResult<std::vector<U>> execute(const std::function<std::vector<U>()>& operation) override;
     ProtectionLevel getProtectionLevel() const override { return ProtectionLevel::STUCK_BIT_TMR; }
 };
 
