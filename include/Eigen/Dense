@@ -1,0 +1,52 @@
+// Eigen Dense stub header
+// This is a placeholder header that provides minimal declarations for the test file
+
+#pragma once
+
+namespace Eigen {
+
+// Matrix class
+template <typename Scalar, int Rows, int Cols>
+class Matrix {
+public:
+    Matrix() {}
+    void setZero() {}
+    Scalar& operator()(int i, int j) { static Scalar s{}; return s; }
+    const Scalar& operator()(int i, int j) const { static Scalar s{}; return s; }
+};
+
+// Vector class
+template <typename Scalar, int Size>
+class Vector {
+public:
+    Vector() {}
+    Scalar& operator()(int i) { static Scalar s{}; return s; }
+    const Scalar& operator()(int i) const { static Scalar s{}; return s; }
+    Scalar sum() const { return Scalar{}; }
+};
+
+// Common matrix types
+typedef Matrix<double, 3, 3> Matrix3d;
+typedef Vector<double, -1> VectorXd;
+
+// Tensor class for multi-dimensional arrays
+template <typename Scalar, int NumDimensions>
+class Tensor {
+public:
+    Tensor() {}
+    Tensor(int d1) {}
+    Tensor(int d1, int d2) {}
+    Tensor(int d1, int d2, int d3) {}
+    Tensor(int d1, int d2, int d3, int d4) {}
+    void setZero() {}
+    Scalar& operator()(int i) { static Scalar s{}; return s; }
+    Scalar& operator()(int i, int j) { static Scalar s{}; return s; }
+    Scalar& operator()(int i, int j, int k) { static Scalar s{}; return s; }
+    Scalar& operator()(int i, int j, int k, int l) { static Scalar s{}; return s; }
+    const Scalar& operator()(int i) const { static Scalar s{}; return s; }
+    const Scalar& operator()(int i, int j) const { static Scalar s{}; return s; }
+    const Scalar& operator()(int i, int j, int k) const { static Scalar s{}; return s; }
+    const Scalar& operator()(int i, int j, int k, int l) const { static Scalar s{}; return s; }
+};
+
+} // namespace Eigen 
