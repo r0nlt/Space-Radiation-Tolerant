@@ -44,12 +44,13 @@ struct MaterialProperties {
     double yield_strength;            // MPa
     double vacuum_modifier;           // Effect factor in vacuum
     double ao_modifier;               // Atomic oxygen effect factor
+    double radiation_tolerance;       // Relative scale (0-100)
     
     // Temperature and mechanical sensitivity
-    enum TempSensitivity { LOW, MODERATE, HIGH, EXTREME };
+    enum class TempSensitivity { LOW, MODERATE, HIGH, EXTREME };
     TempSensitivity temp_sensitivity;
     
-    enum MechSensitivity { LOW, MODERATE, HIGH };
+    enum class MechSensitivity { LOW, MODERATE, HIGH };
     MechSensitivity mech_sensitivity;
     
     /**
