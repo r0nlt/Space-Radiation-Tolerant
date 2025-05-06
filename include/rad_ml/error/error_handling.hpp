@@ -10,6 +10,8 @@
 #include <cassert>
 #include <sstream>
 #include <iostream>
+#include <vector>
+#include <mutex>
 
 namespace rad_ml {
 namespace error {
@@ -53,6 +55,7 @@ enum class ErrorSeverity {
  * @brief Error categories for the framework
  */
 enum class ErrorCategory {
+    GENERAL,
     MEMORY,             ///< Memory-related errors
     COMPUTATION,        ///< Computation-related errors
     RADIATION,          ///< Radiation-induced errors
@@ -63,76 +66,30 @@ enum class ErrorCategory {
     IO,                 ///< I/O errors
     VALIDATION,         ///< Input validation errors
     INTERNAL,           ///< Internal framework errors
-    EXTERNAL            ///< Errors in external components
+    EXTERNAL,           ///< Errors in external components
+    TMR,                ///< TMR-related errors
+    NEURAL_NETWORK,    ///< Neural network-related errors
+    NETWORK             ///< Network-related errors
 };
 
 /**
  * @brief Error codes for the framework
  */
 enum class ErrorCode {
-    // Generic status codes
     SUCCESS = 0,
-    UNKNOWN_ERROR,
+    GENERAL_ERROR,
+    INVALID_ARGUMENT,
+    OUT_OF_MEMORY,
+    BUFFER_OVERFLOW,
+    INVALID_STATE,
     OPERATION_FAILED,
-    
-    // Memory-related errors (1000-1999)
-    MEMORY_ALLOCATION_FAILED = 1000,
-    MEMORY_ACCESS_VIOLATION,
-    MEMORY_CORRUPTION_DETECTED,
-    MEMORY_LIMIT_EXCEEDED,
-    
-    // Radiation-related errors (2000-2999)
-    RADIATION_BIT_FLIP_DETECTED = 2000,
-    RADIATION_MULTI_BIT_ERROR,
-    RADIATION_STUCK_BIT_DETECTED,
-    RADIATION_UNCORRECTABLE_ERROR,
-    RADIATION_TMR_VOTING_DISAGREEMENT,
-    
-    // Configuration errors (3000-3999)
-    CONFIGURATION_INVALID = 3000,
-    CONFIGURATION_MISSING,
-    CONFIGURATION_VALUE_OUT_OF_RANGE,
-    
-    // Thread-related errors (4000-4999)
-    THREAD_CREATION_FAILED = 4000,
-    THREAD_SYNCHRONIZATION_ERROR,
-    MUTEX_LOCK_FAILED,
-    
-    // I/O errors (5000-5999)
-    IO_FILE_NOT_FOUND = 5000,
-    IO_PERMISSION_DENIED,
-    IO_WRITE_FAILED,
-    IO_READ_FAILED,
-    
-    // Arithmetic errors (6000-6999)
-    ARITHMETIC_OVERFLOW = 6000,
-    ARITHMETIC_UNDERFLOW,
-    ARITHMETIC_DIVISION_BY_ZERO,
-    
-    // Resource errors (7000-7999)
-    RESOURCE_EXHAUSTED = 7000,
-    RESOURCE_UNAVAILABLE,
-    RESOURCE_BUSY,
-    
-    // Validation errors (8000-8999)
-    VALIDATION_ARGUMENT_NULL = 8000,
-    VALIDATION_ARGUMENT_OUT_OF_RANGE,
-    VALIDATION_INVALID_OPERATION,
-    
-    // TMR errors (9000-9999)
-    TMR_ALL_COPIES_CORRUPTED = 9000,
-    TMR_NO_MAJORITY,
-    TMR_CHECKSUM_MISMATCH,
-    
-    // Scrubber errors (10000-10999)
-    SCRUBBER_REGION_NOT_FOUND = 10000,
-    SCRUBBER_REGION_ALREADY_REGISTERED,
-    SCRUBBER_START_FAILED,
-    
-    // Framework errors (11000-11999)
-    FRAMEWORK_INITIALIZATION_FAILED = 11000,
-    FRAMEWORK_COMPONENT_MISSING,
-    FRAMEWORK_INVALID_STATE
+    NOT_IMPLEMENTED,
+    TIMEOUT,
+    IO_ERROR,
+    MEMORY_ERROR,
+    RADIATION_ERROR,
+    NETWORK_ERROR,
+    MISSING_DATA
 };
 
 /**
@@ -223,6 +180,7 @@ struct ErrorInfo {
      */
     std::string getCategoryString() const {
         switch (category) {
+            case ErrorCategory::GENERAL: return "GENERAL";
             case ErrorCategory::MEMORY:        return "MEMORY";
             case ErrorCategory::COMPUTATION:   return "COMPUTATION";
             case ErrorCategory::RADIATION:     return "RADIATION";
@@ -234,6 +192,9 @@ struct ErrorInfo {
             case ErrorCategory::VALIDATION:    return "VALIDATION";
             case ErrorCategory::INTERNAL:      return "INTERNAL";
             case ErrorCategory::EXTERNAL:      return "EXTERNAL";
+            case ErrorCategory::TMR:           return "TMR";
+            case ErrorCategory::NEURAL_NETWORK: return "NEURAL_NETWORK";
+            case ErrorCategory::NETWORK:       return "NETWORK";
             default:                           return "UNKNOWN";
         }
     }
@@ -773,6 +734,169 @@ ErrorSeverity ErrorHandler::reporting_level_ = ErrorSeverity::INFO;
             ); \
         } \
     } while (0)
+
+/**
+ * @brief Type for error callback functions
+ */
+using ErrorCallback = std::function<void(const ErrorInfo&)>;
+
+/**
+ * @brief Singleton class for handling errors throughout the framework
+ */
+class ErrorHandler {
+public:
+    /**
+     * @brief Get the singleton instance
+     * 
+     * @return Reference to the singleton instance
+     */
+    static ErrorHandler& getInstance() {
+        static ErrorHandler instance;
+        return instance;
+    }
+    
+    /**
+     * @brief Log an error using the registered callbacks
+     * 
+     * @param error Error information
+     */
+    static void logError(const ErrorInfo& error) {
+        getInstance().logErrorImpl(error);
+    }
+    
+    /**
+     * @brief Register a callback for error handling
+     * 
+     * @param callback Function to call when an error occurs
+     * @return ID of the registered callback
+     */
+    int registerCallback(ErrorCallback callback) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        callbacks_.push_back(callback);
+        return static_cast<int>(callbacks_.size() - 1);
+    }
+    
+    /**
+     * @brief Unregister a callback
+     * 
+     * @param id ID of the callback to unregister
+     * @return true if the callback was found and unregistered
+     */
+    bool unregisterCallback(int id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (id >= 0 && id < static_cast<int>(callbacks_.size())) {
+            callbacks_[id] = nullptr;  // Mark as removed
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * @brief Get a string representation of an error code
+     * 
+     * @param code Error code
+     * @return String representation
+     */
+    static std::string getErrorCodeString(ErrorCode code) {
+        switch (code) {
+            case ErrorCode::SUCCESS: return "SUCCESS";
+            case ErrorCode::GENERAL_ERROR: return "GENERAL_ERROR";
+            case ErrorCode::INVALID_ARGUMENT: return "INVALID_ARGUMENT";
+            case ErrorCode::OUT_OF_MEMORY: return "OUT_OF_MEMORY";
+            case ErrorCode::BUFFER_OVERFLOW: return "BUFFER_OVERFLOW";
+            case ErrorCode::INVALID_STATE: return "INVALID_STATE";
+            case ErrorCode::OPERATION_FAILED: return "OPERATION_FAILED";
+            case ErrorCode::NOT_IMPLEMENTED: return "NOT_IMPLEMENTED";
+            case ErrorCode::TIMEOUT: return "TIMEOUT";
+            case ErrorCode::IO_ERROR: return "IO_ERROR";
+            case ErrorCode::MEMORY_ERROR: return "MEMORY_ERROR";
+            case ErrorCode::RADIATION_ERROR: return "RADIATION_ERROR";
+            case ErrorCode::NETWORK_ERROR: return "NETWORK_ERROR";
+            case ErrorCode::MISSING_DATA: return "MISSING_DATA";
+            default: return "UNKNOWN_ERROR";
+        }
+    }
+    
+    /**
+     * @brief Get a string representation of an error category
+     * 
+     * @param category Error category
+     * @return String representation
+     */
+    static std::string getErrorCategoryString(ErrorCategory category) {
+        switch (category) {
+            case ErrorCategory::GENERAL: return "GENERAL";
+            case ErrorCategory::MEMORY: return "MEMORY";
+            case ErrorCategory::COMPUTATION: return "COMPUTATION";
+            case ErrorCategory::RADIATION: return "RADIATION";
+            case ErrorCategory::CONFIGURATION: return "CONFIGURATION";
+            case ErrorCategory::RESOURCE: return "RESOURCE";
+            case ErrorCategory::THREADING: return "THREADING";
+            case ErrorCategory::INITIALIZATION: return "INITIALIZATION";
+            case ErrorCategory::IO: return "IO";
+            case ErrorCategory::VALIDATION: return "VALIDATION";
+            case ErrorCategory::INTERNAL: return "INTERNAL";
+            case ErrorCategory::EXTERNAL: return "EXTERNAL";
+            case ErrorCategory::TMR: return "TMR";
+            case ErrorCategory::NEURAL_NETWORK: return "NEURAL_NETWORK";
+            case ErrorCategory::NETWORK: return "NETWORK";
+            default: return "UNKNOWN_CATEGORY";
+        }
+    }
+    
+    /**
+     * @brief Get a string representation of an error severity level
+     * 
+     * @param severity Error severity
+     * @return String representation
+     */
+    static std::string getErrorSeverityString(ErrorSeverity severity) {
+        switch (severity) {
+            case ErrorSeverity::DEBUG: return "DEBUG";
+            case ErrorSeverity::INFO: return "INFO";
+            case ErrorSeverity::WARNING: return "WARNING";
+            case ErrorSeverity::ERROR: return "ERROR";
+            case ErrorSeverity::CRITICAL: return "CRITICAL";
+            case ErrorSeverity::FATAL: return "FATAL";
+            default: return "UNKNOWN_SEVERITY";
+        }
+    }
+
+private:
+    // Private constructor for singleton
+    ErrorHandler() {
+        // Register default console logger
+        registerCallback([](const ErrorInfo& error) {
+            std::cerr << "[" << getErrorSeverityString(error.severity) << "] "
+                      << getErrorCategoryString(error.category) << " - "
+                      << getErrorCodeString(error.code) << ": "
+                      << error.message;
+            
+            if (!error.location.empty()) {
+                std::cerr << " (" << error.location << ")";
+            }
+            
+            std::cerr << std::endl;
+        });
+    }
+    
+    // Private implementation of logError
+    void logErrorImpl(const ErrorInfo& error) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (const auto& callback : callbacks_) {
+            if (callback) {
+                callback(error);
+            }
+        }
+    }
+    
+    // Prevent copying and assignment
+    ErrorHandler(const ErrorHandler&) = delete;
+    ErrorHandler& operator=(const ErrorHandler&) = delete;
+    
+    std::vector<ErrorCallback> callbacks_;
+    std::mutex mutex_;
+};
 
 } // namespace error
 } // namespace rad_ml 

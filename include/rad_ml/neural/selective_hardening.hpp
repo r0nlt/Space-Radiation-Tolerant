@@ -9,10 +9,13 @@
 #include <cmath>
 #include <limits>
 #include <iostream>
+#include <unordered_map>
 
 #include "../tmr/approximate_tmr.hpp"
 #include "../tmr/health_weighted_tmr.hpp"
 #include "../tmr/enhanced_tmr.hpp"
+#include "../common/types.hpp"
+#include "../error/error_handling.hpp"
 
 namespace rad_ml {
 namespace neural {
@@ -23,6 +26,8 @@ namespace neural {
 enum class ProtectionLevel {
     NONE,               ///< No protection
     CHECKSUM_ONLY,      ///< Only use CRC checksum
+    CHECKSUM_WITH_RECOVERY,///< Checksum with recovery capability
+    SELECTIVE_TMR,      ///< TMR for selected critical elements only
     APPROXIMATE_TMR,    ///< Use approximate TMR with reduced precision
     HEALTH_WEIGHTED_TMR,///< Use health-weighted TMR
     FULL_TMR            ///< Use full TMR with CRC checksums
@@ -87,11 +92,14 @@ struct NetworkComponent {
  * @brief Strategy for selective hardening
  */
 enum class HardeningStrategy {
-    FIXED_THRESHOLD,           ///< Protect components above a fixed criticality threshold
-    RESOURCE_CONSTRAINED,      ///< Protect most critical components within a resource budget
+    PROTECT_ALL,                ///< Protect all components equally
+    FIXED_THRESHOLD,            ///< Protect components above a fixed criticality threshold
+    RESOURCE_CONSTRAINED,       ///< Protect most critical components within a resource budget
     ADAPTIVE_RUNTIME,          ///< Adapt protection at runtime based on error rates
     LAYERWISE_IMPORTANCE,      ///< Protect based on layer importance (e.g., output layers more critical)
-    GRADIENT_BASED             ///< Protect based on gradient magnitude during training
+    GRADIENT_BASED,             ///< Protect based on gradient magnitude during training
+    LAYER_SPECIFIC,             ///< Layer-specific protection policies
+    IMPORTANCE_DECAY            ///< Importance decay strategy (prioritize input layers)
 };
 
 /**
@@ -192,22 +200,30 @@ public:
         
         // Apply hardening strategy
         switch (config_.strategy) {
+            case HardeningStrategy::PROTECT_ALL:
+                applyProtectAllStrategy(components, result);
+                break;
             case HardeningStrategy::FIXED_THRESHOLD:
-                applyFixedThresholdStrategy(result);
+                applyFixedThresholdStrategy(components, result);
                 break;
             case HardeningStrategy::RESOURCE_CONSTRAINED:
-                applyResourceConstrainedStrategy(result);
+                applyResourceConstrainedStrategy(components, result);
                 break;
             case HardeningStrategy::LAYERWISE_IMPORTANCE:
-                applyLayerwiseImportanceStrategy(result);
+                applyLayerwiseImportanceStrategy(components, result);
                 break;
             case HardeningStrategy::GRADIENT_BASED:
-                // This would require gradient information, use fallback
-                applyResourceConstrainedStrategy(result);
+                applyGradientBasedStrategy(components, result);
+                break;
+            case HardeningStrategy::LAYER_SPECIFIC:
+                applyLayerSpecificStrategy(components, result);
+                break;
+            case HardeningStrategy::IMPORTANCE_DECAY:
+                applyImportanceDecayStrategy(components, result);
                 break;
             case HardeningStrategy::ADAPTIVE_RUNTIME:
                 // Initial protection is same as resource constrained
-                applyResourceConstrainedStrategy(result);
+                applyResourceConstrainedStrategy(components, result);
                 break;
         }
         
@@ -752,6 +768,10 @@ private:
                 return "No Protection";
             case ProtectionLevel::CHECKSUM_ONLY:
                 return "Checksum Only";
+            case ProtectionLevel::CHECKSUM_WITH_RECOVERY:
+                return "Checksum with Recovery";
+            case ProtectionLevel::SELECTIVE_TMR:
+                return "Selective TMR";
             case ProtectionLevel::APPROXIMATE_TMR:
                 return "Approximate TMR";
             case ProtectionLevel::HEALTH_WEIGHTED_TMR:
@@ -771,6 +791,8 @@ private:
      */
     std::string getStrategyName(HardeningStrategy strategy) const {
         switch (strategy) {
+            case HardeningStrategy::PROTECT_ALL:
+                return "Protect All";
             case HardeningStrategy::FIXED_THRESHOLD:
                 return "Fixed Threshold";
             case HardeningStrategy::RESOURCE_CONSTRAINED:
@@ -781,6 +803,10 @@ private:
                 return "Layerwise Importance";
             case HardeningStrategy::GRADIENT_BASED:
                 return "Gradient Based";
+            case HardeningStrategy::LAYER_SPECIFIC:
+                return "Layer Specific";
+            case HardeningStrategy::IMPORTANCE_DECAY:
+                return "Importance Decay";
             default:
                 return "Unknown";
         }
