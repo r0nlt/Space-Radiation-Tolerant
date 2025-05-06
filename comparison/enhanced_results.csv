@@ -1,0 +1,21 @@
+Mission,Phase,Protection,ErrorRate,ProtectionEfficiency,ResourceUsage,NASAMatch,PowerImpact,Passed
+Geostationary Orbit Mission,GEO Operations,Full TMR,0.032,0.891892,0.788889,98.8108,0.946667,Yes
+Geostationary Orbit Mission,GTO Transfer,Full TMR,0.027,0.902174,0.744444,97.7826,0.893333,Yes
+Geostationary Orbit Mission,LEO Parking Orbit,Full TMR,0.036,0.866667,0.744444,98.6667,0.893333,Yes
+Geostationary Orbit Mission,Launch,Selective TMR,0.048,0.731844,0.661111,98.8156,0.793333,Yes
+Jupiter Mission,Earth-Jupiter Transfer,Full TMR,0.036,0.877551,0.744444,97.2449,0.893333,Yes
+Jupiter Mission,Extended Mission,Full TMR,0.037,0.875,0.788889,97.5,0.946667,Yes
+Jupiter Mission,Jupiter Approach,Full TMR,0.039,0.870432,0.788889,97.9568,0.946667,Yes
+Jupiter Mission,Jupiter Orbit,Full TMR,0.034,0.887789,0.788889,96.2211,0.946667,Yes
+Jupiter Mission,Launch,Selective TMR,0.055,0.689266,0.661111,99.0734,0.793333,No
+Low Earth Orbit Mission,LEO Operations,Full TMR,0.032,0.878788,0.744444,99.8788,0.893333,Yes
+Low Earth Orbit Mission,Launch,Selective TMR,0.051,0.728723,0.661111,99.1277,0.793333,No
+Lunar Mission,Launch,Selective TMR,0.056,0.688889,0.661111,97.8889,0.793333,No
+Lunar Mission,Lunar Orbit,Full TMR,0.03,0.885057,0.744444,98.4943,0.893333,Yes
+Lunar Mission,Moon-Earth Transfer,Full TMR,0.029,0.894545,0.744444,97.5455,0.893333,Yes
+Mars Mission,Launch,Selective TMR,0.061,0.651429,0.661111,95.1429,0.793333,No
+Mars Mission,Mars Orbit,Full TMR,0.033,0.869565,0.744444,99.0435,0.893333,Yes
+Mars Mission,Mars-Earth Transfer,Full TMR,0.027,0.906574,0.744444,95.3426,0.893333,Yes
+Solar Probe Mission,Launch,Selective TMR,0.043,0.755682,0.661111,90.4318,0.793333,Yes
+Solar Probe Mission,Perihelion,Full TMR,0.039,0.887608,0.788889,95.2392,0.946667,Yes
+Solar Probe Mission,Venus Gravity Assist,Full TMR,0.038,0.870748,0.788889,96.9252,0.946667,Yes

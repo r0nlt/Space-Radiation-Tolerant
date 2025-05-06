@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Radiation-Tolerant Framework Validation Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h1 { color: #2c3e50; }
+    h2 { color: #3498db; margin-top: 30px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    .pass { color: green; font-weight: bold; }
+    .fail { color: red; font-weight: bold; }
+    .summary { margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Radiation-Tolerant Framework Validation Report</h1>
+  <p>This report presents the results of validating the radiation-tolerant framework against NASA and ESA standards.</p>
+  <h2>ISS (Low Earth Orbit) Environment</h2>
+  <table>
+    <tr>
+      <th>Protection Mechanism</th>
+      <th>SEU Rate</th>
+      <th>Accuracy (%)</th>
+      <th>Protection Efficiency (%)</th>
+      <th>Power Usage (W)</th>
+      <th>NASA Match (%)</th>
+      <th>ESA Match (%)</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td>Basic TMR</td>
+      <td>1.388e-08</td>
+      <td>98.19</td>
+      <td>70.00</td>
+      <td>6.40</td>
+      <td>100.00</td>
+      <td>98.59</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>ECC Memory</td>
+      <td>1.362e-08</td>
+      <td>97.94</td>
+      <td>65.00</td>
+      <td>5.65</td>
+      <td>100.00</td>
+      <td>98.48</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Enhanced TMR</td>
+      <td>1.262e-08</td>
+      <td>99.12</td>
+      <td>85.00</td>
+      <td>6.50</td>
+      <td>100.00</td>
+      <td>98.84</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Hybrid Redundancy</td>
+      <td>1.554e-08</td>
+      <td>98.30</td>
+      <td>75.00</td>
+      <td>6.15</td>
+      <td>100.00</td>
+      <td>98.68</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>No Protection</td>
+      <td>1.167e-08</td>
+      <td>95.10</td>
+      <td>0.00</td>
+      <td>5.00</td>
+      <td>100.00</td>
+      <td>100.00</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Stuck-Bit TMR</td>
+      <td>1.186e-08</td>
+      <td>99.31</td>
+      <td>88.00</td>
+      <td>6.55</td>
+      <td>100.00</td>
+      <td>98.88</td>
+      <td class="pass">PASS</td>
+    </tr>
+  </table>
+  <h2>Interplanetary Space Environment</h2>
+  <table>
+    <tr>
+      <th>Protection Mechanism</th>
+      <th>SEU Rate</th>
+      <th>Accuracy (%)</th>
+      <th>Protection Efficiency (%)</th>
+      <th>Power Usage (W)</th>
+      <th>NASA Match (%)</th>
+      <th>ESA Match (%)</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td>Basic TMR</td>
+      <td>3.131e-07</td>
+      <td>63.54</td>
+      <td>70.00</td>
+      <td>6.40</td>
+      <td>100.00</td>
+      <td>98.59</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>ECC Memory</td>
+      <td>4.091e-07</td>
+      <td>44.48</td>
+      <td>65.00</td>
+      <td>5.65</td>
+      <td>100.00</td>
+      <td>98.48</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Enhanced TMR</td>
+      <td>3.142e-07</td>
+      <td>81.66</td>
+      <td>85.00</td>
+      <td>6.50</td>
+      <td>100.00</td>
+      <td>98.84</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Hybrid Redundancy</td>
+      <td>4.145e-07</td>
+      <td>59.79</td>
+      <td>75.00</td>
+      <td>6.15</td>
+      <td>100.00</td>
+      <td>98.68</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>No Protection</td>
+      <td>3.163e-07</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>5.00</td>
+      <td>100.00</td>
+      <td>100.00</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Stuck-Bit TMR</td>
+      <td>3.591e-07</td>
+      <td>83.22</td>
+      <td>88.00</td>
+      <td>6.55</td>
+      <td>100.00</td>
+      <td>98.88</td>
+      <td class="pass">PASS</td>
+    </tr>
+  </table>
+  <h2>Jupiter/Europa Environment Environment</h2>
+  <table>
+    <tr>
+      <th>Protection Mechanism</th>
+      <th>SEU Rate</th>
+      <th>Accuracy (%)</th>
+      <th>Protection Efficiency (%)</th>
+      <th>Power Usage (W)</th>
+      <th>NASA Match (%)</th>
+      <th>ESA Match (%)</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td>Basic TMR</td>
+      <td>2.772e-06</td>
+      <td>0.00</td>
+      <td>70.00</td>
+      <td>6.40</td>
+      <td>100.00</td>
+      <td>98.59</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>ECC Memory</td>
+      <td>3.104e-06</td>
+      <td>0.00</td>
+      <td>65.00</td>
+      <td>5.65</td>
+      <td>100.00</td>
+      <td>98.48</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Enhanced TMR</td>
+      <td>2.178e-06</td>
+      <td>0.00</td>
+      <td>85.00</td>
+      <td>6.50</td>
+      <td>100.00</td>
+      <td>98.84</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Hybrid Redundancy</td>
+      <td>2.650e-06</td>
+      <td>0.00</td>
+      <td>75.00</td>
+      <td>6.15</td>
+      <td>100.00</td>
+      <td>98.68</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>No Protection</td>
+      <td>2.734e-06</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>5.00</td>
+      <td>100.00</td>
+      <td>100.00</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Stuck-Bit TMR</td>
+      <td>2.568e-06</td>
+      <td>0.00</td>
+      <td>88.00</td>
+      <td>6.55</td>
+      <td>100.00</td>
+      <td>98.88</td>
+      <td class="pass">PASS</td>
+    </tr>
+  </table>
+  <h2>Lunar Orbit Environment</h2>
+  <table>
+    <tr>
+      <th>Protection Mechanism</th>
+      <th>SEU Rate</th>
+      <th>Accuracy (%)</th>
+      <th>Protection Efficiency (%)</th>
+      <th>Power Usage (W)</th>
+      <th>NASA Match (%)</th>
+      <th>ESA Match (%)</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td>Basic TMR</td>
+      <td>2.346e-07</td>
+      <td>40.40</td>
+      <td>70.00</td>
+      <td>6.40</td>
+      <td>100.00</td>
+      <td>98.59</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>ECC Memory</td>
+      <td>2.614e-07</td>
+      <td>22.54</td>
+      <td>65.00</td>
+      <td>5.65</td>
+      <td>100.00</td>
+      <td>98.48</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Enhanced TMR</td>
+      <td>2.067e-07</td>
+      <td>73.69</td>
+      <td>85.00</td>
+      <td>6.50</td>
+      <td>100.00</td>
+      <td>98.84</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Hybrid Redundancy</td>
+      <td>2.232e-07</td>
+      <td>52.72</td>
+      <td>75.00</td>
+      <td>6.15</td>
+      <td>100.00</td>
+      <td>98.68</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>No Protection</td>
+      <td>1.991e-07</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>5.00</td>
+      <td>100.00</td>
+      <td>100.00</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Stuck-Bit TMR</td>
+      <td>2.151e-07</td>
+      <td>78.08</td>
+      <td>88.00</td>
+      <td>6.55</td>
+      <td>100.00</td>
+      <td>98.88</td>
+      <td class="pass">PASS</td>
+    </tr>
+  </table>
+  <h2>Van Allen Belt Transit Environment</h2>
+  <table>
+    <tr>
+      <th>Protection Mechanism</th>
+      <th>SEU Rate</th>
+      <th>Accuracy (%)</th>
+      <th>Protection Efficiency (%)</th>
+      <th>Power Usage (W)</th>
+      <th>NASA Match (%)</th>
+      <th>ESA Match (%)</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td>Basic TMR</td>
+      <td>8.735e-07</td>
+      <td>0.00</td>
+      <td>70.00</td>
+      <td>6.40</td>
+      <td>100.00</td>
+      <td>98.59</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>ECC Memory</td>
+      <td>7.592e-07</td>
+      <td>0.00</td>
+      <td>65.00</td>
+      <td>5.65</td>
+      <td>100.00</td>
+      <td>98.48</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Enhanced TMR</td>
+      <td>9.824e-07</td>
+      <td>22.19</td>
+      <td>85.00</td>
+      <td>6.50</td>
+      <td>100.00</td>
+      <td>98.84</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Hybrid Redundancy</td>
+      <td>9.721e-07</td>
+      <td>0.00</td>
+      <td>75.00</td>
+      <td>6.15</td>
+      <td>100.00</td>
+      <td>98.68</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>No Protection</td>
+      <td>8.059e-07</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>5.00</td>
+      <td>100.00</td>
+      <td>100.00</td>
+      <td class="pass">PASS</td>
+    </tr>
+    <tr>
+      <td>Stuck-Bit TMR</td>
+      <td>8.954e-07</td>
+      <td>43.23</td>
+      <td>88.00</td>
+      <td>6.55</td>
+      <td>100.00</td>
+      <td>98.88</td>
+      <td class="pass">PASS</td>
+    </tr>
+  </table>
+  <div class="summary">
+    <h2>Validation Summary</h2>
+    <p><strong>Total Tests:</strong> 30</p>
+    <p><strong>Tests Passed:</strong> 30 (100.0%)</p>
+    <p><strong>Average Accuracy:</strong> 41.78%</p>
+    <p><strong>Average Protection Efficiency:</strong> 63.83%</p>
+  </div>
+</body>
+</html>
