@@ -120,12 +120,18 @@ add_executable(enhanced_tmr_test
     test/verification/enhanced_tmr_test.cpp
 )
 
+# Add our Monte Carlo validation test
+add_executable(monte_carlo_validation
+    test/verification/monte_carlo_validation.cpp
+)
+
 # Add include directories for our verification tests
 target_include_directories(framework_verification_test PRIVATE include src)
 target_include_directories(scientific_validation_test PRIVATE include src)
 target_include_directories(radiation_stress_test PRIVATE include src)
 target_include_directories(systematic_fault_test PRIVATE include src)
 target_include_directories(enhanced_tmr_test PRIVATE include src)
+target_include_directories(monte_carlo_validation PRIVATE include src)
 
 # Link libraries for our verification tests
 target_link_libraries(framework_verification_test
@@ -154,12 +160,18 @@ target_link_libraries(enhanced_tmr_test
     ${CMAKE_THREAD_LIBS_INIT}
 )
 
+target_link_libraries(monte_carlo_validation
+    rad_ml_tmr
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
 if(Eigen3_FOUND OR EIGEN3_FOUND)
     target_link_libraries(framework_verification_test Eigen3::Eigen)
     target_link_libraries(scientific_validation_test Eigen3::Eigen)
     target_link_libraries(radiation_stress_test Eigen3::Eigen)
     target_link_libraries(systematic_fault_test Eigen3::Eigen)
     target_link_libraries(enhanced_tmr_test Eigen3::Eigen)
+    target_link_libraries(monte_carlo_validation Eigen3::Eigen)
 endif()
 
 # Enable testing
@@ -172,6 +184,7 @@ add_test(NAME scientific_validation_test COMMAND scientific_validation_test)
 add_test(NAME radiation_stress_test COMMAND radiation_stress_test)
 add_test(NAME systematic_fault_test COMMAND systematic_fault_test)
 add_test(NAME enhanced_tmr_test COMMAND enhanced_tmr_test)
+add_test(NAME monte_carlo_validation COMMAND monte_carlo_validation)
 
 # Print configuration summary
 message(STATUS "Configured RadiationTolerantML NASA/ESA Standard Test:")
