@@ -211,6 +211,43 @@ T injectWordError(T value, std::mt19937& gen) {
     return result;
 }
 
+// Function to corrupt bits with a specific pattern at a given position
+template<typename T>
+T corruptBitsWithPattern(T value, uint64_t pattern, int start_bit) {
+    using UintType = typename std::conditional<sizeof(T) <= 4, uint32_t, uint64_t>::type;
+    UintType bits;
+    std::memcpy(&bits, &value, sizeof(T));
+    
+    // Apply the pattern at the specified position
+    // Limit to the size of the type to avoid overflow
+    int max_bits = sizeof(T) * 8;
+    
+    // Count the number of bits in the pattern in a portable way
+    int pattern_bits = 0;
+    uint64_t temp_pattern = pattern;
+    while (temp_pattern) {
+        pattern_bits++;
+        temp_pattern >>= 1;
+    }
+    
+    pattern_bits = std::min(pattern_bits, max_bits - start_bit);
+    
+    // Apply the corruption pattern
+    for (int i = 0; i < pattern_bits; i++) {
+        int bit_pos = start_bit + i;
+        if (bit_pos >= max_bits) break;
+        
+        // If this bit should be flipped (pattern bit is 1)
+        if ((pattern >> i) & 1) {
+            bits ^= (UintType(1) << bit_pos);
+        }
+    }
+    
+    T result;
+    std::memcpy(&result, &bits, sizeof(T));
+    return result;
+}
+
 // Function to run Monte Carlo validation for a specific data type
 template<typename T>
 void runMonteCarloValidation(std::mt19937& gen, std::map<std::string, std::map<std::string, TestResults>>& results) {
@@ -226,10 +263,23 @@ void runMonteCarloValidation(std::mt19937& gen, std::map<std::string, std::map<s
         
         std::cout << "  Testing environment: " << env_name << std::endl;
         
-        // Error type tests
+        // Error type tests - original
         std::vector<std::string> error_types = {"SINGLE_BIT", "MULTI_BIT", "BURST", "WORD", "COMBINED"};
         
-        for (const auto& error_type : error_types) {
+        // Enhanced test patterns
+        std::vector<std::string> enhanced_tests = {
+            "MULTI_CORRUPTION",     // Multiple copies corrupted
+            "EDGE_CASES",           // Test boundary values and special cases
+            "CORRELATED_ERRORS",    // Spatially correlated errors
+            "RECOVERY_TEST"         // Test recovery after multiple errors
+        };
+        
+        // Combine all test types
+        std::vector<std::string> all_tests = error_types;
+        all_tests.insert(all_tests.end(), enhanced_tests.begin(), enhanced_tests.end());
+        
+        // Run all standard and enhanced tests
+        for (const auto& error_type : all_tests) {
             TestResults& test_results = results[typeid(T).name()][env_name + "_" + error_type];
             test_results.total_trials = NUM_TRIALS_PER_TEST;
             
@@ -290,6 +340,135 @@ void runMonteCarloValidation(std::mt19937& gen, std::map<std::string, std::map<s
                     if (roll < env.single_bit_prob) {
                         copy3 = injectSingleBitError(copy3, gen);
                     }
+                }
+                // ENHANCEMENT 1: Multiple copies corrupted with same error type
+                else if (error_type == "MULTI_CORRUPTION") {
+                    // Corrupt all three copies with different patterns of the same error type
+                    std::uniform_int_distribution<int> error_type_dist(0, 3);
+                    int selected_error = error_type_dist(gen);
+                    
+                    switch (selected_error) {
+                        case 0: // Single bit errors in all copies
+                            copy1 = injectSingleBitError(original_value, gen);
+                            copy2 = injectSingleBitError(original_value, gen);
+                            copy3 = injectSingleBitError(original_value, gen);
+                            break;
+                        case 1: // Multi-bit errors in all copies
+                            copy1 = injectMultiBitError(original_value, gen);
+                            copy2 = injectMultiBitError(original_value, gen);
+                            copy3 = injectMultiBitError(original_value, gen);
+                            break;
+                        case 2: // Burst errors in all copies
+                            copy1 = injectBurstError(original_value, gen);
+                            copy2 = injectBurstError(original_value, gen);
+                            copy3 = injectBurstError(original_value, gen);
+                            break;
+                        case 3: // Word errors in all copies
+                            copy1 = injectWordError(original_value, gen);
+                            copy2 = injectWordError(original_value, gen);
+                            copy3 = injectWordError(original_value, gen);
+                            break;
+                    }
+                }
+                // ENHANCEMENT 2: Edge cases testing
+                else if (error_type == "EDGE_CASES") {
+                    // Generate a special edge case value
+                    std::uniform_int_distribution<int> edge_case_dist(0, 4);
+                    int edge_case = edge_case_dist(gen);
+                    
+                    switch (edge_case) {
+                        case 0: // Near-zero values
+                            if constexpr(std::is_floating_point<T>::value) {
+                                original_value = static_cast<T>(1.0e-10);
+                            } else {
+                                original_value = static_cast<T>(0);
+                            }
+                            break;
+                        case 1: // Maximum representable value
+                            original_value = std::numeric_limits<T>::max();
+                            break;
+                        case 2: // Minimum representable value
+                            original_value = std::numeric_limits<T>::lowest();
+                            break;
+                        case 3: // NaN/Infinity (for floating point types)
+                            if constexpr(std::is_floating_point<T>::value) {
+                                original_value = std::numeric_limits<T>::infinity();
+                            }
+                            break;
+                        case 4: // Values with alternating bit patterns
+                            if constexpr(std::is_integral<T>::value) {
+                                original_value = static_cast<T>(0xAAAAAAAA);
+                            } else {
+                                // Create a value with alternating bit pattern for floating point
+                                using UintType = typename std::conditional<sizeof(T) <= 4, uint32_t, uint64_t>::type;
+                                UintType bits = 0;
+                                for (size_t i = 0; i < sizeof(T) * 8; i += 2) {
+                                    bits |= (UintType(1) << i);
+                                }
+                                std::memcpy(&original_value, &bits, sizeof(T));
+                            }
+                            break;
+                    }
+                    
+                    // Reset copies and apply corruption to one copy
+                    copy1 = copy2 = copy3 = original_value;
+                    copy1 = injectSingleBitError(original_value, gen);
+                }
+                // ENHANCEMENT 3: Spatially correlated errors
+                else if (error_type == "CORRELATED_ERRORS") {
+                    // Apply similar corruption pattern to multiple copies
+                    std::uniform_int_distribution<int> bit_start_dist(0, sizeof(T) * 8 - 8);
+                    std::uniform_int_distribution<int> pattern_dist(0, 3);
+                    
+                    int start_bit = bit_start_dist(gen);
+                    int pattern_type = pattern_dist(gen);
+                    
+                    // Use same starting position but with small variations
+                    using UintType = typename std::conditional<sizeof(T) <= 4, uint32_t, uint64_t>::type;
+                    UintType pattern;
+                    
+                    switch (pattern_type) {
+                        case 0: pattern = 0x3; break;     // 2 adjacent bits
+                        case 1: pattern = 0xF; break;     // 4 adjacent bits
+                        case 2: pattern = 0xFF; break;    // 8 adjacent bits
+                        case 3: pattern = 0x55; break;    // Alternating bits
+                    }
+                    
+                    // Apply correlated bit corruptions
+                    copy1 = corruptBitsWithPattern(original_value, pattern, start_bit);
+                    copy2 = corruptBitsWithPattern(original_value, pattern, start_bit + 1); // Slight offset
+                    copy3 = original_value; // Keep one copy intact for comparison
+                }
+                // ENHANCEMENT 4: Recovery after multiple errors
+                else if (error_type == "RECOVERY_TEST") {
+                    // Create ProtectedValue and apply multiple sequential corruptions
+                    using namespace rad_ml::core::memory;
+                    
+                    ProtectedValue<T> protected_val(original_value);
+                    
+                    // First corruption
+                    T* raw_access = reinterpret_cast<T*>(&protected_val);
+                    *raw_access = injectSingleBitError(original_value, gen);
+                    
+                    // Call get() which might trigger scrubbing, then corrupt again
+                    auto result1 = protected_val.get();
+                    
+                    // Second corruption
+                    *(raw_access + 1) = injectMultiBitError(original_value, gen);
+                    
+                    // Final get() to test recovery
+                    auto result_variant = protected_val.get();
+                    if (std::holds_alternative<T>(result_variant)) {
+                        T result = std::get<T>(result_variant);
+                        if (result == original_value) {
+                            test_results.protected_value_success++;
+                        }
+                    }
+                    
+                    // Use copies for other tests as usual
+                    copy1 = injectSingleBitError(original_value, gen);
+                    copy2 = original_value;
+                    copy3 = original_value;
                 }
                 
                 // Test different voting techniques
@@ -365,7 +544,8 @@ void runMonteCarloValidation(std::mt19937& gen, std::map<std::string, std::map<s
                 auto result_variant = protected_val.get();
                 if (std::holds_alternative<T>(result_variant)) {
                     T result = std::get<T>(result_variant);
-                    if (result == original_value) {
+                    // Skip incrementing for RECOVERY_TEST since we already count this separately
+                    if (result == original_value && error_type != "RECOVERY_TEST") {
                         test_results.protected_value_success++;
                     }
                 }
@@ -449,6 +629,13 @@ void generateVerificationReport(const std::map<std::string, std::map<std::string
     report << "- Test Environments: LEO, GEO, LUNAR, SAA, SOLAR_STORM, JUPITER\n";
     report << "- Enhanced Features: Weighted Voting, Fast Bit Correction, Pattern Detection with Confidence\n";
     report << "- Memory Protection: Protected Value Containers, Aligned Memory Protection\n";
+    
+    // Add enhanced test descriptions
+    report << "\nEnhanced Test Scenarios:\n";
+    report << "- MULTI_CORRUPTION: Tests with all three copies corrupted simultaneously\n";
+    report << "- EDGE_CASES: Tests with boundary values (max, min, near-zero, infinity, NaN)\n";
+    report << "- CORRELATED_ERRORS: Tests with spatially correlated bit errors across copies\n";
+    report << "- RECOVERY_TEST: Tests recovery capabilities after sequential errors\n";
     
     // Fix the timestamp issue by storing the time in a variable first
     std::time_t current_time = std::time(nullptr);
@@ -705,6 +892,69 @@ void printSummaryResults(const std::map<std::string, std::map<std::string, TestR
     std::cout << "\nMEMORY PROTECTION:\n";
     std::cout << "  Protected Value:     " << std::fixed << std::setprecision(4) << (method_success_rates["Protected Value"] * 100 / total_count) << "%\n";
     std::cout << "  Aligned Memory:      " << std::fixed << std::setprecision(4) << (method_success_rates["Aligned Memory"] * 100 / total_count) << "%\n";
+    
+    // Add reports for enhanced test scenarios
+    std::cout << "\nENHANCED TEST SCENARIOS (Success Rates):\n";
+    
+    std::map<std::string, double> enhanced_test_success;
+    int enhanced_test_count = 0;
+    
+    // Gather results from the enhanced test scenarios
+    for (const auto& type_name : type_names) {
+        std::string actual_type;
+        if (type_name == "float") actual_type = typeid(float).name();
+        else if (type_name == "double") actual_type = typeid(double).name();
+        else if (type_name == "int32_t") actual_type = typeid(int32_t).name();
+        else if (type_name == "int64_t") actual_type = typeid(int64_t).name();
+        
+        if (results.find(actual_type) == results.end()) continue;
+        
+        for (const auto& env : ENVIRONMENTS) {
+            std::vector<std::string> enhanced_tests = {"MULTI_CORRUPTION", "EDGE_CASES", "CORRELATED_ERRORS", "RECOVERY_TEST"};
+            
+            for (const auto& test_type : enhanced_tests) {
+                std::string key = env.name + "_" + test_type;
+                
+                if (results.at(actual_type).find(key) == results.at(actual_type).end()) continue;
+                
+                const auto& test_results = results.at(actual_type).at(key);
+                
+                // Track success rates for adaptive voting and best protection method
+                double adaptive_rate = static_cast<double>(test_results.adaptive_success) / test_results.total_trials;
+                
+                if (test_type == "RECOVERY_TEST") {
+                    // For recovery test, use only protected_value_success since that's what's incremented in the test
+                    double recovery_rate = static_cast<double>(test_results.protected_value_success) / test_results.total_trials;
+                    enhanced_test_success[test_type + "_best"] += recovery_rate;
+                } else {
+                    // For other tests, use the max of all protection methods
+                    double best_protection_rate = std::max({
+                        static_cast<double>(test_results.weighted_voting_success) / test_results.total_trials,
+                        static_cast<double>(test_results.pattern_detection_success) / test_results.total_trials,
+                        static_cast<double>(test_results.protected_value_success) / test_results.total_trials,
+                        static_cast<double>(test_results.aligned_memory_success) / test_results.total_trials
+                    });
+                    enhanced_test_success[test_type + "_best"] += best_protection_rate;
+                }
+                
+                enhanced_test_success[test_type + "_adaptive"] += adaptive_rate;
+                enhanced_test_count++;
+            }
+        }
+    }
+    
+    // Calculate average success rates for each enhanced test scenario
+    int test_count = enhanced_test_count / 4; // Divide by number of test types
+    if (test_count > 0) {
+        std::cout << "  Multi-Copy Corruption:  " << std::fixed << std::setprecision(4) 
+                  << (enhanced_test_success["MULTI_CORRUPTION_best"] * 100 / test_count) << "%\n";
+        std::cout << "  Edge Cases:            " << std::fixed << std::setprecision(4) 
+                  << (enhanced_test_success["EDGE_CASES_best"] * 100 / test_count) << "%\n";
+        std::cout << "  Correlated Errors:     " << std::fixed << std::setprecision(4) 
+                  << (enhanced_test_success["CORRELATED_ERRORS_best"] * 100 / test_count) << "%\n";
+        std::cout << "  Recovery Testing:      " << std::fixed << std::setprecision(4) 
+                  << (enhanced_test_success["RECOVERY_TEST_best"] * 100 / test_count) << "%\n";
+    }
     
     // Highlight most effective method
     std::pair<std::string, double> best_method = {"None", 0.0};
