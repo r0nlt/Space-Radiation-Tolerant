@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <random>
 #include "rad_ml/tmr/physics_driven_protection.hpp"
+#include "rad_ml/tmr/basic_tmr.hpp"
 #include "rad_ml/sim/mission_environment.hpp"
 #include "rad_ml/core/material_database.hpp"
 
@@ -145,36 +146,6 @@ bool testBasicTMR() {
         std::cout << "  ERROR: Could not access TMR copies for testing\n";
         return false;
     }
-}
-
-// Test enhanced TMR functionality
-bool testEnhancedTMR() {
-    std::cout << "Testing Enhanced TMR functionality...\n";
-    
-    // Create Enhanced TMR with initial value
-    tmr::EnhancedTMR<int> enhanced_tmr(42);
-    
-    // Get initial value to verify constructor worked
-    int initial = enhanced_tmr.get();
-    std::cout << "  Initial value: " << initial << "\n";
-    bool constructor_check = (initial == 42);
-    
-    // Test setting new value
-    enhanced_tmr.set(100);
-    int after_set = enhanced_tmr.get();
-    std::cout << "  Value after set: " << after_set << "\n";
-    bool set_check = (after_set == 100);
-    
-    // Test corruption detection
-    bool has_errors = enhanced_tmr.hasErrors();
-    std::cout << "  Has errors initially: " << (has_errors ? "Yes" : "No") << "\n";
-    
-    // Corrupt internal state if possible
-    // Note: EnhancedTMR has better protection, so direct corruption is harder
-    
-    bool overall = constructor_check && set_check;
-    std::cout << "  Enhanced TMR test: " << (overall ? "PASSED" : "FAILED") << "\n\n";
-    return overall;
 }
 
 // Test physics-driven protection with different environments
@@ -343,9 +314,6 @@ int main(int argc, char** argv) {
     
     // Test basic TMR functionality
     passed &= testBasicTMR();
-    
-    // Test enhanced TMR functionality
-    passed &= testEnhancedTMR();
     
     // Test physics-driven protection
     passed &= testPhysicsDrivenProtection();

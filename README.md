@@ -570,7 +570,7 @@ The radiation-tolerant machine learning framework has several potential applicat
   Alternatively, the framework will use its minimal stub implementation.
 
 - **Boost Not Found**: If Boost libraries are not found, install them:
-  ```bash
+```bash
   # Ubuntu/Debian
   sudo apt-get install libboost-all-dev
   
@@ -594,17 +594,17 @@ The radiation-tolerant machine learning framework has several potential applicat
 The framework includes various debugging tools:
 
 - Set the environment variable `RAD_ML_LOG_LEVEL` to control log verbosity:
-  ```bash
+```bash
   export RAD_ML_LOG_LEVEL=DEBUG  # Options: ERROR, WARNING, INFO, DEBUG, TRACE
   ```
 
 - Enable detailed diagnostics with:
-  ```bash
+```bash
   export RAD_ML_DIAGNOSTICS=1
   ```
 
 - Simulate specific radiation events with the test tools:
-  ```bash
+```bash
   ./build/radiation_event_simulator --environment=LEO --event=SEU
   ```
 

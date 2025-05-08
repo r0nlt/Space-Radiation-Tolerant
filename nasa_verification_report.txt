@@ -1,0 +1,1223 @@
+==========================================================================
+                RADIATION-TOLERANT ML FRAMEWORK                           
+          STATISTICAL VALIDATION AND VERIFICATION REPORT                  
+==========================================================================
+
+Test Parameters:
+- Monte Carlo Simulations: 25000 trials per test case
+- Confidence Level: 95%
+- Test Data Types: float, double, int32_t, int64_t
+- Test Environments: LEO, GEO, LUNAR, SAA, SOLAR_STORM, JUPITER
+- Test Date: 2025-05-08 00:26:59
+
+==========================================================================
+DATA TYPE: float
+==========================================================================
+
+ENVIRONMENT: LEO
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: GEO
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: LUNAR
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: SAA
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: SOLAR_STORM
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    99.9360% [99.9047% - 99.9673%]
+  Bit-Level Voting:   99.9360% [99.9047% - 99.9673%]
+  Word Error Voting:  99.9360% [99.9047% - 99.9673%]
+  Burst Error Voting: 99.9360% [99.9047% - 99.9673%]
+  Adaptive Voting:    99.9360% [99.9047% - 99.9673%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: JUPITER
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+==========================================================================
+DATA TYPE: double
+==========================================================================
+
+ENVIRONMENT: LEO
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: GEO
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: LUNAR
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: SAA
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: SOLAR_STORM
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    99.9600% [99.9352% - 99.9848%]
+  Bit-Level Voting:   99.9600% [99.9352% - 99.9848%]
+  Word Error Voting:  99.9600% [99.9352% - 99.9848%]
+  Burst Error Voting: 99.9600% [99.9352% - 99.9848%]
+  Adaptive Voting:    99.9600% [99.9352% - 99.9848%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: JUPITER
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+==========================================================================
+DATA TYPE: int32_t
+==========================================================================
+
+ENVIRONMENT: LEO
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: GEO
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: LUNAR
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: SAA
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: SOLAR_STORM
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    99.9440% [99.9147% - 99.9733%]
+  Bit-Level Voting:   99.9440% [99.9147% - 99.9733%]
+  Word Error Voting:  99.9440% [99.9147% - 99.9733%]
+  Burst Error Voting: 99.9440% [99.9147% - 99.9733%]
+  Adaptive Voting:    99.9440% [99.9147% - 99.9733%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: JUPITER
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+==========================================================================
+DATA TYPE: int64_t
+==========================================================================
+
+ENVIRONMENT: LEO
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: GEO
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: LUNAR
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: SAA
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: SOLAR_STORM
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    99.9880% [99.9744% - 100.0000%]
+  Bit-Level Voting:   99.9880% [99.9744% - 100.0000%]
+  Word Error Voting:  99.9880% [99.9744% - 100.0000%]
+  Burst Error Voting: 99.9880% [99.9744% - 100.0000%]
+  Adaptive Voting:    99.9880% [99.9744% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+ENVIRONMENT: JUPITER
+--------------------------------------------------------------------------
+Error Type: SINGLE_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: MULTI_BIT
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: BURST
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: WORD
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+Error Type: COMBINED
+  Total Trials: 25000
+
+  Standard Voting:    100.0000% [100.0000% - 100.0000%]
+  Bit-Level Voting:   100.0000% [100.0000% - 100.0000%]
+  Word Error Voting:  100.0000% [100.0000% - 100.0000%]
+  Burst Error Voting: 100.0000% [100.0000% - 100.0000%]
+  Adaptive Voting:    100.0000% [100.0000% - 100.0000%]
+
+--------------------------------------------------------------------------
+
+==========================================================================
+                             SUMMARY                                      
+==========================================================================
+
+NASA/ESA Verification Status:
+- LEO            : 100.0000% (PASS)
+- GEO            : 100.0000% (PASS)
+- LUNAR          : 100.0000% (PASS)
+- SAA            : 100.0000% (PASS)
+- SOLAR_STORM    : 100.0000% (PASS)
+- JUPITER        : 100.0000% (PASS)
+
+Overall Framework Readiness Level:
+- Overall Success Rate: 100.0000%
+- Framework Status: READY FOR MISSION DEPLOYMENT
+
+==========================================================================
+                          END OF REPORT                                   
+==========================================================================

@@ -6,9 +6,37 @@
 #include <memory>
 #include <array>
 #include <functional>
+#include "rad_ml/testing/radiation_simulator.hpp"
+#include "rad_ml/testing/protection_techniques.hpp"
 
 namespace rad_ml {
 namespace validation {
+
+// Forward declarations
+class NASAESAVerificationProtocol;
+
+// Reference model data structure
+struct ReferenceModelData {
+    std::vector<double> seu_rates;
+    std::vector<double> let_values;
+    std::vector<double> cross_sections;
+    std::vector<double> mtbf_values;
+    std::vector<double> ber_values;
+};
+
+// Protection technique results structure
+struct ProtectionTechniqueResults {
+    double effectiveness_ratio;
+    double reference_effectiveness;
+    double resource_overhead;
+    double power_overhead;
+    double performance_overhead;
+    bool passed_verification;
+};
+
+// Helper functions
+double calculateCorrelation(double measured, double reference);
+double calculatePercentDifference(double measured, double reference);
 
 /**
  * @brief NASA/ESA Space Radiation Framework Verification Protocol
@@ -229,6 +257,20 @@ public:
         };
     }
     
+    // Helper function to convert to testing::ProtectionTechnique
+    static testing::ProtectionTechnique toTestingProtectionTechnique(ProtectionTechnique tech) {
+        switch (tech) {
+            case ProtectionTechnique::TMR:
+                return testing::ProtectionTechnique::TMR;
+            case ProtectionTechnique::EDAC:
+                return testing::ProtectionTechnique::EDAC;
+            case ProtectionTechnique::SCRUBBING:
+                return testing::ProtectionTechnique::SCRUBBING;
+            default:
+                return testing::ProtectionTechnique::NONE;
+        }
+    }
+
 private:
     std::vector<TestEnvironment> environments_;
     std::vector<ProtectionTechnique> techniques_;
@@ -252,6 +294,15 @@ private:
     
     // Generate verification statement
     std::string generateVerificationStatement(const VerificationReport& report);
+    
+    // Helper functions
+    testing::RadiationSimulator::EnvironmentParams getEnvironmentParams(TestEnvironment env);
+    ReferenceModelData getReferenceModelData(TestEnvironment env);
+    ProtectionTechniqueResults evaluateProtectionTechnique(ProtectionTechnique tech);
+    void calculateRequiredModifications(MissionSuitability& suitability, const RadiationHardeningResult& result);
+    double calculateRequiredShielding(const RadiationHardeningResult& result);
+    void generateSuitabilityRationale(MissionSuitability& suitability, const RadiationHardeningResult& result);
+    bool determineOverallCompliance(const VerificationReport& report);
 };
 
 } // namespace validation
