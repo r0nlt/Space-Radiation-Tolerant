@@ -1,0 +1,43 @@
+# Verification tests for rad-tolerant-ml framework
+
+# Add executable for Monte Carlo validation test
+add_executable(monte_carlo_validation monte_carlo_validation.cpp)
+target_link_libraries(monte_carlo_validation rad_ml_tmr rad_ml_testing)
+add_test(NAME monte_carlo_validation COMMAND monte_carlo_validation)
+
+# Add executable for space-optimized Monte Carlo validation
+add_executable(space_monte_carlo_validation space_monte_carlo_validation.cpp)
+target_link_libraries(space_monte_carlo_validation rad_ml_tmr rad_ml_testing)
+target_compile_definitions(space_monte_carlo_validation PRIVATE ENABLE_TESTING=1)
+add_test(NAME space_monte_carlo_validation COMMAND space_monte_carlo_validation)
+
+# Add executable for realistic space radiation validation
+add_executable(realistic_space_validation realistic_space_validation.cpp)
+target_link_libraries(realistic_space_validation rad_ml_tmr rad_ml_testing)
+target_compile_definitions(realistic_space_validation PRIVATE ENABLE_TESTING=1)
+add_test(NAME realistic_space_validation COMMAND realistic_space_validation)
+
+# Add other verification tests
+add_executable(framework_verification_test framework_verification_test.cpp)
+target_link_libraries(framework_verification_test rad_ml_tmr rad_ml_testing)
+add_test(NAME framework_verification_test COMMAND framework_verification_test)
+
+add_executable(enhanced_tmr_test enhanced_tmr_test.cpp)
+target_link_libraries(enhanced_tmr_test rad_ml_tmr rad_ml_testing)
+add_test(NAME enhanced_tmr_test COMMAND enhanced_tmr_test)
+
+add_executable(scientific_validation_test scientific_validation_test.cpp)
+target_link_libraries(scientific_validation_test rad_ml_tmr rad_ml_testing)
+add_test(NAME scientific_validation_test COMMAND scientific_validation_test)
+
+add_executable(radiation_stress_test radiation_stress_test.cpp)
+target_link_libraries(radiation_stress_test rad_ml_tmr rad_ml_testing)
+add_test(NAME radiation_stress_test COMMAND radiation_stress_test)
+
+add_executable(systematic_fault_test systematic_fault_test.cpp)
+target_link_libraries(systematic_fault_test rad_ml_tmr rad_ml_testing)
+add_test(NAME systematic_fault_test COMMAND systematic_fault_test)
+
+add_executable(modern_features_test modern_features_test.cpp)
+target_link_libraries(modern_features_test rad_ml_tmr rad_ml_testing)
+add_test(NAME modern_features_test COMMAND modern_features_test) 

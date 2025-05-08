@@ -85,6 +85,7 @@ enum class FaultPattern {
  * @class EnhancedTMR
  * @brief Provides enhanced voting strategies for different radiation fault patterns
  */
+template <typename T>
 class EnhancedTMR {
 public:
     /// Statistics about detected errors
@@ -229,8 +230,10 @@ public:
     
     /**
      * @brief Repair any corrupted values and checksums
+     *
+     * @return true if repair was successful
      */
-    void repair() {
+    bool repair() {
         T corrected_value = get(); // This will do majority voting
         
         // Forcibly correct all copies
@@ -240,6 +243,8 @@ public:
         
         // Recalculate checksums
         recalculateChecksums();
+        
+        return true;
     }
     
     /**
@@ -298,15 +303,10 @@ public:
     }
     
     /**
-     * Standard TMR majority voting
-     * 
-     * @param a First copy
-     * @param b Second copy
-     * @param c Third copy
-     * @return The majority value or first value if no majority
+     * Standard majority voting strategy
      */
-    template<typename T>
-    static T standardVote(const T& a, const T& b, const T& c) {
+    template<typename U>
+    static U standardVote(const U& a, const U& b, const U& c) {
         if (a == b) return a;
         if (a == c) return a;
         if (b == c) return b;
@@ -316,25 +316,20 @@ public:
     }
     
     /**
-     * Bit-level majority voting for handling single-bit errors
-     * 
-     * @param a First copy
-     * @param b Second copy
-     * @param c Third copy
-     * @return Value with each bit determined by majority vote
+     * Bit-level voting strategy for integer types
      */
-    template<typename T>
-    static T bitLevelVote(const T& a, const T& b, const T& c) {
-        static_assert(std::is_arithmetic<T>::value, "Only arithmetic types are supported");
+    template<typename U>
+    static U bitLevelVote(const U& a, const U& b, const U& c) {
+        static_assert(std::is_arithmetic<U>::value, "Only arithmetic types are supported");
         
         using UintType = typename std::conditional<
-            sizeof(T) == 8, 
+            sizeof(U) == 8, 
             uint64_t, 
             typename std::conditional<
-                sizeof(T) == 4,
+                sizeof(U) == 4,
                 uint32_t,
                 typename std::conditional<
-                    sizeof(T) == 2,
+                    sizeof(U) == 2,
                     uint16_t,
                     uint8_t
                 >::type
@@ -342,12 +337,12 @@ public:
         >::type;
         
         UintType a_bits, b_bits, c_bits;
-        std::memcpy(&a_bits, &a, sizeof(T));
-        std::memcpy(&b_bits, &b, sizeof(T));
-        std::memcpy(&c_bits, &c, sizeof(T));
+        std::memcpy(&a_bits, &a, sizeof(U));
+        std::memcpy(&b_bits, &b, sizeof(U));
+        std::memcpy(&c_bits, &c, sizeof(U));
         
         UintType result = 0;
-        for (size_t i = 0; i < sizeof(T) * 8; i++) {
+        for (size_t i = 0; i < sizeof(U) * 8; i++) {
             UintType bit_a = (a_bits >> i) & 1;
             UintType bit_b = (b_bits >> i) & 1;
             UintType bit_c = (c_bits >> i) & 1;
@@ -357,32 +352,24 @@ public:
             result |= (majority_bit << i);
         }
         
-        T final_result;
-        std::memcpy(&final_result, &result, sizeof(T));
+        U final_result;
+        std::memcpy(&final_result, &result, sizeof(U));
         return final_result;
     }
     
     /**
-     * Enhanced voting for WORD_ERROR pattern using Hamming distance
-     * 
-     * This approach prioritizes values that are closer to each other in
-     * Hamming distance space, making it more robust for word-level errors.
-     * 
-     * @param a First copy
-     * @param b Second copy
-     * @param c Third copy
-     * @return Best value based on Hamming distance analysis
+     * Word-level voting strategy for handling word corruptions
      */
-    template<typename T>
-    static T wordErrorVote(const T& a, const T& b, const T& c) {
-        static_assert(std::is_arithmetic<T>::value, "Only arithmetic types are supported");
+    template<typename U>
+    static U wordErrorVote(const U& a, const U& b, const U& c) {
+        static_assert(std::is_arithmetic<U>::value, "Only arithmetic types are supported");
         
-        using UintType = typename std::conditional<sizeof(T) <= 4, uint32_t, uint64_t>::type;
+        using UintType = typename std::conditional<sizeof(U) <= 4, uint32_t, uint64_t>::type;
         
         UintType a_bits, b_bits, c_bits;
-        std::memcpy(&a_bits, &a, sizeof(T));
-        std::memcpy(&b_bits, &b, sizeof(T));
-        std::memcpy(&c_bits, &c, sizeof(T));
+        std::memcpy(&a_bits, &a, sizeof(U));
+        std::memcpy(&b_bits, &b, sizeof(U));
+        std::memcpy(&c_bits, &c, sizeof(U));
         
         // Calculate Hamming distances between all values
         int dist_ab = hammingDistance(a_bits, b_bits);
@@ -403,31 +390,23 @@ public:
     }
     
     /**
-     * Enhanced voting for BURST_ERROR pattern using segment-based voting
-     * 
-     * Divides the value into 8-bit segments and performs voting on each segment separately,
-     * which is effective for burst errors that corrupt consecutive bits.
-     * 
-     * @param a First copy
-     * @param b Second copy
-     * @param c Third copy
-     * @return Reconstructed value with burst errors corrected
+     * Burst error voting strategy for handling clustered bit errors
      */
-    template<typename T>
-    static T burstErrorVote(const T& a, const T& b, const T& c) {
-        static_assert(std::is_arithmetic<T>::value, "Only arithmetic types are supported");
+    template<typename U>
+    static U burstErrorVote(const U& a, const U& b, const U& c) {
+        static_assert(std::is_arithmetic<U>::value, "Only arithmetic types are supported");
         
-        using UintType = typename std::conditional<sizeof(T) <= 4, uint32_t, uint64_t>::type;
+        using UintType = typename std::conditional<sizeof(U) <= 4, uint32_t, uint64_t>::type;
         
         UintType a_bits, b_bits, c_bits;
-        std::memcpy(&a_bits, &a, sizeof(T));
-        std::memcpy(&b_bits, &b, sizeof(T));
-        std::memcpy(&c_bits, &c, sizeof(T));
+        std::memcpy(&a_bits, &a, sizeof(U));
+        std::memcpy(&b_bits, &b, sizeof(U));
+        std::memcpy(&c_bits, &c, sizeof(U));
         
         // Perform segment-based voting
         UintType result = 0;
         constexpr int SEGMENT_SIZE = 8; // 8-bit segments
-        constexpr int NUM_SEGMENTS = sizeof(T) * 8 / SEGMENT_SIZE;
+        constexpr int NUM_SEGMENTS = sizeof(U) * 8 / SEGMENT_SIZE;
         
         for (int segment = 0; segment < NUM_SEGMENTS; segment++) {
             int shift = segment * SEGMENT_SIZE;
@@ -454,22 +433,17 @@ public:
             result |= (segment_result << shift);
         }
         
-        T final_result;
-        std::memcpy(&final_result, &result, sizeof(T));
+        U final_result;
+        std::memcpy(&final_result, &result, sizeof(U));
         return final_result;
     }
     
     /**
-     * Adaptive voting mechanism that selects the best strategy based on the fault pattern
-     * 
-     * @param a First copy
-     * @param b Second copy
-     * @param c Third copy
-     * @param pattern The detected or expected fault pattern
-     * @return Best value based on specialized voting for the given pattern
+     * Adaptive voting strategy that selects the appropriate algorithm
+     * based on the detected fault pattern
      */
-    template<typename T>
-    static T adaptiveVote(const T& a, const T& b, const T& c, FaultPattern pattern) {
+    template<typename U>
+    static U adaptiveVote(const U& a, const U& b, const U& c, FaultPattern pattern) {
         // Fast path for exact matches
         if (a == b) return a;
         if (a == c) return a;
@@ -498,9 +472,9 @@ public:
             default:
                 // For unknown patterns, use most conservative approach
                 // Try all strategies and select best result
-                T bit_result = bitLevelVote(a, b, c);
-                T word_result = wordErrorVote(a, b, c);
-                T burst_result = burstErrorVote(a, b, c);
+                U bit_result = bitLevelVote(a, b, c);
+                U word_result = wordErrorVote(a, b, c);
+                U burst_result = burstErrorVote(a, b, c);
                 
                 // Select result with highest confidence
                 return selectMostConfidentResult(a, b, c, bit_result, word_result, burst_result);
@@ -508,23 +482,19 @@ public:
     }
     
     /**
-     * Detect the most likely fault pattern based on the values
-     * 
-     * @param a First copy
-     * @param b Second copy
-     * @param c Third copy
-     * @return The detected fault pattern
+     * Detect the likely fault pattern by analyzing the differences
+     * between the three values
      */
-    template<typename T>
-    static FaultPattern detectFaultPattern(const T& a, const T& b, const T& c) {
-        static_assert(std::is_arithmetic<T>::value, "Only arithmetic types are supported");
+    template<typename U>
+    static FaultPattern detectFaultPattern(const U& a, const U& b, const U& c) {
+        static_assert(std::is_arithmetic<U>::value, "Only arithmetic types are supported");
         
-        using UintType = typename std::conditional<sizeof(T) <= 4, uint32_t, uint64_t>::type;
+        using UintType = typename std::conditional<sizeof(U) <= 4, uint32_t, uint64_t>::type;
         
         UintType a_bits, b_bits, c_bits;
-        std::memcpy(&a_bits, &a, sizeof(T));
-        std::memcpy(&b_bits, &b, sizeof(T));
-        std::memcpy(&c_bits, &c, sizeof(T));
+        std::memcpy(&a_bits, &a, sizeof(U));
+        std::memcpy(&b_bits, &b, sizeof(U));
+        std::memcpy(&c_bits, &c, sizeof(U));
         
         // Calculate XOR to see the differing bits
         UintType diff_ab = a_bits ^ b_bits;
@@ -555,6 +525,27 @@ public:
         return FaultPattern::UNKNOWN;
     }
     
+public:
+#ifdef ENABLE_TESTING
+    // Test hooks for direct access to internal state
+    void setForTesting(int index, const T& value) {
+        if (index >= 0 && index < 3) {
+            values_[index] = value;
+        }
+    }
+    
+    void recalculateChecksumsForTesting() {
+        recalculateChecksums();
+    }
+    
+    T getForTesting(int index) const {
+        if (index >= 0 && index < 3) {
+            return values_[index];
+        }
+        return T{};
+    }
+#endif // ENABLE_TESTING
+
 private:
     /// The redundant copies of the value
     std::array<T, 3> values_;
@@ -716,16 +707,16 @@ private:
     }
     
     /**
-     * Reconstruct value from the closest pair (used in word error voting)
+     * Reconstruct a value from the two closest copies
      */
-    template<typename T>
-    static T reconstructFromClosestPair(const T& a, const T& b, const T& outlier) {
-        using UintType = typename std::conditional<sizeof(T) <= 4, uint32_t, uint64_t>::type;
+    template<typename U>
+    static U reconstructFromClosestPair(const U& a, const U& b, const U& outlier) {
+        using UintType = typename std::conditional<sizeof(U) <= 4, uint32_t, uint64_t>::type;
         
         UintType a_bits, b_bits, outlier_bits;
-        std::memcpy(&a_bits, &a, sizeof(T));
-        std::memcpy(&b_bits, &b, sizeof(T));
-        std::memcpy(&outlier_bits, &outlier, sizeof(T));
+        std::memcpy(&a_bits, &a, sizeof(U));
+        std::memcpy(&b_bits, &b, sizeof(U));
+        std::memcpy(&outlier_bits, &outlier, sizeof(U));
         
         // For bits that agree between a and b, use that value
         // For bits that disagree, use bit-level voting
@@ -734,7 +725,7 @@ private:
         
         // For disagreeing bits, do bit-by-bit comparison with outlier
         UintType disagreement_mask = (a_bits ^ b_bits);
-        for (size_t i = 0; i < sizeof(T) * 8; i++) {
+        for (size_t i = 0; i < sizeof(U) * 8; i++) {
             UintType mask = 1ULL << i;
             if (disagreement_mask & mask) {
                 // This is a disagreeing bit - check with outlier
@@ -754,8 +745,8 @@ private:
             }
         }
         
-        T final_result;
-        std::memcpy(&final_result, &result, sizeof(T));
+        U final_result;
+        std::memcpy(&final_result, &result, sizeof(U));
         return final_result;
     }
     
@@ -778,11 +769,11 @@ private:
     }
     
     /**
-     * Select the most confident result among multiple voting algorithms
+     * Select the most confident result from different voting strategies
      */
-    template<typename T>
-    static T selectMostConfidentResult(const T& a, const T& b, const T& c,
-                                    const T& bit_result, const T& word_result, const T& burst_result) {
+    template<typename U>
+    static U selectMostConfidentResult(const U& a, const U& b, const U& c,
+                                     const U& bit_result, const U& word_result, const U& burst_result) {
         // Count how many of the original values agree with each result
         int bit_confidence = 0;
         int word_confidence = 0;
