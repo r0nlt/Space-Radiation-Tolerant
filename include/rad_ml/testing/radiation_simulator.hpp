@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <cstdint>
 
 namespace rad_ml {
 namespace testing {

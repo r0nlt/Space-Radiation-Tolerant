@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find required packages
 find_package(Threads REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system filesystem)
 
 # Try to find Eigen3 (if available)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -84,6 +86,7 @@ endif()
 # Add fault injection implementation
 add_library(rad_ml_testing
     src/testing/fault_injection.cpp
+    src/testing/protection_techniques.cpp
 )
 target_include_directories(rad_ml_testing PRIVATE include)
 
@@ -93,7 +96,10 @@ add_executable(nasa_esa_standard_test
     src/validation/nasa_esa_validation_protocol.cpp
 )
 target_include_directories(nasa_esa_standard_test PRIVATE include src)
-target_link_libraries(nasa_esa_standard_test ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(nasa_esa_standard_test 
+    rad_ml_testing
+    ${CMAKE_THREAD_LIBS_INIT}
+)
 
 # Add our verification test
 add_executable(framework_verification_test
