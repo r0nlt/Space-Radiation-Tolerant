@@ -1,0 +1,70 @@
+=== Basic Protection ===
+Result: Normal vs Corrupted Output Comparison
+Statistics:
+  Mean: 0.37136
+  Std Dev: 4.40782e-08
+  95% CI: ±2.732e-09
+  Min: 0.37136
+  Max: 0.37136
+  Sample Size: 1000
+
+=== JUPITER Environment ===
+Result: Success Rate Analysis
+Statistics:
+  Mean: 100
+  Std Dev: 0
+  95% CI: ±0
+  Min: 100
+  Max: 100
+  Sample Size: 10
+
+=== MARS Environment ===
+Result: Success Rate Analysis
+Statistics:
+  Mean: 100
+  Std Dev: 0
+  95% CI: ±0
+  Min: 100
+  Max: 100
+  Sample Size: 10
+
+=== LUNAR Environment ===
+Result: Success Rate Analysis
+Statistics:
+  Mean: 100
+  Std Dev: 0
+  95% CI: ±0
+  Min: 100
+  Max: 100
+  Sample Size: 10
+
+=== DEEP_SPACE Environment ===
+Result: Success Rate Analysis
+Statistics:
+  Mean: 100
+  Std Dev: 0
+  95% CI: ±0
+  Min: 100
+  Max: 100
+  Sample Size: 10
+
+=== Performance Metrics ===
+Result: Execution Time Analysis
+Statistics:
+  Mean: 1.13099e-06
+  Std Dev: 1.23623e-06
+  95% CI: ±7.66221e-09
+  Min: 1e-06
+  Max: 7.1703e-05
+  Sample Size: 100000
+
+=== Concurrent Faults ===
+Result: Success Rate Analysis
+Statistics:
+  Mean: 100
+  Std Dev: 0
+  95% CI: ±0
+  Min: 100
+  Max: 100
+  Sample Size: 10
+
