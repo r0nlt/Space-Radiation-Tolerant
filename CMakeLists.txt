@@ -131,6 +131,13 @@ add_executable(monte_carlo_validation
     test/verification/monte_carlo_validation.cpp
 )
 
+# Add modern features test
+add_executable(modern_features_test
+    test/verification/modern_features_test.cpp
+)
+target_link_libraries(modern_features_test rad_ml_testing)
+target_compile_features(modern_features_test PRIVATE cxx_std_20)
+
 # Add include directories for our verification tests
 target_include_directories(framework_verification_test PRIVATE include src)
 target_include_directories(scientific_validation_test PRIVATE include src)
@@ -138,6 +145,7 @@ target_include_directories(radiation_stress_test PRIVATE include src)
 target_include_directories(systematic_fault_test PRIVATE include src)
 target_include_directories(enhanced_tmr_test PRIVATE include src)
 target_include_directories(monte_carlo_validation PRIVATE include src)
+target_include_directories(modern_features_test PRIVATE include src)
 
 # Link libraries for our verification tests
 target_link_libraries(framework_verification_test
@@ -171,6 +179,11 @@ target_link_libraries(monte_carlo_validation
     ${CMAKE_THREAD_LIBS_INIT}
 )
 
+target_link_libraries(modern_features_test
+    rad_ml_testing
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
 if(Eigen3_FOUND OR EIGEN3_FOUND)
     target_link_libraries(framework_verification_test Eigen3::Eigen)
     target_link_libraries(scientific_validation_test Eigen3::Eigen)
@@ -178,6 +191,7 @@ if(Eigen3_FOUND OR EIGEN3_FOUND)
     target_link_libraries(systematic_fault_test Eigen3::Eigen)
     target_link_libraries(enhanced_tmr_test Eigen3::Eigen)
     target_link_libraries(monte_carlo_validation Eigen3::Eigen)
+    target_link_libraries(modern_features_test Eigen3::Eigen)
 endif()
 
 # Enable testing
@@ -191,6 +205,7 @@ add_test(NAME radiation_stress_test COMMAND radiation_stress_test)
 add_test(NAME systematic_fault_test COMMAND systematic_fault_test)
 add_test(NAME enhanced_tmr_test COMMAND enhanced_tmr_test)
 add_test(NAME monte_carlo_validation COMMAND monte_carlo_validation)
+add_test(NAME modern_features_test COMMAND modern_features_test)
 
 # Print configuration summary
 message(STATUS "Configured RadiationTolerantML NASA/ESA Standard Test:")
