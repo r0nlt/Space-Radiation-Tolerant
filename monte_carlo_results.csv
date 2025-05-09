@@ -1,0 +1,43 @@
+Mission,Protection,ErrorModel,ErrorRate,Accuracy,BaselineAccuracy,AccuracyPreservation,TotalBits,FlippedBits,ErrorsDetected,ErrorsCorrected,UncorrectableErrors,CorrectionEffectiveness,MemoryOverhead,ExecutionTime
+LEO Equatorial,None,SingleBit,1e-06,0,35,0,20100000,0,0,0,0,1,0,6.81693
+LEO Equatorial,Minimal,SingleBit,1e-06,0,35,0,20100000,180,180,180,0,1,10,6.18605
+LEO Equatorial,Moderate,SingleBit,1e-06,0,35,0,20100000,0,0,0,0,1,50,5.52178
+LEO Equatorial,High,SingleBit,1e-06,0,35,0,20100000,0,0,0,0,1,100,6.2725
+LEO Equatorial,Very High,SingleBit,1e-06,0,35,0,20100000,0,0,0,0,1,200,6.09634
+LEO Equatorial,Adaptive,SingleBit,1e-06,0,35,0,20100000,0,0,0,0,1,75,5.47189
+LEO Polar,None,SingleBit,2.5e-06,0,35,0,20100000,117,0,0,0,1,0,5.96597
+LEO Polar,Minimal,SingleBit,2.5e-06,0,35,0,20100000,30,30,30,0,1,10,5.65671
+LEO Polar,Moderate,SingleBit,2.5e-06,0,35,0,20100000,0,0,0,0,1,50,5.26467
+LEO Polar,High,SingleBit,2.5e-06,0,35,0,20100000,0,0,0,0,1,100,5.55526
+LEO Polar,Very High,SingleBit,2.5e-06,0,35,0,20100000,0,0,0,0,1,200,5.3476
+LEO Polar,Adaptive,SingleBit,2.5e-06,0,35,0,20100000,1,1,1,0,1,75,6.09434
+MEO,None,AdjacentBits,5e-06,0,35,0,20100000,22,0,0,0,1,0,5.22558
+MEO,Minimal,AdjacentBits,5e-06,0,35,0,20100000,250,250,250,0,1,10,5.3327
+MEO,Moderate,AdjacentBits,5e-06,0,35,0,20100000,155,155,155,0,1,50,6.27697
+MEO,High,AdjacentBits,5e-06,0,35,0,20100000,265,265,265,0,1,100,6.05659
+MEO,Very High,AdjacentBits,5e-06,0,35,0,20100000,94,94,94,0,1,200,5.26741
+MEO,Adaptive,AdjacentBits,5e-06,0,35,0,20100000,32,32,32,0,1,75,5.42538
+GEO,None,SingleBit,1e-05,0,35,0,20100000,147,0,0,0,1,0,5.34997
+GEO,Minimal,SingleBit,1e-05,0,35,0,20100000,73,73,0,73,0,10,5.93339
+GEO,Moderate,SingleBit,1e-05,0,35,0,20100000,221,221,0,221,0,50,5.20943
+GEO,High,SingleBit,1e-05,0,35,0,20100000,115,115,115,0,1,100,5.52846
+GEO,Very High,SingleBit,1e-05,0,35,0,20100000,5,5,5,0,1,200,5.30722
+GEO,Adaptive,SingleBit,1e-05,0,35,0,20100000,210,210,210,0,1,75,5.91972
+Lunar,None,AdjacentBits,2e-05,0,35,0,20100000,658,0,0,0,1,0,5.66389
+Lunar,Minimal,AdjacentBits,2e-05,0,35,0,20100000,276,276,238,38,0.862319,10,5.81883
+Lunar,Moderate,AdjacentBits,2e-05,0,35,0,20100000,403,403,389,14,0.965261,50,5.32917
+Lunar,High,AdjacentBits,2e-05,0,35,0,20100000,140,140,140,0,1,100,5.2427
+Lunar,Very High,AdjacentBits,2e-05,0,35,0,20100000,449,449,249,200,0.554566,200,5.65329
+Lunar,Adaptive,AdjacentBits,2e-05,0,35,0,20100000,352,352,352,0,1,75,5.99211
+Mars,None,RandomMulti,5e-05,0,35,0,20100000,825,0,0,0,1,0,5.46013
+Mars,Minimal,RandomMulti,5e-05,0,35,0,20100000,1332,1332,966,366,0.725225,10,5.4321
+Mars,Moderate,RandomMulti,5e-05,0,35,0,20100000,654,654,497,157,0.759939,50,5.4145
+Mars,High,RandomMulti,5e-05,0,35,0,20100000,1145,1145,861,284,0.751965,100,6.57411
+Mars,Very High,RandomMulti,5e-05,0,35,0,20100000,1133,1133,794,339,0.700794,200,8.65835
+Mars,Adaptive,RandomMulti,5e-05,0,35,0,20100000,921,921,698,223,0.757872,75,5.62581
+Solar Probe,None,RandomMulti,0.0001,0,35,0,1275000,180,0,0,0,1,0,5.76626
+Solar Probe,Minimal,RandomMulti,0.0001,0,35,0,1275000,32,32,22,10,0.6875,10,5.53915
+Solar Probe,Moderate,RandomMulti,0.0001,0,35,0,1275000,92,92,92,0,1,50,6.0431
+Solar Probe,High,RandomMulti,0.0001,0,35,0,1275000,41,41,20,21,0.487805,100,5.51409
+Solar Probe,Very High,RandomMulti,0.0001,0,35,0,1275000,37,37,0,37,0,200,5.18944
+Solar Probe,Adaptive,RandomMulti,0.0001,0,35,0,1275000,104,104,89,15,0.855769,75,5.84798

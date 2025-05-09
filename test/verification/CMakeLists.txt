@@ -5,6 +5,11 @@ add_executable(monte_carlo_validation monte_carlo_validation.cpp)
 target_link_libraries(monte_carlo_validation rad_ml_tmr rad_ml_testing)
 add_test(NAME monte_carlo_validation COMMAND monte_carlo_validation)
 
+# Add executable for Monte Carlo Neural Network validation test
+add_executable(monte_carlo_neuralnetwork monte_carlo_neuralnetwork.cpp)
+target_link_libraries(monte_carlo_neuralnetwork rad_ml_tmr rad_ml_testing)
+add_test(NAME monte_carlo_neuralnetwork COMMAND monte_carlo_neuralnetwork)
+
 # Add executable for space-optimized Monte Carlo validation
 add_executable(space_monte_carlo_validation space_monte_carlo_validation.cpp)
 target_link_libraries(space_monte_carlo_validation rad_ml_tmr rad_ml_testing)
