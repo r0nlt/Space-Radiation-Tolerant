@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <complex>
+
 namespace Eigen {
 
 // Matrix class
@@ -28,6 +30,10 @@ public:
 // Common matrix types
 typedef Matrix<double, 3, 3> Matrix3d;
 typedef Vector<double, -1> VectorXd;
+
+// Add the missing types used in your quantum_field_theory.hpp
+typedef Vector<double, 3> Vector3d;
+typedef Matrix<std::complex<double>, Dynamic, Dynamic> MatrixXcd;
 
 // Tensor class for multi-dimensional arrays
 template <typename Scalar, int NumDimensions>

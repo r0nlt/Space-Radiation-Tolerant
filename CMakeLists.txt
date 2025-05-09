@@ -39,6 +39,15 @@ add_library(rad_ml_testing STATIC
     src/testing/protection_techniques.cpp
 )
 
+# Define the quantum field theory library
+add_library(rad_ml_qft STATIC
+    src/rad_ml/physics/quantum_field_theory.cpp
+)
+
+target_link_libraries(rad_ml_qft
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
 # Define NASA/ESA Standard Test Runner
 add_executable(nasa_esa_standard_test
     src/nasa_esa_standard_runner.cpp
@@ -95,6 +104,15 @@ add_executable(modern_features_test test/verification/modern_features_test.cpp)
 target_link_libraries(modern_features_test rad_ml_tmr rad_ml_testing)
 add_test(NAME modern_features_test COMMAND modern_features_test)
 
+# Add the quantum field validation test
+add_executable(quantum_field_validation_test test/verification/quantum_field_validation_test.cpp)
+target_link_libraries(quantum_field_validation_test 
+    rad_ml_tmr 
+    rad_ml_testing 
+    rad_ml_qft
+)
+add_test(NAME quantum_field_validation_test COMMAND quantum_field_validation_test)
+
 # Add the neural network validation test
 add_executable(neural_network_validation
   test/verification/monte_carlo_neuralnetwork.cpp
@@ -113,6 +131,17 @@ target_link_libraries(monte_carlo_neuralnetwork
   PRIVATE
   rad_ml_tmr
   rad_ml_testing
+)
+
+# Add the quantum field theory example
+add_executable(quantum_field_example
+  examples/quantum_field_example.cpp
+)
+target_link_libraries(quantum_field_example
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+  rad_ml_qft
 )
 
 # Optional: Link OpenCV if visualization is enabled
@@ -135,6 +164,7 @@ endif()
 message(STATUS "Configured RadiationTolerantML NASA/ESA Standard Test:")
 message(STATUS "  C++ Standard: C++${CMAKE_CXX_STANDARD}")
 message(STATUS "  Build Type: ${BUILD_TYPE}")
+message(STATUS "  Quantum Field Theory: Enabled")
 
 # Enable testing flag if needed
 if(BUILD_TESTING)
