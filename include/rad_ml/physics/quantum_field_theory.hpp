@@ -152,6 +152,7 @@ public:
      * Calculate field propagator
      */
     Eigen::MatrixXcd calculatePropagator(const Eigen::Vector3d& momentum) const;
+
 };
 
 /**

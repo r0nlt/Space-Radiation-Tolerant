@@ -4,6 +4,7 @@
  */
 
 #include "../../include/rad_ml/testing/fault_injection.hpp"
+#include <iostream>
 
 namespace rad_ml {
 namespace testing {
@@ -140,6 +141,11 @@ std::vector<int> SystematicFaultInjector::getBitsToFlip(FaultPattern pattern,
     }
     
     return bits_to_flip;
+}
+
+// Stub implementation
+void injectFault() {
+    // Placeholder implementation
 }
 
 } // namespace testing

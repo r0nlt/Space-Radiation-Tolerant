@@ -3,6 +3,7 @@
 #include <cmath>
 #include <array>
 #include <random>
+#include <iostream>
 
 namespace rad_ml {
 namespace testing {
@@ -451,6 +452,11 @@ void calculateMetrics(
     
     // Calculate BER
     result.ber = static_cast<double>(result.total_errors - result.corrections_successful) / total_bits;
+}
+
+// Stub implementation for protection techniques
+void applyProtection() {
+    // Placeholder implementation
 }
 
 } // namespace testing
