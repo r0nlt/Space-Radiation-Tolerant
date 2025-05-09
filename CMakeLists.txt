@@ -95,6 +95,36 @@ add_executable(modern_features_test test/verification/modern_features_test.cpp)
 target_link_libraries(modern_features_test rad_ml_tmr rad_ml_testing)
 add_test(NAME modern_features_test COMMAND modern_features_test)
 
+# Add the neural network validation test
+add_executable(neural_network_validation
+  test/verification/monte_carlo_neuralnetwork.cpp
+)
+target_link_libraries(neural_network_validation
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+)
+
+# Add the neural Monte Carlo validation test
+add_executable(monte_carlo_neuralnetwork
+  test/verification/monte_carlo_neuralnetwork.cpp
+)
+target_link_libraries(monte_carlo_neuralnetwork
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+)
+
+# Optional: Link OpenCV if visualization is enabled
+option(ENABLE_VISUALIZATION "Enable visualization with OpenCV" OFF)
+if(ENABLE_VISUALIZATION)
+  find_package(OpenCV REQUIRED)
+  target_link_libraries(neural_network_validation PRIVATE ${OpenCV_LIBS})
+  target_compile_definitions(neural_network_validation PRIVATE ENABLE_VISUALIZATION)
+  target_link_libraries(monte_carlo_neuralnetwork PRIVATE ${OpenCV_LIBS})
+  target_compile_definitions(monte_carlo_neuralnetwork PRIVATE ENABLE_VISUALIZATION)
+endif()
+
 # Display configuration summary
 set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
 if(NOT BUILD_TYPE)
