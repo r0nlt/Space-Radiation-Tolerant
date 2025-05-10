@@ -9,26 +9,19 @@ find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 
-# Try to find Eigen3 (if available)
-if (NOT EIGEN3_INCLUDE_DIR)
-  # Look for it in some common places
-  find_path(EIGEN3_INCLUDE_DIR NAMES Eigen/Core
-            PATHS "${CMAKE_SOURCE_DIR}/third_party/eigen"
-                  "/usr/local/include/eigen3"
-                  "/usr/include/eigen3"
-            DOC "Eigen include directory")
-  if (EIGEN3_INCLUDE_DIR)
-    message(STATUS "Found Eigen3: ${EIGEN3_INCLUDE_DIR}")
-  else()
-    message(WARNING "Eigen3 not found. Some functionality may be disabled.")
-  endif()
+# Setup Eigen includes properly
+if(EIGEN3_INCLUDE_DIR)
+  # Include system Eigen headers with BEFORE to override any local headers
+  include_directories(BEFORE ${EIGEN3_INCLUDE_DIR})
+  message(STATUS "Using Eigen3 from: ${EIGEN3_INCLUDE_DIR}")
+else()
+  # Fallback to default locations
+  include_directories(BEFORE /usr/local/include/eigen3 /usr/include/eigen3)
+  message(STATUS "Using default Eigen3 locations")
 endif()
 
-# Include directories
+# Project includes
 include_directories(include)
-if (EIGEN3_INCLUDE_DIR)
-  include_directories(${EIGEN3_INCLUDE_DIR})
-endif()
 
 # Enable testing
 enable_testing()
@@ -42,6 +35,7 @@ add_library(rad_ml_testing STATIC
 # Define the quantum field theory library
 add_library(rad_ml_qft STATIC
     src/rad_ml/physics/quantum_field_theory.cpp
+    src/rad_ml/physics/quantum_models.cpp
 )
 
 target_link_libraries(rad_ml_qft
@@ -165,6 +159,7 @@ message(STATUS "Configured RadiationTolerantML NASA/ESA Standard Test:")
 message(STATUS "  C++ Standard: C++${CMAKE_CXX_STANDARD}")
 message(STATUS "  Build Type: ${BUILD_TYPE}")
 message(STATUS "  Quantum Field Theory: Enabled")
+message(STATUS "  Using Eigen3: ${EIGEN3_INCLUDE_DIR}")
 
 # Enable testing flag if needed
 if(BUILD_TESTING)
