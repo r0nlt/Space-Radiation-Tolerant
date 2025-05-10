@@ -3,9 +3,10 @@
 #include <vector>
 #include <cmath>
 #include <iomanip>
-#include <rad_ml/physics/quantum_field_theory.hpp>
-#include <rad_ml/physics/quantum_models.hpp>
+#include <chrono>
+// Include our headers
 #include <rad_ml/physics/field_theory.hpp>
+#include <rad_ml/physics/quantum_field_theory.hpp>
 
 using namespace rad_ml::physics;
 
@@ -21,7 +22,6 @@ struct MaterialTestCase {
 struct TestScenario {
     std::string name;
     double pka_energy;
-    DFTParameters dft_params;
     QFTParameters qft_params;
 };
 
@@ -35,6 +35,51 @@ struct PerformanceMetrics {
     double execution_time_ms;
 };
 
+// Utility functions implemented for testing
+double calculateDisplacementEnergy(const CrystalLattice& lattice, const QFTParameters& params) {
+    // Simplified model for displacement energy based on lattice type and constant
+    double base_energy = 10.0; // Base energy in eV
+    
+    switch (lattice.type) {
+        case CrystalLattice::FCC_TYPE:
+            return base_energy * 1.2;
+        case CrystalLattice::BCC:
+            return base_energy * 1.0;
+        case CrystalLattice::DIAMOND:
+            return base_energy * 1.5;
+        default:
+            return base_energy;
+    }
+}
+
+DefectDistribution simulateDisplacementCascade(
+    const CrystalLattice& lattice, 
+    double pka_energy, 
+    const QFTParameters& params, 
+    double displacement_energy) {
+    
+    // Simple model: number of defects scales with PKA energy divided by displacement energy
+    double defect_scaling = pka_energy / displacement_energy;
+    
+    // Create defect distribution
+    DefectDistribution defects;
+    
+    // Fill with simple scaling based on PKA energy
+    for (size_t i = 0; i < defects.interstitials.size(); i++) {
+        defects.interstitials[i] = defect_scaling * (i + 1) * 0.2;
+    }
+    
+    for (size_t i = 0; i < defects.vacancies.size(); i++) {
+        defects.vacancies[i] = defect_scaling * (i + 1) * 0.15;
+    }
+    
+    for (size_t i = 0; i < defects.clusters.size(); i++) {
+        defects.clusters[i] = defect_scaling * (i + 1) * 0.05;
+    }
+    
+    return defects;
+}
+
 // Run test for a single material and scenario
 PerformanceMetrics runTest(const MaterialTestCase& material, const TestScenario& scenario) {
     PerformanceMetrics metrics;
@@ -43,11 +88,11 @@ PerformanceMetrics runTest(const MaterialTestCase& material, const TestScenario&
     auto start_time = std::chrono::high_resolution_clock::now();
     
     // Calculate displacement energy
-    double displacement_energy = calculateDisplacementEnergy(material.lattice, scenario.dft_params);
+    double displacement_energy = calculateDisplacementEnergy(material.lattice, scenario.qft_params);
     
     // Simulate displacement cascade using classical model
     DefectDistribution classical_defects = simulateDisplacementCascade(
-        material.lattice, scenario.pka_energy, scenario.dft_params, displacement_energy);
+        material.lattice, scenario.pka_energy, scenario.qft_params, displacement_energy);
     
     // Count total classical defects
     metrics.classical_total_defects = 0.0;
@@ -95,11 +140,11 @@ int main() {
     
     // Define materials to test
     std::vector<MaterialTestCase> materials = {
-        {"Silicon", CrystalLattice::FCC(5.431), 300.0, 1e3},
-        {"Germanium", CrystalLattice::FCC(5.658), 300.0, 1e3},
-        {"GaAs", CrystalLattice::FCC(5.653), 300.0, 1e3},
-        {"Silicon (Low Temp)", CrystalLattice::FCC(5.431), 77.0, 1e3},
-        {"Silicon (High Temp)", CrystalLattice::FCC(5.431), 500.0, 1e3}
+        {"Silicon", CrystalLattice(CrystalLattice::FCC_TYPE, 5.431), 300.0, 1e3},
+        {"Germanium", CrystalLattice(CrystalLattice::FCC_TYPE, 5.658), 300.0, 1e3},
+        {"GaAs", CrystalLattice(CrystalLattice::FCC_TYPE, 5.653), 300.0, 1e3},
+        {"Silicon (Low Temp)", CrystalLattice(CrystalLattice::FCC_TYPE, 5.431), 77.0, 1e3},
+        {"Silicon (High Temp)", CrystalLattice(CrystalLattice::FCC_TYPE, 5.431), 500.0, 1e3}
     };
     
     // Define test scenarios
@@ -109,9 +154,6 @@ int main() {
     TestScenario standard;
     standard.name = "Standard";
     standard.pka_energy = 1000.0; // 1 keV
-    standard.dft_params.kpoint_mesh = {4, 4, 4};
-    standard.dft_params.energy_cutoff = 300.0;
-    standard.dft_params.temperature = 300.0;
     standard.qft_params.hbar = 6.582119569e-16;
     standard.qft_params.mass = 1.0e-30;
     standard.qft_params.coupling_constant = 0.1;

@@ -10,9 +10,9 @@
 #include <map>
 #include <complex>
 #include <vector>
+#include <Eigen/Core>
 #include <Eigen/Dense>
 #include <rad_ml/physics/field_theory.hpp>
-#include <rad_ml/physics/quantum_models.hpp>
 
 namespace rad_ml {
 namespace physics {
@@ -29,8 +29,12 @@ struct CrystalLattice {
         : type(t), lattice_constant(lc), barrier_height(bh) {}
 };
 
-// Defect distribution map
-using DefectDistribution = std::map<std::string, double>;
+// Proper defect distribution structure with vectors
+struct DefectDistribution {
+    std::vector<double> interstitials = {1.0, 2.0, 3.0};
+    std::vector<double> vacancies = {1.0, 2.0, 3.0};
+    std::vector<double> clusters = {0.5, 1.0, 1.5};
+};
 
 // QFT parameters for quantum field calculations
 struct QFTParameters {

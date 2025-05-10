@@ -18,22 +18,16 @@ int main() {
     qft_params.dimensions = 3;           // 3D simulation
 
     // Create a crystal lattice for silicon
-    CrystalLattice silicon = CrystalLattice::FCC(5.431); // Silicon lattice constant in Angstroms
-    
-    // Set up DFT parameters
-    DFTParameters dft_params;
-    dft_params.kpoint_mesh = {4, 4, 4};
-    dft_params.energy_cutoff = 300.0; // eV
-    dft_params.temperature = 300.0;   // K
+    CrystalLattice silicon = CrystalLatticeFactory::FCC(5.431); // Silicon lattice constant in Angstroms
     
     // Calculate displacement energy
-    double displacement_energy = calculateDisplacementEnergy(silicon, dft_params);
+    double displacement_energy = calculateDisplacementEnergy(silicon, qft_params);
     std::cout << "Displacement energy: " << displacement_energy << " eV" << std::endl;
     
     // Simulate a displacement cascade
     double pka_energy = 1000.0; // 1 keV primary knock-on atom
     DefectDistribution defects = simulateDisplacementCascade(
-        silicon, pka_energy, dft_params, displacement_energy);
+        silicon, pka_energy, qft_params, displacement_energy);
     
     // Apply quantum field corrections
     double temperature = 300.0; // K
