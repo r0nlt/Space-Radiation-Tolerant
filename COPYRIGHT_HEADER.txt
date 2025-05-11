@@ -1,6 +1,5 @@
 /**
  * Copyright (c) 2025 Rishab Nuguru
- * Copyright (c) 2025 [Your Name]
  * 
  * This file is part of the Radiation-Tolerant ML Framework.
  * https://github.com/r0nlt/Space-Radiation-Tolerant
