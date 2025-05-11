@@ -10,7 +10,6 @@ includes novel methods for Health-Weighted Triple Modular Redundancy,
 Approximate TMR, Selective Hardening, and physics-based radiation simulation.
 
 This work represents significant intellectual contribution to the field of 
-radiation-tolerant computing and is provided under the MIT license with the 
-expectation of proper attribution.
+radiation-tolerant computing and is provided under the GNU General Public License
 
 Project Repository: https://github.com/r0nlt/Space-Radiation-Tolerant
