@@ -1,3 +1,11 @@
+<!--
+ Copyright (C) 2025 Rishab Nuguru
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+-->
 # Radiation-Tolerant ML Framework Verification Tests
 
 This directory contains verification tests for the radiation-tolerant machine learning framework, designed to evaluate the framework's robustness and error correction capabilities under various conditions.
