@@ -1145,7 +1145,7 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer):
 - **Minor version**: Backwards-compatible functionality additions
 - **Patch version**: Backwards-compatible bug fixes
 
-Current version: 0.9.3 (Pre-release)
+Current version: 0.9.6 (Pre-release)
 
 ## Release History
 
