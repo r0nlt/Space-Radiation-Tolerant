@@ -1108,8 +1108,8 @@ Contributions to improve the radiation-tolerant ML framework are welcome. Please
 2. **Create a Branch**: Create a feature branch for your contributions
 3. **Make Changes**: Implement your changes, additions, or fixes
 4. **Test Thoroughly**: Ensure your changes pass all tests
-5. **Document Your Changes**: Update documentation to reflect your changes
-6. **Submit a Pull Request**: Create a pull request with a clear description of your changes
+5. **Document Your Changes**: Update documentation to reflect your changes, nothing in root README without owners permission!
+6. **Submit a Pull Request**: Create a pull request with a clear description of your changes, different md file.
 
 ### Contribution Areas
 
