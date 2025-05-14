@@ -1,0 +1,81 @@
+{
+  "editor": {
+    "formatOnSave": true,
+    "tabSize": 4,
+    "insertSpaces": true,
+    "detectIndentation": false,
+    "wordWrap": "off",
+    "rulers": [100]
+  },
+  "clangd": {
+    "enableInlayHints": true,
+    "checkUpdates": true
+  },
+  "autocomplete": {
+    "enabled": true,
+    "delay": 0
+  },
+  "typescript": {
+    "format": {
+      "indentSize": 4,
+      "semicolons": "insert",
+      "trailingCommas": "all"
+    }
+  },
+  "python": {
+    "format": {
+      "indentSize": 4,
+      "lineLength": 100
+    },
+    "linter": "pyright"
+  },
+  "cpp": {
+    "format": {
+      "indentWidth": 4,
+      "columnLimit": 100,
+      "useTab": false,
+      "namespaceIndentation": "None",
+      "accessModifierOffset": -4,
+      "breakBeforeBraces": "Stroustrup",
+      "pointerAlignment": "Right",
+      "includeBlocks": "Preserve",
+      "breakConstructorInitializers": "BeforeColon"
+    },
+    "intelliSense": {
+      "mode": "clang-x64"
+    }
+  },
+  "files": {
+    "trimTrailingWhitespace": true,
+    "insertFinalNewline": true,
+    "trimFinalNewlines": true,
+    "exclude": {
+      "**/.git": true,
+      "**/build": true,
+      "**/results": true,
+      "**/CMakeFiles": true,
+      "**/Testing": true,
+      "**/third_party": false
+    },
+    "associations": {
+      "*.hpp": "cpp",
+      "*.cpp": "cpp",
+      "*.h": "cpp",
+      "*.c": "cpp",
+      "*.tpp": "cpp",
+      "CMakeLists.txt": "cmake"
+    }
+  },
+  "terminal": {
+    "fontFamily": "monospace",
+    "fontSize": 14,
+    "lineHeight": 1.2
+  },
+  "vim": {
+    "enabled": false
+  },
+  "git": {
+    "enableSmartCommit": true,
+    "autofetch": true
+  }
+}

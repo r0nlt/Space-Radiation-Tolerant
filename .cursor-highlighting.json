@@ -1,0 +1,24 @@
+{
+  "highlight.regexpHighlight": [
+    {
+      "pattern": "TMR<[^>]+>|EnhancedTMR<[^>]+>",
+      "color": "#73D0FF",
+      "backgroundColor": "#3a414d"
+    },
+    {
+      "pattern": "::memory::|::scrubber::",
+      "color": "#7AF8CA",
+      "backgroundColor": "#3a414d"
+    },
+    {
+      "pattern": "rad_ml::(quantum|physics)::",
+      "color": "#FF9E64",
+      "backgroundColor": "#3a414d"
+    },
+    {
+      "pattern": "MissionProfile",
+      "color": "#D4BFFF",
+      "backgroundColor": "#3a414d"
+    }
+  ]
+}

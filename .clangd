@@ -1,0 +1,19 @@
+{
+  "CompileFlags": {
+    "Add": ["-Wall", "-Wextra", "-std=c++17", "-Wno-unused-parameter"],
+    "Remove": ["-W*", "-std=*"]
+  },
+  "Diagnostics": {
+    "UnusedIncludes": "Strict",
+    "ClangTidy": {
+      "Add": ["modernize-*", "cppcoreguidelines-*", "performance-*"],
+      "Remove": ["modernize-use-trailing-return-type"],
+      "CheckOptions": {
+        "cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor": "true"
+      }
+    }
+  },
+  "Index": {
+    "Background": "Build"
+  }
+}

@@ -13,11 +13,15 @@ if(POLICY CMP0148)
   cmake_policy(SET CMP0148 NEW)
 endif()
 
+# Include the IDE integration system
+include(cmake/RadTolerantIDE.cmake)
+
 # Build options
 option(BUILD_PYTHON_BINDINGS "Build Python bindings" OFF)
 option(ENABLE_VISUALIZATION "Enable visualization with OpenCV" OFF)
 option(BUILD_TESTING "Build with testing enabled" ON)
 option(USE_MINIMAL_PYTHON_BINDINGS "Use minimal Python bindings to avoid compilation errors" ON)
+option(ENABLE_IDE_INTEGRATION "Enable IDE integration features" ON)
 
 # Find required packages
 find_package(Threads REQUIRED)
@@ -244,29 +248,49 @@ if(BUILD_PYTHON_BINDINGS)
   endforeach()
 endif()
 
+# Enable IDE integration if requested
+if(ENABLE_IDE_INTEGRATION)
+  configure_all_ide_integrations()
+  
+  # Add custom target to run clang-format over source files
+  find_program(CLANG_FORMAT_EXE NAMES "clang-format")
+  if(CLANG_FORMAT_EXE)
+    # Get all source files
+    file(GLOB_RECURSE ALL_SOURCE_FILES 
+      "${CMAKE_SOURCE_DIR}/src/*.cpp"
+      "${CMAKE_SOURCE_DIR}/src/*.hpp"
+      "${CMAKE_SOURCE_DIR}/include/*.hpp"
+      "${CMAKE_SOURCE_DIR}/examples/*.cpp"
+      "${CMAKE_SOURCE_DIR}/test/*.cpp"
+    )
+    
+    add_custom_target(
+      format
+      COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${ALL_SOURCE_FILES}
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      COMMENT "Running clang-format to format all source files"
+      VERBATIM
+    )
+    
+    message(STATUS "Added 'format' target using clang-format: ${CLANG_FORMAT_EXE}")
+  endif()
+endif()
+
+# Export compile commands for IDE integration
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Display configuration summary
 set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
 if(NOT BUILD_TYPE)
   set(BUILD_TYPE "Release")
 endif()
 
-# Output configuration information
-message(STATUS "Configured RadiationTolerantML NASA/ESA Standard Test:")
-message(STATUS "  C++ Standard: C++${CMAKE_CXX_STANDARD}")
-message(STATUS "  Build Type: ${BUILD_TYPE}")
-message(STATUS "  Quantum Field Theory: Enabled")
-message(STATUS "  Using Eigen3: ${EIGEN3_INCLUDE_DIR}")
-message(STATUS "  Python Bindings: ${BUILD_PYTHON_BINDINGS}")
-if(BUILD_PYTHON_BINDINGS)
-  if(USE_MINIMAL_PYTHON_BINDINGS)
-    message(STATUS "  Python Binding Type: Minimal")
-  else()
-    message(STATUS "  Python Binding Type: Full")
-  endif()
-endif()
-
-# Enable testing flag if needed
-if(BUILD_TESTING)
-  message(STATUS "  Testing: Enabled")
-  add_definitions(-DENABLE_TESTING=1)
-endif()
+message(STATUS "")
+message(STATUS "==== Radiation Tolerant ML Framework Configuration ====")
+message(STATUS "Build type:                 ${BUILD_TYPE}")
+message(STATUS "C++ Standard:               C++17")
+message(STATUS "Python bindings:            ${BUILD_PYTHON_BINDINGS}")
+message(STATUS "IDE integration:            ${ENABLE_IDE_INTEGRATION}")
+message(STATUS "Testing enabled:            ${BUILD_TESTING}")
+message(STATUS "Visualization:              ${ENABLE_VISUALIZATION}")
+message(STATUS "======================================================")
