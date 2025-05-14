@@ -11,7 +11,7 @@
 If someone uses this code
 Then they MUST:
 
-Make ALL of their source code public (both Risahab Nuguru's originial code and their adjustments)
+Make ALL of their source code public (both Rishab Nuguru's original code and their adjustments)
 License their entire program under the GPL (same license)
 Allow their customers to freely share and modify the code, too!
 
