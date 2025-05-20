@@ -1,9 +1,9 @@
 # Radiation-Tolerant Machine Learning Framework
 
-**Author:** Rishab Nuguru  
+**Author:** Rishab Nuguru
 **Original Copyright:** © 2025 Rishab Nuguru
-**Company:** Space Labs AI   
-**License:** GNU General Public License (GPL) Version 3  
+**Company:** Space Labs AI
+**License:** GNU General Public License (GPL) Version 3
 **Repository:** https://github.com/r0nlt/Space-Radiation-Tolerant
 **Company Page** https://www.linkedin.com/company/space-labs-ai
 **Version:** v0.9.7
@@ -101,28 +101,28 @@ int main() {
     core::MaterialProperties aluminum;
     aluminum.radiation_tolerance = 50.0; // Standard aluminum
     tmr::PhysicsDrivenProtection protection(aluminum);
-    
+
     // 2. Configure for your target environment
     sim::RadiationEnvironment env = sim::createEnvironment(sim::Environment::LEO);
     protection.updateEnvironment(env);
-    
+
     // 3. Define your ML inference operation
     auto my_ml_operation = []() {
         // Your ML model inference code here
         float result = 0.0f; // Replace with actual inference
         return result;
     };
-    
+
     // 4. Execute with radiation protection
     auto result = protection.executeProtected<float>(my_ml_operation);
-    
+
     // 5. Check for detected errors
     if (result.error_detected) {
-        std::cout << "Error detected and " 
+        std::cout << "Error detected and "
                   << (result.error_corrected ? "corrected!" : "not corrected")
                   << std::endl;
     }
-    
+
     return 0;
 }
 ```
@@ -215,7 +215,7 @@ protection.updateEnvironment(leo);
 // Perform protected operations in LEO environment
 // ...
 
-// Configure for SAA crossing (South Atlantic Anomaly) 
+// Configure for SAA crossing (South Atlantic Anomaly)
 sim::RadiationEnvironment saa = sim::createEnvironment(sim::Environment::SAA);
 protection.updateEnvironment(saa);
 protection.enterMissionPhase(MissionPhase::SAA_CROSSING);
@@ -255,23 +255,23 @@ using namespace rad_ml::tmr;
 int main() {
     // Create a mission profile for Low Earth Orbit
     MissionProfile profile = MissionProfile::createStandard("LEO");
-    
+
     // Configure adaptive protection
     AdaptiveProtectionConfig protection_config;
     protection_config.enable_tmr_medium = true;
     protection_config.memory_scrubbing_interval_ms = 5000;
-    
+
     // Create mission simulator
     MissionSimulator simulator(profile, protection_config);
-    
+
     // Create your neural network
     YourNeuralNetwork network;
-    
+
     // Register important memory regions for radiation simulation
-    simulator.registerMemoryRegion(network.getWeightsPtr(), 
-                                 network.getWeightsSize(), 
+    simulator.registerMemoryRegion(network.getWeightsPtr(),
+                                 network.getWeightsSize(),
                                  true);  // Enable protection
-    
+
     // Run the simulation for 30 mission seconds
     auto stats = simulator.runSimulation(
         std::chrono::seconds(30),
@@ -285,13 +285,13 @@ int main() {
             }
         }
     );
-    
+
     // Print mission statistics
     std::cout << stats.getReport() << std::endl;
-    
+
     // Test neural network after the mission
     network.runInference(test_data);
-    
+
     return 0;
 }
 ```
@@ -318,7 +318,7 @@ print(f"Protected value: {protected_value.value}")
 # Check integrity
 if protected_value.check_integrity():
     print("Value integrity verified")
-    
+
 # Simulate a radiation effect
 # In production code, this would happen naturally in radiation environments
 # This is just for demonstration purposes
@@ -327,7 +327,7 @@ protected_value._v1 = 43  # Corrupt one copy
 # Check integrity again
 if not protected_value.check_integrity():
     print("Corruption detected!")
-    
+
     # Attempt to correct the error
     if protected_value.correct():
         print(f"Error corrected, value restored to {protected_value.value}")
@@ -371,17 +371,17 @@ print("Testing TMR protection...")
 for _ in range(10):
     # Your data operations here
     result = protected_int.value * 2
-    
+
     # Simulate random radiation effects
     if random.random() < 0.3:  # 30% chance of radiation effect
         bit = random.randint(0, 31)
         corrupted_value = simulate_bit_flip(protected_int.value, bit)
         # In a real scenario, radiation would directly affect memory
         # This is just for demonstration
-        protected_int._v2 = corrupted_value  
-        
+        protected_int._v2 = corrupted_value
+
         print(f"Radiation effect simulated, bit {bit} flipped")
-        
+
         # Verify integrity and correct if needed
         if not protected_int.check_integrity():
             print("Corruption detected!")
@@ -661,7 +661,7 @@ When radiation events occur, the framework follows this validated workflow:
 
 1. **Detection**: Error is detected through checksums, redundancy disagreement, or Reed-Solomon syndrome
 2. **Classification**: Error is categorized by type (single-bit, adjacent-bit, or multi-bit) and location
-3. **Correction**: 
+3. **Correction**:
    - For redundancy-protected data: Voting mechanisms attempt correction
    - For RS-protected data: Galois Field arithmetic enables error recovery
    - For hybrid-protected data: Both mechanisms are applied in sequence
@@ -881,7 +881,7 @@ The framework has been evaluated in several simulated mission scenarios demonstr
 
 - **Environment**: Low Earth Orbit with South Atlantic Anomaly crossings
 - **Application**: Real-time cloud cover and weather pattern detection
-- **Results**: 
+- **Results**:
   - 100% computational accuracy maintained throughout 75-day simulation
   - SAA crossings handled with zero unrecoverable errors
   - Protection overhead automatically reduced by 18% during non-SAA regions
@@ -914,7 +914,7 @@ To demonstrate the framework's capabilities in realistic space mission contexts,
 
 A simulated Europa lander mission using onboard ML-based image classification for identifying surface features of scientific interest:
 
-- **Mission Profile**: 
+- **Mission Profile**:
   - Continuous exposure to extreme radiation (1.0×10¹¹ p/cm²/s)
   - Temperature cycling from -180°C to -140°C
   - Limited power and communication windows
@@ -989,7 +989,7 @@ The framework currently has the following limitations:
 While the current framework demonstrates exceptional performance, several avenues for future research have been identified:
 
 1. **Hardware Co-design**: Integration with radiation-hardened FPGA architectures for hardware acceleration of TMR voting
-   
+
 2. **Dynamic Adaptation**: Self-tuning redundancy levels based on measured radiation environment
 
 3. **Error Prediction**: Machine learning-based prediction of radiation effects to preemptively adjust protection
@@ -1037,10 +1037,10 @@ The radiation-tolerant machine learning framework has several potential applicat
   ```bash
   # Ubuntu/Debian
   sudo apt-get install libeigen3-dev
-  
+
   # macOS
   brew install eigen
-  
+
   # Windows (with vcpkg)
   vcpkg install eigen3
   ```
@@ -1050,10 +1050,10 @@ The radiation-tolerant machine learning framework has several potential applicat
 ```bash
   # Ubuntu/Debian
   sudo apt-get install libboost-all-dev
-  
+
   # macOS
   brew install boost
-  
+
   # Windows (with vcpkg)
   vcpkg install boost
   ```
@@ -1353,7 +1353,7 @@ The framework now includes several best practices for developing radiation-toler
    if (value) {
        // Process *value safely
    }
-   
+
    // Avoid direct access which may throw exceptions
    // NOT recommended: float x = tmr_protected_value.get();
    ```
@@ -1374,13 +1374,13 @@ The framework now includes several best practices for developing radiation-toler
    ```cpp
    // Use static storage for memory regions
    static std::array<float, SIZE> weight_buffer;
-   
+
    // Copy critical data to protected storage
    std::copy(weights.begin(), weights.end(), weight_buffer.begin());
-   
+
    // Register the static buffer
-   simulator.registerMemoryRegion(weight_buffer.data(), 
-                               weight_buffer.size() * sizeof(float), 
+   simulator.registerMemoryRegion(weight_buffer.data(),
+                               weight_buffer.size() * sizeof(float),
                                true);
    ```
 
@@ -1398,7 +1398,7 @@ The framework now includes several best practices for developing radiation-toler
            // Skip corrupted elements
        }
    }
-   
+
    // Scale result based on valid elements processed
    if (valid_elements > 0) {
        result /= valid_elements;
@@ -1424,3 +1424,73 @@ The framework now includes several best practices for developing radiation-toler
    ```
 
 These best practices are derived from extensive testing in simulated radiation environments and provide significant improvements in system reliability for critical space applications.
+
+# Reed-Solomon Monte Carlo Testing
+
+This project implements and tests Reed-Solomon error correction codes for protecting neural network weights in radiation environments using Monte Carlo simulation.
+
+## Overview
+
+The Monte Carlo testing script performs thousands of randomized trials to evaluate Reed-Solomon's effectiveness in correcting bit errors across a range of error rates. This provides statistically robust results with confidence intervals.
+
+## Requirements
+
+- Python 3.6+
+- NumPy
+- Matplotlib
+- tqdm
+
+Install dependencies with:
+```bash
+pip install numpy matplotlib tqdm
+```
+
+## Running the Tests
+
+Run the Monte Carlo simulation with the default settings:
+```bash
+python rs_monte_carlo.py
+```
+
+Or customize the simulation parameters:
+```bash
+python rs_monte_carlo.py --trials 5000 --min-rate 0.0005 --max-rate 0.25 --num-rates 30
+```
+
+### Command Line Arguments
+
+- `--trials`: Number of trials per error rate (default: 1000)
+- `--min-rate`: Minimum bit error rate as decimal (default: 0.001)
+- `--max-rate`: Maximum bit error rate as decimal (default: 0.3)
+- `--num-rates`: Number of error rates to test (default: 20)
+- `--output`: Output file for plot image (default: rs_monte_carlo_results.png)
+- `--csv`: Output file for CSV data (default: rs_monte_carlo_results.csv)
+
+## Interpreting Results
+
+The script generates:
+
+1. **Plot with two graphs**:
+   - Top graph: Success rate vs. bit error rate with 95% confidence intervals
+   - Bottom graph: Average bit errors and corrected errors vs. bit error rate
+
+2. **CSV file** with detailed results for each error rate
+
+3. **Console output** with a summary of key results and the error correction threshold (where success rate drops below 50%)
+
+### Key Metrics
+
+- **Success Rate**: Percentage of trials where the error correction fully recovered the original value
+- **Confidence Intervals**: Statistical range showing the reliability of the success rate
+- **Average Bit Errors**: Mean number of bit errors introduced at each error rate
+- **Average Corrected Errors**: Mean number of bit errors successfully corrected
+
+## Implementation Details
+
+The implementation includes:
+- Galois Field (GF(2^8)) arithmetic
+- Reed-Solomon encoder/decoder with 8 ECC symbols
+- Random bit error simulation
+- Statistical analysis with confidence intervals
+
+This RS8Bit8Sym implementation can theoretically correct up to 4 symbol errors.

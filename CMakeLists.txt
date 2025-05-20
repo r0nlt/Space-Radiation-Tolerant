@@ -151,9 +151,9 @@ add_test(NAME modern_features_test COMMAND modern_features_test)
 
 # Add the quantum field validation test
 add_executable(quantum_field_validation_test test/verification/quantum_field_validation_test.cpp)
-target_link_libraries(quantum_field_validation_test 
-    rad_ml_tmr 
-    rad_ml_testing 
+target_link_libraries(quantum_field_validation_test
+    rad_ml_tmr
+    rad_ml_testing
     rad_ml_qft
 )
 add_test(NAME quantum_field_validation_test COMMAND quantum_field_validation_test)
@@ -201,13 +201,13 @@ endif()
 # Python bindings
 if(BUILD_PYTHON_BINDINGS)
   message(STATUS "Building Python bindings")
-  
+
   # Include pybind11
   add_subdirectory(third_party/pybind11)
-  
+
   # Find Python
   find_package(Python COMPONENTS Interpreter Development REQUIRED)
-  
+
   # Build the Python module - choose between minimal and full versions
   if(USE_MINIMAL_PYTHON_BINDINGS)
     message(STATUS "Using minimal Python bindings to avoid compilation errors")
@@ -218,28 +218,28 @@ if(BUILD_PYTHON_BINDINGS)
     pybind11_add_module(_core python/rad_ml_core.cpp)
     target_link_libraries(_core PRIVATE rad_ml_tmr rad_ml_testing rad_ml_qft)
   endif()
-  
+
   # Set the output directory for the Python module
   set_target_properties(_core PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/rad_ml"
   )
-  
+
   # Create the Python package directory
   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/rad_ml)
-  
+
   # Copy Python files for development mode
   file(GLOB PYTHON_FILES "python/rad_ml/*.py")
   foreach(PYTHON_FILE ${PYTHON_FILES})
     get_filename_component(FILE_NAME ${PYTHON_FILE} NAME)
     configure_file(${PYTHON_FILE} ${CMAKE_BINARY_DIR}/rad_ml/${FILE_NAME} COPYONLY)
   endforeach()
-  
+
   # Create __init__.py in the build directory
   configure_file(python/rad_ml/__init__.py ${CMAKE_BINARY_DIR}/rad_ml/__init__.py COPYONLY)
-  
+
   # Create examples directory
   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/examples)
-  
+
   # Copy examples
   file(GLOB EXAMPLE_FILES "python/examples/*.py")
   foreach(EXAMPLE_FILE ${EXAMPLE_FILES})
@@ -251,19 +251,19 @@ endif()
 # Enable IDE integration if requested
 if(ENABLE_IDE_INTEGRATION)
   configure_all_ide_integrations()
-  
+
   # Add custom target to run clang-format over source files
   find_program(CLANG_FORMAT_EXE NAMES "clang-format")
   if(CLANG_FORMAT_EXE)
     # Get all source files
-    file(GLOB_RECURSE ALL_SOURCE_FILES 
+    file(GLOB_RECURSE ALL_SOURCE_FILES
       "${CMAKE_SOURCE_DIR}/src/*.cpp"
       "${CMAKE_SOURCE_DIR}/src/*.hpp"
       "${CMAKE_SOURCE_DIR}/include/*.hpp"
       "${CMAKE_SOURCE_DIR}/examples/*.cpp"
       "${CMAKE_SOURCE_DIR}/test/*.cpp"
     )
-    
+
     add_custom_target(
       format
       COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${ALL_SOURCE_FILES}
@@ -271,7 +271,7 @@ if(ENABLE_IDE_INTEGRATION)
       COMMENT "Running clang-format to format all source files"
       VERBATIM
     )
-    
+
     message(STATUS "Added 'format' target using clang-format: ${CLANG_FORMAT_EXE}")
   endif()
 endif()
