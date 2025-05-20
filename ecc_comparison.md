@@ -48,7 +48,7 @@ Correction |      \    \    \
 
 | Technique | Theoretical Error Threshold | Empirical Threshold in Tests | Notes |
 |-----------|----------------------------|------------------------------|-------|
-| Reed-Solomon (RS8Bit8Sym) | 4 symbol errors | ~5% bit error rate | Symbol-oriented approach helps with burst errors |
+| Reed-Solomon (RS8Bit8Sym) | 4 symbol errors | ~0.74% bit error rate | Monte Carlo simulation (1000 trials) shows much lower threshold than previously reported 5% |
 | TMR | 1 bit per word | ~33% bit error rate | Can handle higher error rates but at 3x cost |
 | Hamming | 1 bit per word | ~1% bit error rate | Efficient for very low error rates |
 | BCH | Configurable (t errors) | ~10% bit error rate | Good balance of overhead and correction |

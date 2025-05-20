@@ -146,3 +146,51 @@ Our testing validates that Reed-Solomon coding is an effective approach for prot
 2. Explore bit interleaving techniques to improve resistance to burst errors
 3. Develop adaptive protection that adjusts based on detected radiation levels
 4. Investigate hardware-accelerated Reed-Solomon coding for real-time applications
+
+### 9. Addendum: Monte Carlo Simulation Results
+
+Following the initial testing described in this report, we conducted a more rigorous Monte Carlo simulation to obtain statistically significant results on the error correction capabilities of our Reed-Solomon implementation.
+
+#### 9.1 Monte Carlo Test Methodology
+
+The Monte Carlo simulation used:
+- 1,000 trials per error rate point
+- 20 logarithmically-spaced error rates from 0.1% to 10%
+- Random neural network weight values between -2.0 and 2.0
+- 95% confidence intervals for all measurements
+
+#### 9.2 Revised Error Correction Threshold
+
+Our Monte Carlo simulation identified the error correction threshold (50% success rate) at **0.742% bit error rate**, which is significantly lower than our initial estimate of ~5%.
+
+| Error Rate | Success Rate | 95% Confidence Interval |
+|------------|--------------|-------------------------|
+| 0.10%      | 91.80%       | (90.10%, 93.50%)        |
+| 0.21%      | 83.50%       | (81.20%, 85.80%)        |
+| 0.43%      | 66.40%       | (63.47%, 69.33%)        |
+| 0.89%      | 41.60%       | (38.55%, 44.65%)        |
+| 1.83%      | 17.80%       | (15.43%, 20.17%)        |
+| 3.79%      | 2.50%        | (1.53%, 3.47%)          |
+| 7.85%      | 0.00%        | (0.00%, 0.00%)          |
+| 10.00%     | 0.00%        | (0.00%, 0.00%)          |
+
+#### 9.3 Comparison with Initial Results
+
+| Error Rate | Initial Success Rate | Monte Carlo Success Rate | Difference |
+|------------|----------------------|--------------------------|------------|
+| 1%         | 76.67%               | ~35%                     | -41.67%    |
+| 5%         | 20.00%               | ~1%                      | -19.00%    |
+| 10%        | 6.67%                | 0.00%                    | -6.67%     |
+| 15%        | 0%                   | 0%                       | 0%         |
+
+#### 9.4 Revised Conclusion
+
+Based on these more accurate results, we revise our conclusion:
+
+Reed-Solomon error correction provides effective protection for neural network weights in radiation environments only at very low bit error rates (below 1%). For practical space applications, Reed-Solomon should be:
+
+1. Combined with other protection mechanisms like TMR for critical weights
+2. Used in conjunction with sufficient radiation shielding to keep error rates below 0.5%
+3. Potentially enhanced with interleaving to better handle burst errors
+
+The sharp decline in correction capability between 0.1% and 1% bit error rates indicates that Reed-Solomon is most suitable as one component in a multi-layered protection strategy rather than as a standalone solution for high-radiation environments.

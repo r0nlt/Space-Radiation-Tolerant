@@ -128,7 +128,27 @@ Our Reed-Solomon implementation (RS8Bit8Sym):
 - Uses 8-bit symbols (GF(2^8))
 - Employs 8 ECC symbols
 - Theoretical correction capability: t = 8/2 = 4 symbol errors
-- Empirical threshold: ~5% bit error rate
+- Empirical threshold based on Monte Carlo simulation (1000 trials per error rate):
+  - 50% success rate at 0.742% bit error rate
+  - >90% success rate at 0.1% bit error rate
+  - <5% success rate above 3% bit error rate
+
+```
+                    Reed-Solomon Success Rate vs. Bit Error Rate
+                    -------------------------------------------->
+   100% |  *
+        |   \
+        |    \
+        |     \
+Correction |      \
+ Success   |       \
+  Rate     |        \
+        |         *
+     0% |           *-------*-------*-------*
+        +---------------------------------------
+           0.1%  0.5%  1%   2%    5%   10%   15%
+                    Bit Error Rate
+```
 
 ## 7. Memory Layout
 
