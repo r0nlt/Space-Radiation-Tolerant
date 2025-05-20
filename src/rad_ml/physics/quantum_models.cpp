@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <numeric>
 #include <rad_ml/physics/quantum_field_theory.hpp>
 #include <rad_ml/physics/quantum_models.hpp>
@@ -114,8 +115,8 @@ double calculateDisplacementEnergy(const CrystalLattice& crystal, const QFTParam
     double quantum_correction =
         calculateZeroPointEnergyContribution(params.hbar, mass, crystal.lattice_constant, 300.0);
 
-    // Apply scaling correction to fix energy magnitude (1.0e-6 converts from MeV to eV range)
-    return (base_energy + quantum_correction) * 1.0e-6;
+    // Apply scaling correction to fix energy magnitude (1.0e6 converts from MeV to eV range)
+    return (base_energy + quantum_correction) * 1.0e6;
 }
 
 DefectDistribution simulateDisplacementCascade(const CrystalLattice& crystal, double pka_energy,
@@ -226,10 +227,22 @@ std::vector<double> simulateMultiParticleInteraction(
             // For photons, we need both electric and magnetic fields
             // This is a simplification - in reality we'd need to couple them
             MaxwellEquations maxwell(params);
+
+            // Check if next field exists and is also a photon field (for electric/magnetic pairing)
             if (i + 1 < fields.size() &&
                 fields[i + 1].get().getParticleType() == ParticleType::Photon) {
+                // Evolve both fields together as electromagnetic field
                 maxwell.evolveField(field, fields[i + 1].get());
-                i++;  // Skip the next field as we've already processed it
+                // Skip the next field since we've already processed it
+                i++;
+            }
+            else {
+                // If no paired field available, just evolve this one separately
+                // This would require a custom implementation not shown here
+                // For now, we'll just log a message
+                std::cout << "Warning: Unpaired photon field detected, proper evolution requires "
+                             "paired E/B fields"
+                          << std::endl;
             }
         }
         else if (type == ParticleType::Electron || type == ParticleType::Proton ||

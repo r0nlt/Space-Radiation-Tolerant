@@ -70,6 +70,46 @@ params.masses[ParticleType::Electron] = 9.1093837e-31;
 params.coupling_constants[ParticleType::Proton] = 0.15;
 ```
 
+### Using enum class with std::unordered_map
+
+When using `std::unordered_map<ParticleType, ...>`, you need to provide a custom hash function since `enum class` types don't have a default hash implementation. This can be added to your namespace:
+
+```cpp
+namespace std {
+    template<>
+    struct hash<rad_ml::physics::ParticleType> {
+        size_t operator()(const rad_ml::physics::ParticleType& type) const {
+            return static_cast<size_t>(type);
+        }
+    };
+}
+```
+
+### Physical Constants
+
+Instead of hardcoding physical constants across the codebase, consider referencing a common physical constants header file:
+
+```cpp
+// In physical_constants.hpp
+namespace rad_ml {
+namespace constants {
+    constexpr double ELECTRON_MASS = 9.1093837015e-31;  // kg
+    constexpr double PROTON_MASS = 1.67262192369e-27;   // kg
+    constexpr double NEUTRON_MASS = 1.67492749804e-27;  // kg
+    constexpr double HBAR = 6.582119569e-16;            // eV·s
+    constexpr double BOLTZMANN = 8.617333262e-5;        // eV/K
+    // etc.
+}
+}
+
+// In your code
+#include <rad_ml/physics/physical_constants.hpp>
+using namespace rad_ml::constants;
+
+QFTParameters params;
+params.masses[ParticleType::Electron] = ELECTRON_MASS;
+```
+
 ### Simulating Different Particle Types
 
 ```cpp

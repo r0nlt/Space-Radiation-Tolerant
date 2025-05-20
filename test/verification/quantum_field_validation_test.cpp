@@ -147,8 +147,15 @@ PerformanceMetrics runTest(const MaterialTestCase& material, const TestScenario&
     }
 
     // Calculate percentage difference
-    metrics.percent_difference = (metrics.quantum_total_defects - metrics.classical_total_defects) /
-                                 metrics.classical_total_defects * 100.0;
+    if (metrics.classical_total_defects > 0.0) {
+        metrics.percent_difference =
+            (metrics.quantum_total_defects - metrics.classical_total_defects) /
+            metrics.classical_total_defects * 100.0;
+    }
+    else {
+        // Avoid division by zero
+        metrics.percent_difference = metrics.quantum_total_defects > 0 ? 100.0 : 0.0;
+    }
 
     // Estimate tunneling contribution (simplified calculation)
     double formation_energy = 4.0;  // typical value in eV
@@ -161,8 +168,15 @@ PerformanceMetrics runTest(const MaterialTestCase& material, const TestScenario&
     double classical_energy = formation_energy;
     double quantum_energy = calculateQuantumCorrectedDefectEnergy(
         material.temperature, formation_energy, scenario.qft_params);
-    metrics.zero_point_contribution =
-        (quantum_energy - classical_energy) / classical_energy * 100.0;
+
+    // Safe calculation of zero-point contribution
+    if (std::abs(classical_energy) > 1e-10) {
+        metrics.zero_point_contribution =
+            (quantum_energy - classical_energy) / classical_energy * 100.0;
+    }
+    else {
+        metrics.zero_point_contribution = 0.0;
+    }
 
     // Record end time and calculate execution time
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -193,9 +207,18 @@ int main()
     standard.name = "Standard";
     standard.pka_energy = 1000.0;  // 1 keV
     standard.qft_params.hbar = 6.582119569e-16;
-    // Set particle-specific properties - using proton as default
-    standard.qft_params.masses[ParticleType::Proton] = 1.0e-30;
+
+    // Set particle-specific properties for all relevant particle types
+    standard.qft_params.masses[ParticleType::Proton] = 1.67262192369e-27;
+    standard.qft_params.masses[ParticleType::Electron] = 9.1093837015e-31;
+    standard.qft_params.masses[ParticleType::Neutron] = 1.67492749804e-27;
+    standard.qft_params.masses[ParticleType::Photon] = 0.0;  // Massless
+
     standard.qft_params.coupling_constants[ParticleType::Proton] = 0.1;
+    standard.qft_params.coupling_constants[ParticleType::Electron] = 0.15;
+    standard.qft_params.coupling_constants[ParticleType::Neutron] = 0.08;
+    standard.qft_params.coupling_constants[ParticleType::Photon] = 0.05;
+
     standard.qft_params.potential_coefficient = 0.5;
     standard.qft_params.lattice_spacing = 0.1;
     standard.qft_params.time_step = 1.0e-18;

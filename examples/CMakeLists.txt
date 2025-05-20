@@ -33,6 +33,7 @@ target_link_libraries(multi_particle_simulation_example
     rad_ml_qft
     rad_ml_tmr
     rad_ml_testing
+    rad_ml_research
 )
 target_include_directories(multi_particle_simulation_example PRIVATE ${CMAKE_SOURCE_DIR})
 
@@ -44,7 +45,7 @@ add_test(NAME radiation_aware_training_example_run COMMAND radiation_aware_train
 add_test(NAME multi_particle_simulation_example_test COMMAND multi_particle_simulation_example)
 
 # Installation
-install(TARGETS architecture_test residual_network_test auto_arch_search_example radiation_aware_training_example
+install(TARGETS architecture_test residual_network_test auto_arch_search_example radiation_aware_training_example multi_particle_simulation_example
     DESTINATION bin/examples)
 
 # These will be enabled as they are implemented

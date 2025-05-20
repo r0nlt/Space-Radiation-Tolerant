@@ -8,6 +8,16 @@
 
 using namespace rad_ml::physics;
 
+// Helper function to safely calculate values for massless particles
+double safeCalculation(double value, double mass, double fallback_value = 0.0)
+{
+    // Handle massless or very low mass particles safely
+    if (mass <= 0.0 || std::isnan(mass) || std::isinf(mass)) {
+        return fallback_value;
+    }
+    return value;
+}
+
 int main()
 {
     std::cout << "Multi-Particle Simulation Example" << std::endl;
@@ -21,7 +31,7 @@ int main()
     qft_params.masses[ParticleType::Proton] = 1.67262192369e-27;   // Proton mass (kg)
     qft_params.masses[ParticleType::Electron] = 9.1093837015e-31;  // Electron mass (kg)
     qft_params.masses[ParticleType::Neutron] = 1.67492749804e-27;  // Neutron mass (kg)
-    qft_params.masses[ParticleType::Photon] = 1.0e-36;  // Photon "mass" (effectively zero)
+    qft_params.masses[ParticleType::Photon] = 0.0;                 // Photons are truly massless
 
     qft_params.coupling_constants[ParticleType::Proton] = 0.15;
     qft_params.coupling_constants[ParticleType::Electron] = 0.20;
@@ -43,9 +53,24 @@ int main()
     // Calculate displacement energy for each particle type
     std::cout << "\nDisplacement Energies by Particle Type:" << std::endl;
     for (const auto& particle : particles) {
-        double energy = calculateDisplacementEnergy(silicon, qft_params, particle);
-        std::cout << "  - Particle Type " << static_cast<int>(particle) << ": " << std::fixed
-                  << std::setprecision(2) << energy << " eV" << std::endl;
+        // Get mass for this particle type
+        double mass = qft_params.getMass(particle);
+
+        // Calculate displacement energy, handling massless particles appropriately
+        double energy;
+        if (particle == ParticleType::Photon) {
+            // Photons interact differently - use energy based on frequency rather than displacement
+            energy = qft_params.hbar * 1.0e15;  // E = hbar * omega
+            std::cout << "  - Particle Type " << static_cast<int>(particle)
+                      << " (Photon): " << std::fixed << std::setprecision(2) << energy
+                      << " eV (based on frequency)" << std::endl;
+        }
+        else {
+            // Normal displacement energy calculation for massive particles
+            energy = calculateDisplacementEnergy(silicon, qft_params, particle);
+            std::cout << "  - Particle Type " << static_cast<int>(particle) << ": " << std::fixed
+                      << std::setprecision(2) << energy << " eV" << std::endl;
+        }
     }
 
     // Simulate displacement cascades for different particles

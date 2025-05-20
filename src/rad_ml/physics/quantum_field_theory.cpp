@@ -12,6 +12,7 @@
 #include <numeric>
 #include <rad_ml/physics/quantum_field_theory.hpp>
 #include <random>
+#include <set>
 
 namespace rad_ml {
 namespace physics {
@@ -418,27 +419,21 @@ DefectDistribution applyQuantumFieldCorrections(const DefectDistribution& defect
     DefectDistribution corrected = defects;
 
     // If no specific particle types requested, process all particles in the defects
-    std::vector<ParticleType> types_to_process;
+    std::set<ParticleType> types_to_process;
     if (particle_types.empty()) {
         // Collect all particle types from the defects
         for (const auto& [type, _] : corrected.interstitials) {
-            types_to_process.push_back(type);
+            types_to_process.insert(type);
         }
         for (const auto& [type, _] : corrected.vacancies) {
-            if (std::find(types_to_process.begin(), types_to_process.end(), type) ==
-                types_to_process.end()) {
-                types_to_process.push_back(type);
-            }
+            types_to_process.insert(type);
         }
         for (const auto& [type, _] : corrected.clusters) {
-            if (std::find(types_to_process.begin(), types_to_process.end(), type) ==
-                types_to_process.end()) {
-                types_to_process.push_back(type);
-            }
+            types_to_process.insert(type);
         }
     }
     else {
-        types_to_process = particle_types;
+        types_to_process.insert(particle_types.begin(), particle_types.end());
     }
 
     // Debug output
