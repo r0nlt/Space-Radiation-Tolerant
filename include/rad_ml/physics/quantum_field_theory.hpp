@@ -126,6 +126,7 @@ struct QFTParameters {
     double potential_coefficient;  // Potential energy coefficient
     double lattice_spacing;        // Lattice spacing (nm)
     double time_step;              // Simulation time step (s)
+    double omega;                  // Angular frequency (rad/s)
     int dimensions;                // Number of spatial dimensions
 
     QFTParameters()
@@ -133,6 +134,7 @@ struct QFTParameters {
           potential_coefficient(0.5),
           lattice_spacing(1.0),
           time_step(1.0e-18),
+          omega(1.0e15),  // Default angular frequency
           dimensions(3)
     {
         // Initialize with default values for backward compatibility

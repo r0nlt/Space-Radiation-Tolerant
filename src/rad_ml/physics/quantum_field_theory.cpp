@@ -62,8 +62,30 @@ double QuantumField<Dimensions>::calculateTotalEnergy(
     // Use provided particle type or fall back to the field's type
     const ParticleType type = particle_type.value_or(particle_type_);
 
-    // Simple implementation to satisfy the compiler
-    return 100.0;
+    // Calculate actual energy based on field values instead of hardcoded value
+    double totalEnergy = 0.0;
+
+    // Get dimensions to work with the field
+    std::vector<int> dims = {32, 32, 32};  // Assume standard dimensions
+
+    // Sum the energy contributions from each point in the field
+    for (int i = 0; i < dims[0]; i++) {
+        for (int j = 0; j < dims[1]; j++) {
+            for (int k = 0; k < dims[2]; k++) {
+                std::vector<int> pos = {i, j, k};
+                std::complex<double> value = getFieldAt(pos);
+
+                // Energy is proportional to amplitude squared
+                double amplitude = std::abs(value);
+                totalEnergy += amplitude * amplitude;
+            }
+        }
+    }
+
+    // Scale by particle mass from parameters
+    totalEnergy *= params.getMass(type);
+
+    return totalEnergy;
 }
 
 template <int Dimensions>
@@ -73,7 +95,43 @@ void QuantumField<Dimensions>::evolve(const QFTParameters& params, int steps,
     // Use provided particle type or fall back to the field's type
     const ParticleType type = particle_type.value_or(particle_type_);
 
-    // Simple implementation to satisfy the compiler
+    // Get dimensions to work with the field
+    std::vector<int> dims = {32, 32, 32};  // Assume standard dimensions
+
+    // Get time step size from parameters
+    double dt = params.time_step;
+
+    // Simple time evolution loop
+    for (int step = 0; step < steps; step++) {
+        // Apply time evolution to each point in the field
+        for (int i = 0; i < dims[0]; i++) {
+            for (int j = 0; j < dims[1]; j++) {
+                for (int k = 0; k < dims[2]; k++) {
+                    std::vector<int> pos = {i, j, k};
+                    std::complex<double> current_value = getFieldAt(pos);
+
+                    // Apply simple harmonic oscillator evolution
+                    // Phase evolves with time
+                    double amplitude = std::abs(current_value);
+                    double phase = std::arg(current_value) + params.omega * dt;
+
+                    // Create new field value
+                    std::complex<double> new_value =
+                        amplitude * std::complex<double>(cos(phase), sin(phase));
+
+                    // Apply small damping
+                    new_value *= (1.0 - 0.001 * dt);
+
+                    // Set the new field value
+                    setFieldAt(pos, new_value);
+                }
+            }
+        }
+    }
+
+    // Debug output
+    std::cout << "QuantumField: Evolved field for " << steps << " steps with dt = " << dt
+              << std::endl;
 }
 
 template <int Dimensions>
@@ -124,7 +182,7 @@ void KleinGordonEquation::evolveField(QuantumField<3>& field) const
     // Get dimensions to work with the field
     std::vector<int> dims = {32, 32, 32};  // Assume standard dimensions
 
-    // Add actual field evolution with oscillatory behavior
+    // Add actual field evolution with oscillatory behavior and energy dissipation
     // In a real implementation, this would solve the Klein-Gordon equation
     for (int i = 0; i < dims[0]; i++) {
         for (int j = 0; j < dims[1]; j++) {
@@ -141,9 +199,12 @@ void KleinGordonEquation::evolveField(QuantumField<3>& field) const
                 // Apply some damping/amplification based on position
                 double position_factor = 1.0 + 0.01 * sin(i + j + k);
 
-                // Create new field value
-                std::complex<double> new_value =
-                    amplitude * position_factor * std::complex<double>(cos(phase), sin(phase));
+                // Add energy dissipation factor (0.999 means 0.1% energy loss per step)
+                double dissipation_factor = 0.999;
+
+                // Create new field value with dissipation
+                std::complex<double> new_value = amplitude * position_factor * dissipation_factor *
+                                                 std::complex<double>(cos(phase), sin(phase));
 
                 // Set the new field value
                 field.setFieldAt(pos, new_value);
@@ -224,7 +285,7 @@ void MaxwellEquations::evolveField(QuantumField<3>& electric_field,
     // Get dimensions to work with the field
     std::vector<int> dims = {32, 32, 32};  // Assume standard dimensions
 
-    // Add actual field evolution with oscillatory behavior
+    // Add actual field evolution with oscillatory behavior and energy dissipation
     // In a real implementation, this would solve Maxwell's equations
     for (int i = 0; i < dims[0]; i++) {
         for (int j = 0; j < dims[1]; j++) {
@@ -245,9 +306,12 @@ void MaxwellEquations::evolveField(QuantumField<3>& electric_field,
                 double z_factor = sin(0.1 * k);
                 double space_factor = 1.0 + 0.01 * (x_factor + y_factor + z_factor);
 
-                // Set the new field values
-                electric_field.setFieldAt(pos, new_e * space_factor);
-                magnetic_field.setFieldAt(pos, new_b * space_factor);
+                // Add energy dissipation factor (0.999 means 0.1% energy loss per step)
+                double dissipation_factor = 0.999;
+
+                // Set the new field values with dissipation
+                electric_field.setFieldAt(pos, new_e * space_factor * dissipation_factor);
+                magnetic_field.setFieldAt(pos, new_b * space_factor * dissipation_factor);
             }
         }
     }
