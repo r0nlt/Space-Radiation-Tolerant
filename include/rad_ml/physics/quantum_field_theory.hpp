@@ -8,11 +8,16 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include <algorithm>
 #include <complex>
+#include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
 #include <rad_ml/physics/field_theory.hpp>
+#include <random>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -129,6 +134,13 @@ struct QFTParameters {
     double omega;                  // Angular frequency (rad/s)
     int dimensions;                // Number of spatial dimensions
 
+    // New configurable parameters (previously hardcoded)
+    double phase_evolution_rate = 1.0e15;  // Default oscillation rate (Hz)
+    double damping_factor = 0.001;         // Default damping per second
+    double temperature_threshold = 150.0;  // K
+    double temperature_scaling_factor = 100.0;
+    double position_factor_amplitude = 0.01;  // Amplitude of position-dependent variations
+
     QFTParameters()
         : hbar(6.582119569e-16),
           potential_coefficient(0.5),
@@ -153,14 +165,22 @@ struct QFTParameters {
     double getMass(ParticleType type = ParticleType::Proton) const
     {
         auto it = masses.find(type);
-        return (it != masses.end()) ? it->second : 1.0e-30;
+        if (it == masses.end()) {
+            throw std::runtime_error("Mass not defined for particle type: " +
+                                     std::to_string(static_cast<int>(type)));
+        }
+        return it->second;
     }
 
     // For backward compatibility - get coupling constant for a specific particle type
     double getCouplingConstant(ParticleType type = ParticleType::Proton) const
     {
         auto it = coupling_constants.find(type);
-        return (it != coupling_constants.end()) ? it->second : 0.1;
+        if (it == coupling_constants.end()) {
+            throw std::runtime_error("Coupling constant not defined for particle type: " +
+                                     std::to_string(static_cast<int>(type)));
+        }
+        return it->second;
     }
 };
 
@@ -252,9 +272,22 @@ class QuantumField {
      */
     void setParticleType(ParticleType type) { particle_type_ = type; }
 
+    /**
+     * Get the dimensions of this field
+     */
+    const std::vector<int>& getDimensions() const { return dimensions_; }
+
    private:
     ParticleType particle_type_;
-    // Other private members
+    double lattice_spacing_;
+    std::vector<int> dimensions_;
+    std::vector<std::complex<double>> field_data_;
+    mutable std::mt19937 random_generator_{std::random_device{}()};
+
+    /**
+     * Calculate 1D array index from multi-dimensional position
+     */
+    int calculateIndex(const std::vector<int>& position) const;
 };
 
 /**

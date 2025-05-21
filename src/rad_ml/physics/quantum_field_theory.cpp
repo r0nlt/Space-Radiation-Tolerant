@@ -4,15 +4,32 @@
  * This file implements the quantum field theory models for radiation effects.
  */
 
-#include <Eigen/Dense>
-#include <algorithm>
 #include <cmath>
 #include <complex>
+#include <functional>
 #include <iostream>
+#include <limits>
 #include <numeric>
-#include <rad_ml/physics/quantum_field_theory.hpp>
 #include <random>
 #include <set>
+#include <stdexcept>
+#include <string>
+
+// Include Eigen properly
+#ifdef __has_include
+#if __has_include(<eigen3/Eigen/Dense>)
+#include <eigen3/Eigen/Dense>
+#elif __has_include(<Eigen/Dense>)
+#include <Eigen/Dense>
+#else
+#error "Could not find Eigen/Dense"
+#endif
+#else
+// Fallback for older compilers
+#include <Eigen/Dense>
+#endif
+
+#include <rad_ml/physics/quantum_field_theory.hpp>
 
 namespace rad_ml {
 namespace physics {
@@ -21,21 +38,93 @@ namespace physics {
 template <int Dimensions>
 QuantumField<Dimensions>::QuantumField(const std::vector<int>& grid_dimensions,
                                        double lattice_spacing, ParticleType particle_type)
-    : particle_type_(particle_type)
+    : particle_type_(particle_type), lattice_spacing_(lattice_spacing)
 {
-    // Simple implementation to satisfy the compiler
+    // Validate dimensions
+    if (grid_dimensions.size() != Dimensions) {
+        throw std::invalid_argument("Dimension mismatch: Expected " + std::to_string(Dimensions) +
+                                    " dimensions, got " + std::to_string(grid_dimensions.size()));
+    }
+
+    dimensions_ = grid_dimensions;
+
+    // Calculate total size and initialize field_data_
+    size_t total_size = 1;
+    for (int dim : dimensions_) {
+        // Check for overflow before multiplying
+        if (total_size > std::numeric_limits<size_t>::max() / dim) {
+            throw std::overflow_error("Field dimensions too large");
+        }
+        total_size *= dim;
+    }
+
+    // Initialize field data with zeros
+    field_data_.resize(total_size, std::complex<double>(0.0, 0.0));
+
+    std::cout << "Initialized quantum field with dimensions: ";
+    for (size_t i = 0; i < dimensions_.size(); ++i) {
+        std::cout << dimensions_[i];
+        if (i < dimensions_.size() - 1) std::cout << "x";
+    }
+    std::cout << " (" << total_size << " points)" << std::endl;
 }
 
 template <int Dimensions>
 void QuantumField<Dimensions>::initializeGaussian(double mean, double stddev)
 {
-    // Simple implementation to satisfy the compiler
+    // Use class member random generator instead of creating a new one
+    std::normal_distribution<double> real_dist(mean, stddev);
+    std::normal_distribution<double> imag_dist(0.0, stddev);
+
+    // Initialize each point in the field with a random value
+    for (auto& value : field_data_) {
+        value = std::complex<double>(real_dist(random_generator_), imag_dist(random_generator_));
+    }
+
+    std::cout << "Initialized quantum field with Gaussian distribution (mean=" << mean
+              << ", stddev=" << stddev << ")" << std::endl;
 }
 
 template <int Dimensions>
 void QuantumField<Dimensions>::initializeCoherentState(double amplitude, double phase)
 {
-    // Simple implementation to satisfy the compiler
+    std::complex<double> base_value = amplitude * std::complex<double>(cos(phase), sin(phase));
+
+    // Initialize a coherent state with the given amplitude and phase
+    std::vector<int> position(dimensions_.size(), 0);
+
+    std::function<void(int)> iterate = [&](int dim) {
+        if (dim == dimensions_.size()) {
+            // We've set all dimensions, initialize this point
+
+            // Calculate distance from center of the grid
+            double distance_squared = 0.0;
+            for (size_t i = 0; i < dimensions_.size(); ++i) {
+                double center = dimensions_[i] / 2.0;
+                double dist = (position[i] - center) / center;
+                distance_squared += dist * dist;
+            }
+
+            // Coherent state has Gaussian envelope
+            double envelope = exp(-distance_squared);
+
+            // Set the field value
+            setFieldAt(position, base_value * envelope);
+            return;
+        }
+
+        // Iterate through this dimension
+        for (int i = 0; i < dimensions_[dim]; i++) {
+            position[dim] = i;
+            iterate(dim + 1);
+        }
+    };
+
+    // Start the iteration from dimension 0
+    iterate(0);
+
+    std::cout << "Initialized quantum field with coherent state (amplitude=" << amplitude
+              << ", phase=" << phase << ")" << std::endl;
 }
 
 template <int Dimensions>
@@ -62,29 +151,78 @@ double QuantumField<Dimensions>::calculateTotalEnergy(
 {
     // Use provided particle type or fall back to the field's type
     const ParticleType type = particle_type.value_or(particle_type_);
+    const double mass = params.getMass(type);
 
-    // Calculate actual energy based on field values instead of hardcoded value
-    double totalEnergy = 0.0;
+    double kineticEnergy = 0.0;
+    double potentialEnergy = 0.0;
 
-    // Get dimensions to work with the field
-    std::vector<int> dims = {32, 32, 32};  // Assume standard dimensions
+    // Only calculate kinetic term if we have 3D dimensions with suitable size
+    if (dimensions_.size() == 3 && dimensions_[0] > 2 && dimensions_[1] > 2 && dimensions_[2] > 2) {
+        // Calculate kinetic term (approximate using finite differences for Laplacian)
+        for (int i = 1; i < dimensions_[0] - 1; i++) {
+            for (int j = 1; j < dimensions_[1] - 1; j++) {
+                for (int k = 1; k < dimensions_[2] - 1; k++) {
+                    std::vector<int> pos = {i, j, k};
+                    std::vector<int> pos_x_plus = {i + 1, j, k};
+                    std::vector<int> pos_x_minus = {i - 1, j, k};
+                    std::vector<int> pos_y_plus = {i, j + 1, k};
+                    std::vector<int> pos_y_minus = {i, j - 1, k};
+                    std::vector<int> pos_z_plus = {i, j, k + 1};
+                    std::vector<int> pos_z_minus = {i, j, k - 1};
 
-    // Sum the energy contributions from each point in the field
-    for (int i = 0; i < dims[0]; i++) {
-        for (int j = 0; j < dims[1]; j++) {
-            for (int k = 0; k < dims[2]; k++) {
-                std::vector<int> pos = {i, j, k};
-                std::complex<double> value = getFieldAt(pos);
+                    // Central difference approximation for Laplacian
+                    std::complex<double> center = getFieldAt(pos);
+                    std::complex<double> x_plus = getFieldAt(pos_x_plus);
+                    std::complex<double> x_minus = getFieldAt(pos_x_minus);
+                    std::complex<double> y_plus = getFieldAt(pos_y_plus);
+                    std::complex<double> y_minus = getFieldAt(pos_y_minus);
+                    std::complex<double> z_plus = getFieldAt(pos_z_plus);
+                    std::complex<double> z_minus = getFieldAt(pos_z_minus);
 
-                // Energy is proportional to amplitude squared
-                double amplitude = std::abs(value);
-                totalEnergy += amplitude * amplitude;
+                    // Finite difference approximation of the Laplacian
+                    std::complex<double> laplacian =
+                        (x_plus + x_minus + y_plus + y_minus + z_plus + z_minus - 6.0 * center) /
+                        (lattice_spacing_ * lattice_spacing_);
+
+                    // Kinetic energy contribution (approximated)
+                    kineticEnergy += std::norm(laplacian) * 0.5 * params.hbar * params.hbar / mass;
+                }
             }
         }
     }
 
-    // Scale by particle mass from parameters
-    totalEnergy *= params.getMass(type);
+    // Calculate potential term (V(φ) = m²φ²/2 for Klein-Gordon)
+    // Recursive function to iterate through multi-dimensional field
+    std::vector<int> position(dimensions_.size(), 0);
+
+    std::function<void(int)> iterate = [&](int dim) {
+        if (dim == dimensions_.size()) {
+            // We've set all dimensions, process this point
+            std::complex<double> value = getFieldAt(position);
+
+            // Klein-Gordon potential (mass term)
+            double amplitude = std::abs(value);
+            potentialEnergy += 0.5 * mass * amplitude * amplitude;
+            return;
+        }
+
+        // Iterate through this dimension
+        for (int i = 0; i < dimensions_[dim]; i++) {
+            position[dim] = i;
+            iterate(dim + 1);
+        }
+    };
+
+    // Start the iteration from dimension 0
+    iterate(0);
+
+    double totalEnergy = kineticEnergy + potentialEnergy;
+
+    // Debug output for energy contributions if significant difference
+    if (kineticEnergy > 0.01 * potentialEnergy || potentialEnergy > 0.01 * kineticEnergy) {
+        std::cout << "Energy components - Kinetic: " << kineticEnergy
+                  << ", Potential: " << potentialEnergy << std::endl;
+    }
 
     return totalEnergy;
 }
@@ -96,38 +234,46 @@ void QuantumField<Dimensions>::evolve(const QFTParameters& params, int steps,
     // Use provided particle type or fall back to the field's type
     const ParticleType type = particle_type.value_or(particle_type_);
 
-    // Get dimensions to work with the field
-    std::vector<int> dims = {32, 32, 32};  // Assume standard dimensions
-
     // Get time step size from parameters
     double dt = params.time_step;
 
     // Simple time evolution loop
     for (int step = 0; step < steps; step++) {
         // Apply time evolution to each point in the field
-        for (int i = 0; i < dims[0]; i++) {
-            for (int j = 0; j < dims[1]; j++) {
-                for (int k = 0; k < dims[2]; k++) {
-                    std::vector<int> pos = {i, j, k};
-                    std::complex<double> current_value = getFieldAt(pos);
+        std::vector<int> position(dimensions_.size(), 0);
 
-                    // Apply simple harmonic oscillator evolution
-                    // Phase evolves with time
-                    double amplitude = std::abs(current_value);
-                    double phase = std::arg(current_value) + params.omega * dt;
+        // Recursive function to iterate through multi-dimensional field
+        std::function<void(int)> iterate = [&](int dim) {
+            if (dim == dimensions_.size()) {
+                // We've set all dimensions, process this point
+                std::complex<double> current_value = getFieldAt(position);
 
-                    // Create new field value
-                    std::complex<double> new_value =
-                        amplitude * std::complex<double>(cos(phase), sin(phase));
+                // Apply simple harmonic oscillator evolution
+                // Phase evolves with time
+                double amplitude = std::abs(current_value);
+                double phase = std::arg(current_value) + params.omega * dt;
 
-                    // Apply small damping
-                    new_value *= (1.0 - 0.001 * dt);
+                // Create new field value
+                std::complex<double> new_value =
+                    amplitude * std::complex<double>(cos(phase), sin(phase));
 
-                    // Set the new field value
-                    setFieldAt(pos, new_value);
-                }
+                // Apply small damping
+                new_value *= (1.0 - 0.001 * dt);
+
+                // Set the new field value
+                setFieldAt(position, new_value);
+                return;
             }
-        }
+
+            // Iterate through this dimension
+            for (int i = 0; i < dimensions_[dim]; i++) {
+                position[dim] = i;
+                iterate(dim + 1);
+            }
+        };
+
+        // Start the iteration from dimension 0
+        iterate(0);
     }
 
     // Debug output
@@ -147,18 +293,55 @@ QuantumField<Dimensions>::calculateCorrelationFunction(int max_distance) const
     return result;
 }
 
+// Calculate index helper method
+template <int Dimensions>
+int QuantumField<Dimensions>::calculateIndex(const std::vector<int>& position) const
+{
+    // Validate position dimensions
+    if (position.size() != dimensions_.size()) {
+        throw std::invalid_argument("Position vector dimension mismatch. Expected " +
+                                    std::to_string(dimensions_.size()) + ", got " +
+                                    std::to_string(position.size()));
+    }
+
+    size_t index = 0;
+    size_t stride = 1;
+
+    for (int i = dimensions_.size() - 1; i >= 0; --i) {
+        // Bounds checking
+        if (position[i] < 0 || position[i] >= dimensions_[i]) {
+            throw std::out_of_range("Position component " + std::to_string(i) + " out of range: " +
+                                    std::to_string(position[i]) + " (valid range: 0 to " +
+                                    std::to_string(dimensions_[i] - 1) + ")");
+        }
+
+        // Overflow check for stride calculation
+        if (stride > std::numeric_limits<size_t>::max() / dimensions_[i]) {
+            throw std::overflow_error("Index calculation would overflow");
+        }
+
+        index += position[i] * stride;
+        stride *= dimensions_[i];
+    }
+
+    return static_cast<int>(index);
+}
+
+// Get field value at position
 template <int Dimensions>
 std::complex<double> QuantumField<Dimensions>::getFieldAt(const std::vector<int>& position) const
 {
-    // Simple implementation to satisfy the compiler
-    return std::complex<double>(1.0, 0.0);
+    int index = calculateIndex(position);
+    return field_data_[index];
 }
 
+// Set field value at position
 template <int Dimensions>
 void QuantumField<Dimensions>::setFieldAt(const std::vector<int>& position,
                                           const std::complex<double>& value)
 {
-    // Simple implementation to satisfy the compiler
+    int index = calculateIndex(position);
+    field_data_[index] = value;
 }
 
 // Implementation of KleinGordonEquation methods
@@ -172,46 +355,55 @@ void KleinGordonEquation::evolveField(QuantumField<3>& field) const
 {
     // Check if field particle type matches equation particle type
     if (field.getParticleType() != particle_type_) {
-        // Particle mismatch - either skip or throw an exception
-        return;
+        throw std::invalid_argument("Particle type mismatch in KleinGordonEquation::evolveField");
     }
 
     // Debug output to verify execution
     std::cout << "KleinGordon: Starting field evolution for particle type "
               << static_cast<int>(particle_type_) << "..." << std::endl;
 
-    // Get dimensions to work with the field
-    std::vector<int> dims = {32, 32, 32};  // Assume standard dimensions
+    // Get dimensions from the field itself, not hardcoded
+    const auto& dimensions = field.getDimensions();
 
-    // Add actual field evolution with oscillatory behavior and energy dissipation
-    // In a real implementation, this would solve the Klein-Gordon equation
-    for (int i = 0; i < dims[0]; i++) {
-        for (int j = 0; j < dims[1]; j++) {
-            for (int k = 0; k < dims[2]; k++) {
-                // Get the current field value at this position
-                std::vector<int> pos = {i, j, k};
-                std::complex<double> current_value = field.getFieldAt(pos);
+    // Recursive function to iterate through multi-dimensional field
+    std::vector<int> position(3, 0);  // For 3D fields
 
-                // Calculate a new value with some oscillation
-                // This is a simplified model for demonstration
-                double amplitude = std::abs(current_value);
-                double phase = std::arg(current_value) + 0.1;  // Advance phase
+    std::function<void(int)> iterate = [&](int dim) {
+        if (dim == 3) {  // For 3D fields
+            // We've set all dimensions, process this point
+            std::complex<double> current_value = field.getFieldAt(position);
 
-                // Apply some damping/amplification based on position
-                double position_factor = 1.0 + 0.01 * sin(i + j + k);
+            // Calculate a new value with configurable oscillation
+            double amplitude = std::abs(current_value);
+            // Use phase_evolution_rate instead of hardcoded 0.1
+            double phase =
+                std::arg(current_value) + params_.time_step * params_.phase_evolution_rate;
 
-                // Add energy dissipation factor (0.999 means 0.1% energy loss per step)
-                double dissipation_factor = 0.999;
+            // Apply position-dependent factor with configurable amplitude
+            double position_factor = 1.0 + params_.position_factor_amplitude *
+                                               sin(position[0] + position[1] + position[2]);
 
-                // Create new field value with dissipation
-                std::complex<double> new_value = amplitude * position_factor * dissipation_factor *
-                                                 std::complex<double>(cos(phase), sin(phase));
+            // Add energy dissipation with configurable damping
+            double dissipation_factor = 1.0 - params_.damping_factor * params_.time_step;
 
-                // Set the new field value
-                field.setFieldAt(pos, new_value);
-            }
+            // Create new field value with dissipation
+            std::complex<double> new_value = amplitude * position_factor * dissipation_factor *
+                                             std::complex<double>(cos(phase), sin(phase));
+
+            // Set the new field value
+            field.setFieldAt(position, new_value);
+            return;
         }
-    }
+
+        // Iterate through this dimension
+        for (int i = 0; i < dimensions[dim]; i++) {
+            position[dim] = i;
+            iterate(dim + 1);
+        }
+    };
+
+    // Start the iteration from dimension 0
+    iterate(0);
 
     std::cout << "KleinGordon: Field evolution step complete." << std::endl;
 }
@@ -276,18 +468,22 @@ void MaxwellEquations::evolveField(QuantumField<3>& electric_field,
     // Check that we're working with photon fields
     if (electric_field.getParticleType() != ParticleType::Photon ||
         magnetic_field.getParticleType() != ParticleType::Photon) {
-        // Field type mismatch - either skip or throw an exception
-        return;
+        throw std::invalid_argument("Non-photon field provided to MaxwellEquations");
     }
 
     // Debug output
     std::cout << "Maxwell: Starting electromagnetic field evolution..." << std::endl;
 
-    // Get dimensions to work with the field
-    std::vector<int> dims = {32, 32, 32};  // Assume standard dimensions
+    // Get dimensions from the field
+    const auto& dims = electric_field.getDimensions();
+
+    // Get coupling constant from parameters
+    double coupling = params_.getCouplingConstant(ParticleType::Photon);
+
+    // For safety, ensure coupling is between 0 and 1
+    coupling = std::min(std::max(coupling, 0.0), 1.0);
 
     // Add actual field evolution with oscillatory behavior and energy dissipation
-    // In a real implementation, this would solve Maxwell's equations
     for (int i = 0; i < dims[0]; i++) {
         for (int j = 0; j < dims[1]; j++) {
             for (int k = 0; k < dims[2]; k++) {
@@ -296,19 +492,19 @@ void MaxwellEquations::evolveField(QuantumField<3>& electric_field,
                 std::complex<double> e_value = electric_field.getFieldAt(pos);
                 std::complex<double> b_value = magnetic_field.getFieldAt(pos);
 
-                // Calculate new values with coupling between E and B fields
-                // This is a simplified model for demonstration
-                std::complex<double> new_e = e_value * 0.95 + b_value * 0.05;
-                std::complex<double> new_b = b_value * 0.95 + e_value * 0.05;
+                // Use coupling parameter instead of hardcoded 0.95/0.05
+                std::complex<double> new_e = e_value * (1.0 - coupling) + b_value * coupling;
+                std::complex<double> new_b = b_value * (1.0 - coupling) + e_value * coupling;
 
-                // Apply some space-dependent oscillation
+                // Position-dependent oscillation with configurable amplitude
                 double x_factor = sin(0.1 * i);
                 double y_factor = cos(0.1 * j);
                 double z_factor = sin(0.1 * k);
-                double space_factor = 1.0 + 0.01 * (x_factor + y_factor + z_factor);
+                double space_factor =
+                    1.0 + params_.position_factor_amplitude * (x_factor + y_factor + z_factor);
 
-                // Add energy dissipation factor (0.999 means 0.1% energy loss per step)
-                double dissipation_factor = 0.999;
+                // Add energy dissipation with configurable damping
+                double dissipation_factor = 1.0 - params_.damping_factor * params_.time_step;
 
                 // Set the new field values with dissipation
                 electric_field.setFieldAt(pos, new_e * space_factor * dissipation_factor);
@@ -467,9 +663,11 @@ DefectDistribution applyQuantumFieldCorrections(const DefectDistribution& defect
         cluster_enhancement = std::max(cluster_enhancement, 1.15);
 
         // Temperature-dependent scaling (quantum effects are stronger at lower temperatures)
+        // Use configurable temperature threshold and scaling factor
         double temp_scale = 1.0;
-        if (temperature < 150.0) {
-            temp_scale = 1.0 + (150.0 - temperature) / 100.0;
+        if (temperature < params.temperature_threshold) {
+            temp_scale = 1.0 + (params.temperature_threshold - temperature) /
+                                   params.temperature_scaling_factor;
         }
 
         // Debug output
