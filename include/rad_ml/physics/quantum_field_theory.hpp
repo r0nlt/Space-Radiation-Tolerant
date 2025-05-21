@@ -252,9 +252,21 @@ class QuantumField {
      */
     void setParticleType(ParticleType type) { particle_type_ = type; }
 
+    /**
+     * Get the dimensions of this field
+     */
+    const std::vector<int>& getDimensions() const { return dimensions_; }
+
    private:
     ParticleType particle_type_;
-    // Other private members
+    double lattice_spacing_;
+    std::vector<int> dimensions_;
+    std::vector<std::complex<double>> field_data_;
+
+    /**
+     * Calculate 1D array index from multi-dimensional position
+     */
+    int calculateIndex(const std::vector<int>& position) const;
 };
 
 /**

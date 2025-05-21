@@ -1517,6 +1517,7 @@ For detailed documentation on specific components and features:
 - [Auto Architecture Search Guide](AUTO_ARCH_SEARCH_GUIDE.md)
 - [LEO Radiation Simulation Model](LEO_RADIATION_SIMULATION.md)
 - [Electron Defect Model for LEO](ELECTRON_DEFECT_MODEL.md)
+- [Quantum Field Implementation](QUANTUM_FIELD_IMPLEMENTATION.md)
 - [SpaceLabs Engineering Reference](SpaceLabsEngineeringReference.md)
 
 # Library Structure and Dependencies
