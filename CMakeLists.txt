@@ -158,6 +158,15 @@ target_link_libraries(quantum_field_validation_test
 )
 add_test(NAME quantum_field_validation_test COMMAND quantum_field_validation_test)
 
+# Add the realistic LEO mission test
+add_executable(realistic_leo_mission_test test/verification/realistic_leo_mission_test.cpp)
+target_link_libraries(realistic_leo_mission_test
+    rad_ml_tmr
+    rad_ml_testing
+    rad_ml_qft
+)
+add_test(NAME realistic_leo_mission_test COMMAND realistic_leo_mission_test)
+
 # Add the neural network validation test
 add_executable(neural_network_validation
   test/verification/monte_carlo_neuralnetwork.cpp

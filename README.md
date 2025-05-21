@@ -1494,3 +1494,29 @@ The implementation includes:
 - Statistical analysis with confidence intervals
 
 This RS8Bit8Sym implementation can theoretically correct up to 4 symbol errors.
+
+# Project Structure
+
+The repository is organized as follows:
+
+```
+rad-tolerant-ml/
+├── include/          # Header files
+├── src/              # Source files
+├── examples/         # Example applications
+├── test/             # Unit and integration tests
+├── radiation-data/   # Radiation test data and models
+├── docs/             # Documentation
+└── tools/            # Utility scripts and tools
+```
+
+# Documentation
+
+For detailed documentation on specific components and features:
+
+- [Auto Architecture Search Guide](AUTO_ARCH_SEARCH_GUIDE.md)
+- [LEO Radiation Simulation Model](LEO_RADIATION_SIMULATION.md)
+- [Electron Defect Model for LEO](ELECTRON_DEFECT_MODEL.md)
+- [SpaceLabs Engineering Reference](SpaceLabsEngineeringReference.md)
+
+# Library Structure and Dependencies
