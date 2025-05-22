@@ -1,0 +1,4 @@
+architecture,protection,environment,dropout,baseline_accuracy,mean_accuracy,mean_accuracy_preservation,mean_correction_rate,max_sustainable_error_rate
+standard,NONE,LEO,0.0,0.2492,0.2492,100.0,100.0,0.01
+standard,MODERATE,LEO,0.0,0.2864,0.23333333333333328,81.47113594040968,100.0,0.0
+wide,SPACE_OPTIMIZED,MARS,0.5,0.2242,0.2741333333333333,122.27178114778471,100.0,0.01

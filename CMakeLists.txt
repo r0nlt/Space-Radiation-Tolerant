@@ -149,6 +149,12 @@ add_executable(modern_features_test test/verification/modern_features_test.cpp)
 target_link_libraries(modern_features_test rad_ml_tmr rad_ml_testing)
 add_test(NAME modern_features_test COMMAND modern_features_test)
 
+# Add the IEEE-754 aware TMR voting test
+add_executable(ieee754_tmr_test test/verification/ieee754_tmr_test.cpp)
+target_link_libraries(ieee754_tmr_test rad_ml_tmr rad_ml_testing)
+target_compile_definitions(ieee754_tmr_test PRIVATE ENABLE_TESTING=1)
+add_test(NAME ieee754_tmr_test COMMAND ieee754_tmr_test)
+
 # Add the quantum field validation test
 add_executable(quantum_field_validation_test test/verification/quantum_field_validation_test.cpp)
 target_link_libraries(quantum_field_validation_test

@@ -22,6 +22,12 @@ target_link_libraries(realistic_space_validation rad_ml_tmr rad_ml_testing)
 target_compile_definitions(realistic_space_validation PRIVATE ENABLE_TESTING=1)
 add_test(NAME realistic_space_validation COMMAND realistic_space_validation)
 
+# Add IEEE-754 aware TMR voting test
+add_executable(ieee754_tmr_test ieee754_tmr_test.cpp)
+target_link_libraries(ieee754_tmr_test rad_ml_tmr rad_ml_testing)
+target_compile_definitions(ieee754_tmr_test PRIVATE ENABLE_TESTING=1)
+add_test(NAME ieee754_tmr_test COMMAND ieee754_tmr_test)
+
 # Add other verification tests
 add_executable(framework_verification_test framework_verification_test.cpp)
 target_link_libraries(framework_verification_test rad_ml_tmr rad_ml_testing)
@@ -45,4 +51,4 @@ add_test(NAME systematic_fault_test COMMAND systematic_fault_test)
 
 add_executable(modern_features_test modern_features_test.cpp)
 target_link_libraries(modern_features_test rad_ml_tmr rad_ml_testing)
-add_test(NAME modern_features_test COMMAND modern_features_test) 
+add_test(NAME modern_features_test COMMAND modern_features_test)
