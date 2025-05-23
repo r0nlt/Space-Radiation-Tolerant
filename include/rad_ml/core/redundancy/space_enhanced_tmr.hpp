@@ -714,10 +714,9 @@ class SpaceEnhancedTMR {
     {
         // Return the finite value closest to the median
         if (std::isfinite(a) && std::isfinite(b) && std::isfinite(c)) {
-            // Return median value
-            if ((a <= b && b <= c) || (c <= b && b <= a)) return b;
-            if ((b <= a && a <= c) || (c <= a && a <= b)) return a;
-            return c;
+            std::array<U, 3> values = {a, b, c};
+            std::nth_element(values.begin(), values.begin() + 1, values.end());
+            return values[1];  // Return median
         }
 
         // Return first finite value found
