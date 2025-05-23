@@ -422,6 +422,12 @@ class SpaceEnhancedTMR {
             return bitLevelVote(values_[0], values_[1], values_[2]);
         }
         else if constexpr (std::is_floating_point<T>::value) {
+            // For all different floating point values, use findBestFloatFallback
+            // which will return the median value for finite values
+            if (std::isfinite(values_[0]) && std::isfinite(values_[1]) &&
+                std::isfinite(values_[2])) {
+                return findBestFloatFallback(values_[0], values_[1], values_[2]);
+            }
             return bitLevelVoteFloat(values_[0], values_[1], values_[2]);
         }
         else {
@@ -644,6 +650,11 @@ class SpaceEnhancedTMR {
         if (a == b) return a;
         if (a == c) return a;
         if (b == c) return b;
+
+        // Check if all values are NaN
+        if (std::isnan(a) && std::isnan(b) && std::isnan(c)) {
+            return std::numeric_limits<U>::quiet_NaN();
+        }
 
         // All different special values - return zero as safest fallback
         return U(0.0);
