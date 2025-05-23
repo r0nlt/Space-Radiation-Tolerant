@@ -34,6 +34,13 @@ constexpr double DBL_POS_INF = std::numeric_limits<double>::infinity();
 // Configuration constants
 constexpr float DEFAULT_RELATIVE_TOLERANCE = 0.001f;  // 0.1% relative tolerance
 
+// Structure to store test results
+struct TestResult {
+    std::string name;
+    bool passed;
+    std::string details;
+};
+
 /**
  * Flips a bit in the binary representation of a floating-point value
  *
@@ -82,6 +89,32 @@ T injectTwoBitError(T value, int bit_position1, int bit_position2)
 }
 
 /**
+ * Create a new TMR instance with the given values
+ */
+template <typename T>
+SpaceEnhancedTMR<T> createTMRWithValues(T a, T b, T c)
+{
+#ifdef ENABLE_TESTING
+    // Use the testing API if available
+    SpaceEnhancedTMR<T> tmr;
+    tmr.setForTesting(0, a);
+    tmr.setForTesting(1, b);
+    tmr.setForTesting(2, c);
+    tmr.recalculateChecksumsForTesting();
+    return tmr;
+#else
+    // Without testing API, use a different approach:
+    // 1. Create three separate instances with different values
+    // 2. Use the default TMR constructor that will hold value 'a'
+    // 3. Return a message indicating the test may not be accurate
+    SpaceEnhancedTMR<T> tmr(a);
+    std::cout << "WARNING: ENABLE_TESTING not defined. Using TMR with single value.\n";
+    std::cout << "         Test results will not accurately test bit-level voting.\n";
+    return tmr;
+#endif
+}
+
+/**
  * Tests the IEEE-754 aware TMR implementation with the given values
  *
  * @param a First value in the TMR
@@ -89,55 +122,34 @@ T injectTwoBitError(T value, int bit_position1, int bit_position2)
  * @param c Third value in the TMR
  * @param test_name Name of the test for reporting
  * @param tolerance Relative tolerance for floating-point comparison (default: 0.001)
- * @return True if the test passed, false otherwise
+ * @return Test result structure with pass/fail status and details
  */
 template <typename T>
-bool testFloatTMR(T a, T b, T c, const std::string& test_name,
-                  float tolerance = DEFAULT_RELATIVE_TOLERANCE)
+TestResult testFloatTMR(T a, T b, T c, const std::string& test_name,
+                        float tolerance = DEFAULT_RELATIVE_TOLERANCE)
 {
     std::cout << "Test: " << test_name << "\n";
     std::cout << "Values: " << a << ", " << b << ", " << c << "\n";
 
-    // Create a TMR instance
-    SpaceEnhancedTMR<T> tmr;
-
-    // Manually set the three values
-#ifdef ENABLE_TESTING
-    tmr.setForTesting(0, a);
-    tmr.setForTesting(1, b);
-    tmr.setForTesting(2, c);
-    tmr.recalculateChecksumsForTesting();
-#else
-    // If testing is not enabled, we need to create a more realistic test
-    // Initialize TMR with the first value
-    tmr = SpaceEnhancedTMR<T>(a);
-
-    // Simulate radiation effects by directly modifying memory
-    // Note: This is a simplified approach for testing purposes
-    uint8_t* rawMemory = reinterpret_cast<uint8_t*>(&tmr);
-
-    // Find the offset of the second and third values within the TMR object
-    // This is implementation-specific and should be adapted to your actual TMR layout
-    constexpr size_t VALUE_SIZE = sizeof(T);
-    constexpr size_t ESTIMATED_OFFSET2 = 8 + VALUE_SIZE;
-    constexpr size_t ESTIMATED_OFFSET3 = 8 + 2 * VALUE_SIZE;
-
-    // Copy values to the estimated memory locations
-    std::memcpy(rawMemory + ESTIMATED_OFFSET2, &b, VALUE_SIZE);
-    std::memcpy(rawMemory + ESTIMATED_OFFSET3, &c, VALUE_SIZE);
-
-    std::cout
-        << "WARNING: Using direct memory manipulation for testing! Results may not be reliable.\n";
-#endif
+    // Create a TMR instance using our safe creation function
+    SpaceEnhancedTMR<T> tmr = createTMRWithValues(a, b, c);
 
     // Get the value using TMR majority voting
     T result;
     auto status = tmr.get(result);
+
+    // Prepare result structure
+    TestResult testResult;
+    testResult.name = test_name;
+
     if (status != StatusCode::SUCCESS) {
         std::cout << "TMR voting failed with status code: " << static_cast<int>(status.getCode())
                   << "\n";
         std::cout << "Status: FAIL\n\n";
-        return false;
+        testResult.passed = false;
+        testResult.details = "TMR voting failed with status code: " +
+                             std::to_string(static_cast<int>(status.getCode()));
+        return testResult;
     }
 
     std::cout << "Result: " << result << "\n";
@@ -146,7 +158,9 @@ bool testFloatTMR(T a, T b, T c, const std::string& test_name,
     if (test_name == "All NaN Values") {
         bool test_passed = std::isnan(result);
         std::cout << "Status: " << (test_passed ? "PASS" : "FAIL") << "\n\n";
-        return test_passed;
+        testResult.passed = test_passed;
+        testResult.details = test_passed ? "Correctly returned NaN" : "Failed to return NaN";
+        return testResult;
     }
 
     // For "All Values Different" test, we expect the median value
@@ -154,7 +168,11 @@ bool testFloatTMR(T a, T b, T c, const std::string& test_name,
         // The median is b (2.0)
         bool test_passed = (result == b);
         std::cout << "Status: " << (test_passed ? "PASS" : "FAIL") << "\n\n";
-        return test_passed;
+        testResult.passed = test_passed;
+        testResult.details = test_passed ? "Correctly returned median value"
+                                         : "Expected median value " + std::to_string(b) +
+                                               " but got " + std::to_string(result);
+        return testResult;
     }
 
     // For "Double with Exponent Bit Flips", our implementation chooses the median value
@@ -166,7 +184,10 @@ bool testFloatTMR(T a, T b, T c, const std::string& test_name,
 
         bool test_passed = (result == median);
         std::cout << "Status: " << (test_passed ? "PASS" : "FAIL") << "\n\n";
-        return test_passed;
+        testResult.passed = test_passed;
+        testResult.details = test_passed ? "Correctly returned median exponent value"
+                                         : "Expected median value but got incorrect result";
+        return testResult;
     }
 
     // Most tests should return the majority or "corrected" value
@@ -198,19 +219,36 @@ bool testFloatTMR(T a, T b, T c, const std::string& test_name,
         // Test is successful if sign matches the majority
         bool test_passed = (should_be_negative == result_is_negative);
         std::cout << "Status: " << (test_passed ? "PASS" : "FAIL") << "\n\n";
-        return test_passed;
+        testResult.passed = test_passed;
+        testResult.details = test_passed
+                                 ? "Correctly handled sign bit voting"
+                                 : "Sign bit voting failed: expected " +
+                                       std::string(should_be_negative ? "negative" : "positive") +
+                                       " but got " +
+                                       std::string(result_is_negative ? "negative" : "positive");
+        return testResult;
     }
 
     // For other tests, use the relative error criteria
     bool test_passed = std::abs(result - base_value) <= abs_tolerance;
 
     std::cout << "Status: " << (test_passed ? "PASS" : "FAIL") << "\n\n";
-    return test_passed;
+    testResult.passed = test_passed;
+
+    if (test_passed) {
+        testResult.details = "Correctly handled value within tolerance";
+    }
+    else {
+        testResult.details = "Failed tolerance check: |" + std::to_string(result) + " - " +
+                             std::to_string(base_value) + "| > " + std::to_string(abs_tolerance);
+    }
+
+    return testResult;
 }
 
 // Test helper to validate double TMR voting with bit flips
-bool testDoubleTMRWithBitFlips(double base_value, int bit_position1, int bit_position2,
-                               const std::string& test_name)
+TestResult testDoubleTMRWithBitFlips(double base_value, int bit_position1, int bit_position2,
+                                     const std::string& test_name)
 {
     double a = base_value;
     double b = flipBit(base_value, bit_position1);
@@ -225,48 +263,49 @@ int main()
 
     int passed_tests = 0;
     int total_tests = 0;
+    std::vector<TestResult> test_results;
 
     // Test 1: Basic majority voting with 3 valid values
-    if (testFloatTMR(1.0f, 1.0f, 2.0f, "Basic Majority Voting")) passed_tests++;
+    test_results.push_back(testFloatTMR(1.0f, 1.0f, 2.0f, "Basic Majority Voting"));
     total_tests++;
 
     // Test 2: All values different but finite
-    if (testFloatTMR(1.0f, 2.0f, 3.0f, "All Values Different")) passed_tests++;
+    test_results.push_back(testFloatTMR(1.0f, 2.0f, 3.0f, "All Values Different"));
     total_tests++;
 
     // Test 3: Special values - one NaN
-    if (testFloatTMR(1.0f, NAN_VAL, 3.0f, "One NaN Value")) passed_tests++;
+    test_results.push_back(testFloatTMR(1.0f, NAN_VAL, 3.0f, "One NaN Value"));
     total_tests++;
 
     // Test 4: Special values - one Infinity
-    if (testFloatTMR(1.0f, POS_INF, 3.0f, "One Infinity Value")) passed_tests++;
+    test_results.push_back(testFloatTMR(1.0f, POS_INF, 3.0f, "One Infinity Value"));
     total_tests++;
 
     // Test 5: Special values - all NaN
-    if (testFloatTMR(NAN_VAL, NAN_VAL, NAN_VAL, "All NaN Values")) passed_tests++;
+    test_results.push_back(testFloatTMR(NAN_VAL, NAN_VAL, NAN_VAL, "All NaN Values"));
     total_tests++;
 
     // Test 6: Mix of special values
-    if (testFloatTMR(POS_INF, NAN_VAL, NEG_INF, "Mix of Special Values")) passed_tests++;
+    test_results.push_back(testFloatTMR(POS_INF, NAN_VAL, NEG_INF, "Mix of Special Values"));
     total_tests++;
 
     // Test 7: Denormal values
-    if (testFloatTMR(DENORM_MIN, DENORM_MIN, 0.0f, "Denormal Values")) passed_tests++;
+    test_results.push_back(testFloatTMR(DENORM_MIN, DENORM_MIN, 0.0f, "Denormal Values"));
     total_tests++;
 
     // Test 8: Double with bit flips in mantissa
-    if (testDoubleTMRWithBitFlips(3.14159265359, 0, 1, "Double with Mantissa Bit Flips"))
-        passed_tests++;
+    test_results.push_back(
+        testDoubleTMRWithBitFlips(3.14159265359, 0, 1, "Double with Mantissa Bit Flips"));
     total_tests++;
 
     // Test 9: Double with bit flips in exponent
-    if (testDoubleTMRWithBitFlips(3.14159265359, 52, 53, "Double with Exponent Bit Flips"))
-        passed_tests++;
+    test_results.push_back(
+        testDoubleTMRWithBitFlips(3.14159265359, 52, 53, "Double with Exponent Bit Flips"));
     total_tests++;
 
     // Test 10: Double with bit flips in sign
-    if (testDoubleTMRWithBitFlips(3.14159265359, 63, 63, "Double with Sign Bit Flips"))
-        passed_tests++;
+    test_results.push_back(
+        testDoubleTMRWithBitFlips(3.14159265359, 63, 63, "Double with Sign Bit Flips"));
     total_tests++;
 
     // Test 11: Float with multiple bit errors
@@ -274,36 +313,54 @@ int main()
     float a = multi_error_base;
     float b = flipBit(flipBit(multi_error_base, 5), 10);
     float c = flipBit(flipBit(multi_error_base, 15), 20);
-    if (testFloatTMR(a, b, c, "Float with Multiple Bit Errors")) passed_tests++;
+    test_results.push_back(testFloatTMR(a, b, c, "Float with Multiple Bit Errors"));
     total_tests++;
 
     // Test 12: Near-zero values
     // Use a value that's small but still within float precision
     float near_zero = std::numeric_limits<float>::min() * 10.0f;
-    if (testFloatTMR(near_zero, near_zero, near_zero / 10.0f, "Near-zero Values")) passed_tests++;
+    test_results.push_back(
+        testFloatTMR(near_zero, near_zero, near_zero / 10.0f, "Near-zero Values"));
     total_tests++;
 
     // Test 13: Large values near max float
     float large_val = std::numeric_limits<float>::max() / 2;
-    if (testFloatTMR(large_val, large_val, large_val * 0.9f, "Large Values")) passed_tests++;
+    test_results.push_back(testFloatTMR(large_val, large_val, large_val * 0.9f, "Large Values"));
     total_tests++;
 
     // Test 14: All different but close values
-    if (testFloatTMR(3.14159f, 3.14158f, 3.14160f, "All Different But Close", 0.0001f))
-        passed_tests++;
+    test_results.push_back(
+        testFloatTMR(3.14159f, 3.14158f, 3.1416f, "All Different But Close", 0.0001f));
     total_tests++;
 
     // Test 15: Double precision test
-    if (testFloatTMR<double>(3.14159265358979323846, 3.14159265358979323846,
-                             flipBit<double>(3.14159265358979323846, 30), "Double Precision",
-                             1e-10))
-        passed_tests++;
+    test_results.push_back(testFloatTMR<double>(3.14159265358979323846, 3.14159265358979323846,
+                                                flipBit<double>(3.14159265358979323846, 30),
+                                                "Double Precision", 1e-10));
     total_tests++;
+
+    // Count passing tests
+    for (const auto& result : test_results) {
+        if (result.passed) {
+            passed_tests++;
+        }
+    }
 
     // Summary
     std::cout << "===== Test Summary =====\n";
     std::cout << "Passed: " << passed_tests << " / " << total_tests << " tests\n";
-    std::cout << "Success Rate: " << (passed_tests * 100 / total_tests) << "%\n";
+    std::cout << "Success Rate: " << (passed_tests * 100 / total_tests) << "%\n\n";
+
+    // Detailed test results
+    if (passed_tests < total_tests) {
+        std::cout << "Failed Tests:\n";
+        for (const auto& result : test_results) {
+            if (!result.passed) {
+                std::cout << "- " << result.name << ": " << result.details << "\n";
+            }
+        }
+        std::cout << "\n";
+    }
 
     return (passed_tests == total_tests) ? 0 : 1;
 }

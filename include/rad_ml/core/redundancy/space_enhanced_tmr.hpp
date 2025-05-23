@@ -575,11 +575,35 @@ class SpaceEnhancedTMR {
             }
         }
 
+        // Pre-validate result by checking for known invalid bit patterns
+        // This avoids unnecessary memory copy if we know the result would be invalid
+        if constexpr (sizeof(U) == 4) {  // float
+            // Check for NaN pattern (all exponent bits set and non-zero mantissa)
+            FloatBits exp_mask = 0x7F800000;
+            FloatBits mantissa_mask = 0x007FFFFF;
+            if ((result & exp_mask) == exp_mask && (result & mantissa_mask) != 0) {
+                return findBestFloatFallback(a, b, c);
+            }
+
+            // Check for infinity pattern (all exponent bits set and zero mantissa)
+            if ((result & exp_mask) == exp_mask && (result & mantissa_mask) == 0) {
+                return findBestFloatFallback(a, b, c);
+            }
+        }
+        else {  // double
+            // Check for NaN/infinity patterns in double precision
+            FloatBits exp_mask = 0x7FF0000000000000ULL;
+            FloatBits mantissa_mask = 0x000FFFFFFFFFFFFFULL;
+            if ((result & exp_mask) == exp_mask) {
+                return findBestFloatFallback(a, b, c);
+            }
+        }
+
         // Convert back to floating-point
         U final_result;
         std::memcpy(&final_result, &result, sizeof(U));
 
-        // Final validation
+        // Final safety check (should rarely be needed after the pre-validation above)
         if (std::isnan(final_result) || std::isinf(final_result)) {
             return findBestFloatFallback(a, b, c);
         }
