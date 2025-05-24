@@ -37,17 +37,18 @@ where $M_i$ is a mobility parameter.
 Quantum field theory (QFT) extends the description to quantum fields $\hat{\phi}(\mathbf{r}, t)$, governed by equations such as:
 
 - **Klein-Gordon Equation (scalar fields):**
-  $$
-  \left( \frac{\partial^2}{\partial t^2} - c^2 \nabla^2 + m^2 c^4 / \hbar^2 \right) \phi(\mathbf{r}, t) = 0
-  $$
+```math
+\left( \frac{\partial^2}{\partial t^2} - c^2 \nabla^2 + m^2 c^4 / \hbar^2 \right) \phi(\mathbf{r}, t) = 0
+```
+
 - **Dirac Equation (spinor fields):**
-  $$
+```math
   (i\hbar \gamma^\mu \partial_\mu - mc) \psi = 0
-  $$
+```
 - **Maxwell Equations (electromagnetic fields):**
-  $$
+```math
   \nabla \cdot \mathbf{E} = \frac{\rho}{\epsilon_0}, \quad \nabla \times \mathbf{B} - \frac{1}{c^2} \frac{\partial \mathbf{E}}{\partial t} = \mu_0 \mathbf{J}
-  $$
+```
 
 Quantum corrections to defect formation energy $E_{\text{defect}}$ and tunneling probabilities $P_{\text{tunnel}}$ are computed using path integrals and WKB approximations:
 
