@@ -9,23 +9,23 @@ The `rad_ml/physics` module implements a multi-scale, multi-physics simulation f
 ## 1. Field Theory Models — `field_theory.hpp`
 
 **Mathematical Foundation:**
-Classical field theory models the evolution of defect concentrations \( C_i(\mathbf{r}, t) \) in a material using partial differential equations derived from a free energy functional \( F[\{C_i\}] \):
+Classical field theory models the evolution of defect concentrations $C_i(\mathbf{r}, t)$ in a material using partial differential equations derived from a free energy functional $F[\{C_i\}]$:
 
-\[
+$$
 F[\{C_i\}] = \int \left[ \frac{\kappa}{2} \sum_i |\nabla C_i|^2 + \sum_{i,j} \gamma_{ij} C_i C_j \right] d^3\mathbf{r}
-\]
+$$
 
 The time evolution is governed by gradient flow (e.g., Cahn-Hilliard or Allen-Cahn equations):
 
-\[
+$$
 \frac{\partial C_i}{\partial t} = -M_i \frac{\delta F}{\delta C_i}
-\]
+$$
 
-where \( M_i \) is a mobility parameter.
+where $M_i$ is a mobility parameter.
 
 **Technical Implementation:**
-- Discretizes fields on a 3D grid: \( C_i[x, y, z] \).
-- Computes functional derivatives \( \delta F / \delta C_i \) numerically.
+- Discretizes fields on a 3D grid: $C_i[x, y, z]$.
+- Computes functional derivatives $\delta F / \delta C_i$ numerically.
 - Solves time evolution equations using explicit or implicit schemes.
 - Calculates clustering ratios and other statistical measures.
 
@@ -34,26 +34,26 @@ where \( M_i \) is a mobility parameter.
 ## 2. Quantum Field Theory Models — `quantum_field_theory.hpp`
 
 **Mathematical Foundation:**
-Quantum field theory (QFT) extends the description to quantum fields \( \hat{\phi}(\mathbf{r}, t) \), governed by equations such as:
+Quantum field theory (QFT) extends the description to quantum fields $\hat{\phi}(\mathbf{r}, t)$, governed by equations such as:
 
 - **Klein-Gordon Equation (scalar fields):**
-  \[
+  $$
   \left( \frac{\partial^2}{\partial t^2} - c^2 \nabla^2 + m^2 c^4 / \hbar^2 \right) \phi(\mathbf{r}, t) = 0
-  \]
+  $$
 - **Dirac Equation (spinor fields):**
-  \[
+  $$
   (i\hbar \gamma^\mu \partial_\mu - mc) \psi = 0
-  \]
+  $$
 - **Maxwell Equations (electromagnetic fields):**
-  \[
+  $$
   \nabla \cdot \mathbf{E} = \frac{\rho}{\epsilon_0}, \quad \nabla \times \mathbf{B} - \frac{1}{c^2} \frac{\partial \mathbf{E}}{\partial t} = \mu_0 \mathbf{J}
-  \]
+  $$
 
-Quantum corrections to defect formation energy \( E_{\text{defect}} \) and tunneling probabilities \( P_{\text{tunnel}} \) are computed using path integrals and WKB approximations:
+Quantum corrections to defect formation energy $E_{\text{defect}}$ and tunneling probabilities $P_{\text{tunnel}}$ are computed using path integrals and WKB approximations:
 
-\[
+$$
 P_{\text{tunnel}} \sim \exp\left(-\frac{2}{\hbar} \int_{x_1}^{x_2} \sqrt{2m(V(x) - E)} dx \right)
-\]
+$$
 
 **Technical Implementation:**
 - Lattice discretization of quantum fields.
@@ -65,13 +65,13 @@ P_{\text{tunnel}} \sim \exp\left(-\frac{2}{\hbar} \int_{x_1}^{x_2} \sqrt{2m(V(x)
 ## 3. Quantum Integration and Correction — `quantum_integration.hpp`
 
 **Mathematical Foundation:**
-Quantum corrections are applied when environmental parameters (temperature \( T \) and feature size \( d \)) cross certain thresholds. The quantum enhancement factor \( Q \) is modeled as:
+Quantum corrections are applied when environmental parameters (temperature $T$ and feature size $d$) cross certain thresholds. The quantum enhancement factor $Q$ is modeled as:
 
-\[
+$$
 Q(T, d) = 1 + \alpha_T \exp\left(\frac{T_0}{T} - 1\right) + \alpha_d \exp\left(\frac{d_0}{d} - 1\right)
-\]
+$$
 
-where \( \alpha_T, \alpha_d \) are scaling coefficients.
+where $\alpha_T, \alpha_d$ are scaling coefficients.
 
 **Technical Implementation:**
 - Decision logic for when to apply quantum corrections.
@@ -85,9 +85,9 @@ where \( \alpha_T, \alpha_d \) are scaling coefficients.
 **Mathematical Foundation:**
 Models include decoherence (modeled as exponential decay of off-diagonal density matrix elements) and dissipation (Lindblad or Caldeira-Leggett formalism):
 
-\[
+$$
 \frac{d\rho}{dt} = -\frac{i}{\hbar}[H, \rho] + \mathcal{L}_{\text{decoh}}[\rho] + \mathcal{L}_{\text{diss}}[\rho]
-\]
+$$
 
 Transition probabilities and displacement energies are computed using quantum statistical mechanics and scattering theory.
 
@@ -103,11 +103,11 @@ Transition probabilities and displacement energies are computed using quantum st
 **Mathematical Foundation:**
 Defect evolution is modeled by stochastic differential equations (SDEs):
 
-\[
+$$
 d\mathbf{C} = \mathbf{A}(\mathbf{C}, t) dt + \mathbf{B}(\mathbf{C}, t) d\mathbf{W}_t
-\]
+$$
 
-where \( \mathbf{A} \) is the drift term, \( \mathbf{B} \) is the diffusion term, and \( d\mathbf{W}_t \) is a Wiener process increment.
+where $\mathbf{A}$ is the drift term, $\mathbf{B}$ is the diffusion term, and $d\mathbf{W}_t$ is a Wiener process increment.
 
 **Technical Implementation:**
 - Euler-Maruyama and higher-order SDE solvers.
@@ -119,13 +119,13 @@ where \( \mathbf{A} \) is the drift term, \( \mathbf{B} \) is the diffusion term
 ## 6. Radiation Transport Equation Models — `transport_equation.hpp`
 
 **Mathematical Foundation:**
-The Boltzmann transport equation for particle fluence \( \Phi(\mathbf{r}, \Omega, E, t) \):
+The Boltzmann transport equation for particle fluence $\Phi(\mathbf{r}, \Omega, E, t)$:
 
-\[
+$$
 \frac{\partial \Phi}{\partial t} + \Omega \cdot \nabla \Phi + \Sigma_t \Phi = \int \Sigma_s(\Omega' \rightarrow \Omega, E' \rightarrow E) \Phi(\Omega', E') d\Omega' dE' + S
-\]
+$$
 
-where \( \Sigma_t \) is the total cross-section, \( \Sigma_s \) is the scattering cross-section, and \( S \) is the source term.
+where $\Sigma_t$ is the total cross-section, $\Sigma_s$ is the scattering cross-section, and $S$ is the source term.
 
 **Technical Implementation:**
 - Tensor-based discretization of spatial, angular, and energy variables.
