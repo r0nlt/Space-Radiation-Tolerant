@@ -52,7 +52,7 @@ Contributors will be acknowledged in:
 - Release notes for significant contributions
 - Documentation for major features
 
-The original framework is developed by Rishab Nuguru, with credits to great R&D projects done by physicist and engineers in the  past.
+The original framework is developed by Rishab Nuguru, with credits to great R&D projects done by physicists and engineers in the  past.
 
 ## Questions?
 

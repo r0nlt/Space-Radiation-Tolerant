@@ -7,7 +7,7 @@ by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 For commercial licensing that permits proprietary use,
-contact: commercial@[spacelabsai@gmail.com].com
+contact: commercial@spacelabsai.gmail.com
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
