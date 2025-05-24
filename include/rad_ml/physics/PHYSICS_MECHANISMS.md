@@ -85,10 +85,9 @@ where $\alpha_T, \alpha_d$ are scaling coefficients.
 **Mathematical Foundation:**
 Models include decoherence (modeled as exponential decay of off-diagonal density matrix elements) and dissipation (Lindblad or Caldeira-Leggett formalism):
 
-![equation](https://latex.codecogs.com/svg.latex?\frac{d\rho}{dt}=-\frac{i}{\hbar}[H,\rho]+\mathcal{L}_{\text{decoh}}[\rho]+\mathcal{L}_{\text{diss}}[\rho])
-
-
-
+$$
+\frac{d\rho}{dt} = -\frac{i}{\hbar}[H, \rho] + \mathcal{L}_{\text{decoh}}[\rho] + \mathcal{L}_{\text{diss}}[\rho]
+$$
 
 Transition probabilities and displacement energies are computed using quantum statistical mechanics and scattering theory.
 
