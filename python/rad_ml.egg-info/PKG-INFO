@@ -6,7 +6,7 @@ Home-page: https://github.com/r0nlt/Space-Radiation-Tolerant
 Author: Rishab Nuguru
 Author-email: rishabnuguru@example.com
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: License :: OSI Approved :: AGPL v3 license
 Classifier: Operating System :: OS Independent
 Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
 Classifier: Topic :: Scientific/Engineering :: Physics
@@ -99,7 +99,7 @@ python -m rad_ml.examples.tmr_example
 
 ## License
 
-GNU General Public License v3.0
+AGPL v3 license
 
 ## Author
 
@@ -112,4 +112,4 @@ If you use this framework in academic or scientific research, please cite:
 ```
 Nuguru, Rishab. (2025). Radiation-Tolerant Machine Learning Framework.
 GitHub repository: https://github.com/r0nlt/Space-Radiation-Tolerant
-``` 
+```

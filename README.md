@@ -3,18 +3,10 @@
 **Author:** Rishab Nuguru
 **Original Copyright:** © 2025 Rishab Nuguru
 **Company:** Space Labs AI
-**License:** GNU General Public License (GPL) Version 3
+**License:** GNU Affero General Public License
 **Repository:** https://github.com/r0nlt/Space-Radiation-Tolerant
 **Company Page** https://www.linkedin.com/company/space-labs-ai
 **Version:** v0.9.7
-
-If someone uses this code
-Then they MUST:
-
-Make ALL of their source code public (both Rishab Nuguru's original code and their adjustments)
-License their entire program under the GPL (same license)
-Allow their customers to freely share and modify the code, too!
-
 
 A C++ framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework implements industry-standard radiation tolerance techniques validated against NASA and ESA reference models. Our recent breakthrough (v0.9.3) demonstrates that properly designed neural networks can actually achieve improved performance under radiation conditions.
 
@@ -1128,7 +1120,7 @@ Using enum classes instead of strings provides:
 
 ## License
 
-This project is licensed under the GNU General Public v3.0 - see the license file for more details
+This project and its work is licensed under the AGPL v3 license
 
 ## Acknowledgments
 

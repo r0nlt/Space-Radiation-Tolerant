@@ -1,7 +1,7 @@
 #!/bin/bash
 # Direct build script for minimal Python bindings
 # Author: Rishab Nuguru
-# License: GNU General Public License v3.0
+# License: AGPL v3 license
 
 set -e  # Exit on error
 
@@ -58,7 +58,7 @@ if [ -f "build/rad_ml/_core$PYTHON_EXTENSION" ]; then
     echo "Build successful!"
     echo "Module: build/rad_ml/_core$PYTHON_EXTENSION"
     ls -la build/rad_ml/
-    
+
     echo ""
     echo "======================================================================"
     echo "To use the module, add it to your Python path:"
@@ -73,4 +73,4 @@ if [ -f "build/rad_ml/_core$PYTHON_EXTENSION" ]; then
 else
     echo "Build failed!"
     exit 1
-fi 
+fi

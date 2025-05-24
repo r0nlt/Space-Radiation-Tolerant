@@ -78,7 +78,7 @@ python -m rad_ml.examples.tmr_example
 
 ## License
 
-GNU General Public License v3.0
+AGPL v3 license
 
 ## Author
 
@@ -91,4 +91,4 @@ If you use this framework in academic or scientific research, please cite:
 ```
 Nuguru, Rishab. (2025). Radiation-Tolerant Machine Learning Framework.
 GitHub repository: https://github.com/r0nlt/Space-Radiation-Tolerant
-``` 
+```

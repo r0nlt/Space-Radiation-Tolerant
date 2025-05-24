@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build script for the rad_ml Python bindings
 # Author: Rishab Nuguru
-# License: GNU General Public License v3.0
+# License: AGPL v3 license
 
 # Parse arguments
 DEBUG=0
@@ -91,4 +91,4 @@ echo "  ./build_python_bindings.sh --debug"
 echo ""
 echo "Or to build full bindings (requires fixing C++ code):"
 echo "  ./build_python_bindings.sh --full"
-echo "======================================================================" 
+echo "======================================================================"
