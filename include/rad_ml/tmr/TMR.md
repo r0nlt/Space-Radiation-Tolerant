@@ -138,6 +138,117 @@ auto analysis = hardening.analyzeAndProtect(components);
 
 ---
 
+## Testing and Validation: Best Test Cases
+
+This section highlights real-world validation and demonstration of the TMR and advanced protection mechanisms, using the best and most illustrative tests from the codebase. These tests ensure the reliability, adaptability, and effectiveness of the framework in a variety of challenging scenarios.
+
+### Physics-Driven Protection: Environment Adaptation and Error Recovery
+
+**Test: Environment Adaptation and Error Injection**
+
+```cpp
+// Adapted from test/framework_validation_test.cpp
+auto aluminum = createAluminumProperties();
+tmr::PhysicsDrivenProtection protection(aluminum, 3);
+
+// Test environments
+std::vector<std::string> environments = {"NONE", "LEO", "GEO", "SAA", "SOLAR_STORM", "JUPITER"};
+for (const auto& env_name : environments) {
+    sim::RadiationEnvironment env = createEnvironment(env_name);
+    protection.updateEnvironment(env);
+    // ... check protection level, checkpoint interval, and factors ...
+}
+
+// Error injection and recovery
+tmr::PhysicsDrivenProtection protection(aluminum, 1);
+protection.updateEnvironment(createEnvironment("JUPITER"));
+const int iterations = 1000;
+int corrected_count = 0;
+for (int i = 0; i < iterations; i++) {
+    auto error_prone_op = [&]() -> int {
+        if (dist(gen) < 0.3) return -999; // Simulate error
+        return 42;
+    };
+    tmr::TMRResult<int> result = protection.executeProtected<int>(error_prone_op);
+    if (result.value == 42) corrected_count++;
+}
+// Output: High correction rate even with 30% error injection
+```
+
+### Health-Weighted TMR: Error Detection and Self-Healing
+
+**Test: Health-Weighted TMR Corruption and Repair**
+
+```cpp
+// Adapted from examples/enhanced_features_test/enhanced_features_test.cpp
+rad_ml::tmr::HealthWeightedTMR<float> hwt(3.14159f);
+std::cout << "Initial value: " << hwt.get() << std::endl;
+// Corrupt one copy
+*reinterpret_cast<float*>(&hwt) = 2.71828f;
+std::cout << "Value after corruption: " << hwt.get() << std::endl;
+hwt.repair();
+std::cout << "Value after repair: " << hwt.get() << std::endl;
+// Output: Detects corruption, repairs to original value
+```
+
+### Approximate TMR: Resource-Efficient Protection
+
+**Test: Approximate TMR with Mixed Precision**
+
+```cpp
+// Adapted from examples/enhanced_features_test/enhanced_features_test.cpp
+rad_ml::tmr::ApproximateTMR<float> atmr(
+    3.14159f,
+    {rad_ml::tmr::ApproximationType::EXACT,
+     rad_ml::tmr::ApproximationType::REDUCED_PRECISION,
+     rad_ml::tmr::ApproximationType::RANGE_LIMITED}
+);
+std::cout << "Initial value: " << atmr.get() << std::endl;
+*reinterpret_cast<float*>(&atmr) = 2.71828f;
+std::cout << "Value after corruption: " << atmr.get() << std::endl;
+atmr.repair();
+std::cout << "Value after repair: " << atmr.get() << std::endl;
+// Output: Detects and repairs errors, even with mixed-precision copies
+```
+
+### Enhanced Stuck Bit TMR: Stuck Bit Detection and Recovery
+
+**Test: Stuck Bit Simulation and Mask-Aware Repair**
+
+```cpp
+// Adapted from src/test/enhanced_features_test.cpp
+rad_ml::tmr::EnhancedStuckBitTMR<uint32_t> tmr(0x12345678);
+const uint32_t stuck_bit_mask = 0x00010001; // Bit 0 and 16 stuck at 1
+for (int i = 0; i < 5; i++) {
+    uint32_t corrupted = tmr.getCopies()[0] | stuck_bit_mask;
+    tmr.corruptCopy(0, corrupted);
+    std::cout << "TMR value after corruption: 0x" << std::hex << tmr.get() << std::dec << std::endl;
+    tmr.repair();
+    std::cout << "TMR value after repair: 0x" << std::hex << tmr.get() << std::dec << std::endl;
+}
+// Output: Stuck bits are detected and handled, value is restored
+```
+
+### Selective Hardening: Neural Network Component Protection
+
+**Test: Selective Hardening with Criticality Analysis**
+
+```cpp
+// Adapted from examples/enhanced_features_test/enhanced_features_test.cpp
+ProtectedNeuralNetwork nn(4, {8, 6}, 2);
+rad_ml::neural::HardeningConfig config = rad_ml::neural::HardeningConfig::defaultConfig();
+config.strategy = rad_ml::neural::HardeningStrategy::RESOURCE_CONSTRAINED;
+config.resource_budget = 0.3;
+nn.applySelectiveHardening(config);
+// Output: Prints protection levels assigned to each weight/bias based on criticality
+```
+
+---
+
+These tests, along with comprehensive unit and integration tests in the codebase, validate the robustness and adaptability of the TMR framework under a wide range of real-world and extreme conditions.
+
+---
+
 ## References
 
 1. NASA Radiation Effects Models
