@@ -53,6 +53,9 @@ Delivers high-reliability error correction for critical neural network parameter
 
 ## 4. Multi-Bit and Adaptive Protection — `multi_bit_protection.hpp`, `multibit_protection.hpp`
 
+> **Note:**
+> Both `multi_bit_protection.hpp` and `multibit_protection.hpp` provide mechanisms for multi-bit error protection. For consistency and maintainability, it is recommended to standardize on a single naming convention (e.g., `multi_bit_protection.hpp`) and consolidate functionality if possible.
+
 **Scientific Rationale:**
 Space radiation can induce single and multi-bit upsets, including spatially correlated errors. Multi-bit protection mechanisms are required to detect and correct these complex error patterns.
 

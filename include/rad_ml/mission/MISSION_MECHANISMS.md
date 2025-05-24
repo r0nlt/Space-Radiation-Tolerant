@@ -28,9 +28,9 @@ Space missions encounter vastly different radiation environments, hardware capab
 **Mathematical/Algorithmic Aspects:**
 - **Environment-to-Protection Mapping:**
   - The mission profile selects an initial protection level (e.g., ECC, TMR, adaptive) based on environmental risk, using a mapping:
-    \[
+    \\[
     \text{ProtectionLevel} = f(\text{MissionType}, \text{RadiationEnvironment}, \text{HardwareConfig})
-    \]
+    \\
 - **Simulation Integration:**
   - Provides interfaces to radiation simulators, enabling Monte Carlo or deterministic evaluation of mission scenarios.
 - **Network Configuration:**

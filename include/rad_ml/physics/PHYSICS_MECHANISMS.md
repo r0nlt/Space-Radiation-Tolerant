@@ -65,7 +65,7 @@ P_{\text{tunnel}} \sim \exp\left(-\frac{2}{\hbar} \int_{x_1}^{x_2} \sqrt{2m(V(x)
 ## 3. Quantum Integration and Correction — `quantum_integration.hpp`
 
 **Mathematical Foundation:**
-Quantum corrections are applied when environmental parameters (temperature \( T \), feature size \( d \), radiation intensity \( I \)) cross certain thresholds. The quantum enhancement factor \( Q \) is modeled as:
+Quantum corrections are applied when environmental parameters (temperature \( T \) and feature size \( d \)) cross certain thresholds. The quantum enhancement factor \( Q \) is modeled as:
 
 \[
 Q(T, d) = 1 + \alpha_T \exp\left(\frac{T_0}{T} - 1\right) + \alpha_d \exp\left(\frac{d_0}{d} - 1\right)
