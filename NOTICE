@@ -1,16 +1,16 @@
 Radiation-Tolerant Machine Learning Framework
 Copyright (c) 2025 Rishab Nuguru
 
-This software was developed by Rishab Nuguru as an original work and is the property and free use of Space Labs AI without any limitations.
+This software was developed by Rishab Nuguru as an original work and is the property of Rishab Nuguru.
 
-The Radiation-Tolerant Machine Learning Framework is a comprehensive solution for 
-implementing fault-tolerant neural networks and machine learning models capable 
-of operating reliably in high-radiation environments such as space. This work 
-includes novel methods for Health-Weighted Triple Modular Redundancy, 
+The Space-Radiation-Tolerant Machine Learning Framework is a comprehensive solution for
+implementing fault-tolerant neural networks and machine learning models capable
+of operating reliably in high-radiation environments such as space. This work
+includes novel methods for Health-Weighted Triple Modular Redundancy,
 Approximate TMR, Selective Hardening, and physics-based radiation simulation.
 
-This work represents significant intellectual contribution to the field of 
-radiation-tolerant computing and is provided under the MIT license with the 
+This work represents significant intellectual contribution to the field of
+radiation-tolerant computing and is provided under the AGPL v3 license with the
 expectation of proper attribution.
 
 Project Repository: https://github.com/r0nlt/Space-Radiation-Tolerant

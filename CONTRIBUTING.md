@@ -1,14 +1,14 @@
-# Contributing to Radiation-Tolerant ML Framework
+# Contributing to Space-Radiation-Tolerant
 
-Thank you for your interest in contributing to the Radiation-Tolerant ML Framework! This document provides guidelines for contributing to this project.
+Thank you for your interest in contributing to the Space-Radiation-Tolerant ML Framework! This document provides guidelines for contributing to this project.
 
 ## Copyright and Attribution
 
-This project was originally created by Rishab Nuguru and is now maintained as a GPL v3 licensed project. All contributions must respect both the original attribution and the current licensing terms.
+This project was originally created by Rishab Nuguru and is now maintained as an AGPL v3 licensed project with commercial licensing options. All contributions must respect both the original attribution and the current licensing terms.
 
 ### Copyright Header
 
-All new source files must include the standard GPL v3 copyright header found in `COPYRIGHT_HEADER.txt`. This ensures proper attribution and licensing is maintained throughout the codebase.
+All new source files must include the standard AGPL v3 copyright header found in `COPYRIGHT_HEADER.txt`. This ensures proper attribution and licensing is maintained throughout the codebase.
 
 ### Attribution in Documentation
 
@@ -19,11 +19,11 @@ When documenting new features or modifications, please maintain references to bo
 - Respect the original work and intellectual contribution of the framework
 - Be considerate of other contributors
 - Provide constructive feedback
-- Focus on improving the framework while respecting the GPL v3 license terms
+- Respect the AGPL v3 license terms
 
 ## Pull Request Process
 
-1. Make sure all new files include the GPL v3 copyright header
+1. Make sure all new files include the AGPL v3 copyright header
 2. Update the README.md if your changes add new features or modify existing ones
 3. Add appropriate tests for your changes
 4. Update documentation as necessary
@@ -32,11 +32,18 @@ When documenting new features or modifications, please maintain references to bo
 
 ## Licensing
 
-By contributing to this project, you agree that your contributions will be licensed under the project's GNU General Public License v3.0. This ensures that:
-- Your code remains free and open source
+By contributing to this project, you agree that your contributions will be licensed under the project's GNU Affero General Public License v3.0. This ensures that:
+- Your code remains free and open source for non-commercial use
 - Derivative works must also remain open source under the same license
-- Commercial use of the software must maintain these freedoms
-- The source code must remain available to all users
+- Any commercial use requires a separate commercial license
+- The source code must remain available to all users of the open source version
+- Network use triggers the copyleft requirements
+
+**Note**: This project operates under a dual licensing model:
+- **AGPL v3**: Free for academic research, education, and open source projects
+- **Commercial License**: Available for commercial and proprietary use
+
+For commercial licensing inquiries, contact: [spacelabsai@gmail.com]
 
 ## Getting Credit for Your Contributions
 
@@ -45,8 +52,8 @@ Contributors will be acknowledged in:
 - Release notes for significant contributions
 - Documentation for major features
 
-The original framework is attributed to Rishab Nuguru, with subsequent contributions properly attributed to their respective authors.
+The original framework is developed by Rishab Nuguru, with credits to great R&D projects done by physicist and engineers in the  past.
 
 ## Questions?
 
-If you have any questions about contributing, please reach out to the project maintainer.
+If you have any questions about contributing, please reach out to Space Labs AI.
