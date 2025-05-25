@@ -38,6 +38,13 @@ tmr_int->set(100);
 #include <rad_ml/api/rad_ml.hpp>
 
 // Create a protected neural network with selective hardening
+// Replace /* network constructor args */ with the arguments required by your network's constructor.
+// For example, if MyNetwork(int input_dim, int hidden_dim, int output_dim):
+// auto protected_nn = rad_ml::neural::createProtectedNetwork<MyNetwork>(
+//     rad_ml::neural::HardeningStrategy::RESOURCE_CONSTRAINED,
+//     rad_ml::neural::ProtectionLevel::FULL_TMR,
+//     10, 20, 2 // Example: input=10, hidden=20, output=2
+// );
 auto protected_nn = rad_ml::neural::createProtectedNetwork<MyNetwork>(
     rad_ml::neural::HardeningStrategy::RESOURCE_CONSTRAINED,
     rad_ml::neural::ProtectionLevel::FULL_TMR,
