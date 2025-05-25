@@ -66,7 +66,7 @@ The `rad_ml/research/` module is the **scientific and experimental core** of the
   - Grid, random, and evolutionary search for optimal architectures under radiation constraints
 - **Statistical Validation:**
   - Monte Carlo testing, standard deviation computation, and aggregation of results for scientific rigor
-- **Novel Training Paradigms:**
+- **Training Paradigms:**
   - Radiation-aware training with bit injection, criticality targeting, and recovery analysis
 - **Advanced Architectures:**
   - Protected ResNets with flexible skip connections and per-connection protection
@@ -92,7 +92,7 @@ The `rad_ml/research/` module is the **scientific and experimental core** of the
    - Use `ArchitectureTester` to benchmark a range of architectures and hyperparameters under radiation, collecting detailed metrics.
 2. **Automated Optimization:**
    - Employ `AutoArchSearch` to automatically discover optimal architectures using grid, random, or evolutionary strategies.
-3. **Novel Algorithm Development:**
+3. **Algorithm Development:**
    - Use `RadiationAwareTraining` to develop and validate new training methods that improve inherent resilience.
 4. **Scientific Validation:**
    - All tools support Monte Carlo/statistical validation, CSV export, and visualization, enabling reproducible, publication-quality research.
