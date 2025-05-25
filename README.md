@@ -8,6 +8,67 @@
 **Company Page** https://www.linkedin.com/company/space-labs-ai
 **Version:** v0.9.7
 
+---
+
+## 📚 Documentation Index
+
+- [API Overview](include/rad_ml/api/API.md)
+- [Radiation Modeling & Simulation](include/rad_ml/radiation/RADIATION.md)
+- [Recovery & Checkpointing](include/rad_ml/core/recovery/RECOVERY.md)
+- [Research Tools & Methodology](include/rad_ml/research/RESEARCH.md)
+- [Adaptive Protection](include/rad_ml/core/radiation/RADIATION.md)
+
+---
+
+## Table of Contents
+
+### Getting Started
+- [How Radiation Affects Computing](#how-radiation-affects-computing)
+- [Quick Start Guide](#quick-start-guide)
+- [Common API Usage Examples](#common-api-usage-examples)
+- [Python Bindings Usage](#python-bindings-usage)
+
+### Performance & Results
+- [Performance and Resource Utilization](#performance-and-resource-utilization)
+- [Neural Network Fine-Tuning Results](#neural-network-fine-tuning-results)
+- [Validation Results](#validation-results)
+- [Industry Recognition and Benchmarks](#industry-recognition-and-benchmarks)
+- [Case Studies and Simulated Mission Scenarios](#case-studies-and-simulated-mission-scenarios)
+
+### Framework Features & Architecture
+- [Features](#features)
+- [Key Scientific Advancements](#key-scientific-advancements)
+- [Framework Architecture](#framework-architecture)
+- [Library Structure and Dependencies](#library-structure-and-dependencies)
+- [Project Structure](#project-structure)
+
+### Advanced Topics
+- [Recent Enhancements](#recent-enhancements)
+- [Auto Architecture Search Guide](AUTO_ARCH_SEARCH_GUIDE.md)
+- [Self-Monitoring Radiation Detection](#self-monitoring-radiation-detection)
+- [Potential Applications](#potential-applications)
+- [Practical Use Cases](#practical-use-cases)
+- [Current Limitations](#current-limitations)
+- [Future Research Directions](#future-research-directions)
+
+### Standards & Compliance
+- [NASA Mission Compatibility and Standards Compliance](#nasa-mission-compatibility-and-standards-compliance)
+- [Scientific References](#scientific-references)
+
+### Troubleshooting & Support
+- [Troubleshooting](#troubleshooting)
+- [Contact Information](#contact-information)
+- [Citation Information](#citation-information)
+
+### Project Management
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+- [Contributing](#contributing)
+- [Versioning](#versioning)
+- [Release History](#release-history)
+
+---
+
 A C++ framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework implements industry-standard radiation tolerance techniques validated against NASA and ESA reference models. Our recent breakthrough (v0.9.3) demonstrates that properly designed neural networks can actually achieve improved performance under radiation conditions.
 
 ## Important Note for Students
@@ -19,51 +80,6 @@ The Student Guide provides easy-to-follow steps for:
 - Building the project
 - Running tests and examples
 - Troubleshooting common issues
-
-## Table of Contents
-
-- [How Radiation Affects Computing](#how-radiation-affects-computing)
-- [Quick Start Guide](#quick-start-guide)
-- [Common API Usage Examples](#common-api-usage-examples)
-- [Python Bindings Usage](#python-bindings-usage)
-- [Performance and Resource Utilization](#performance-and-resource-utilization)
-- [Neural Network Fine-Tuning Results](#neural-network-fine-tuning-results)
-  - [Key Findings](#key-findings)
-  - [Implications](#implications)
-- [Features](#features)
-- [Key Scientific Advancements](#key-scientific-advancements)
-- [Framework Architecture](#framework-architecture)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Hardware Requirements](#hardware-requirements-and-development-environment)
-  - [Building Your First Project](#building-your-first-project)
-  - [Quick Start Example](#quick-start-example)
-- [Validation Results](#validation-results)
-- [Scientific References](#scientific-references)
-- [Project Structure](#project-structure)
-- [Library Structure and Dependencies](#library-structure-and-dependencies)
-- [NASA Mission Compatibility and Standards Compliance](#nasa-mission-compatibility-and-standards-compliance)
-- [Recent Enhancements](#recent-enhancements)
-  - [Auto Architecture Search (v0.9.7)](#1-auto-architecture-search-enhancement-v097)
-  - [Auto Architecture Search Guide](AUTO_ARCH_SEARCH_GUIDE.md)
-- [Self-Monitoring Radiation Detection](#self-monitoring-radiation-detection)
-- [Industry Recognition and Benchmarks](#industry-recognition-and-benchmarks)
-- [Potential Applications](#potential-applications)
-- [Practical Use Cases](#practical-use-cases)
-- [Case Studies and Simulated Mission Scenarios](#case-studies-and-simulated-mission-scenarios)
-- [Current Limitations](#current-limitations)
-- [Future Research Directions](#future-research-directions)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
-- [Contributing](#contributing)
-- [Versioning](#versioning)
-- [Release History](#release-history)
-  - [Current Version: v0.9.7 - Auto Architecture Search Enhancement](#release-history)
-  - [Previous Versions: See VERSION_HISTORY.md](#release-history)
-- [Contact Information](#contact-information)
-- [Citation Information](#citation-information)
 
 ## How Radiation Affects Computing
 
