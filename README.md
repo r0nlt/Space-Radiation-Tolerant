@@ -15,8 +15,11 @@
 - [API Overview](include/rad_ml/api/API.md)
 - [Radiation Modeling & Simulation](include/rad_ml/radiation/RADIATION.md)
 - [Recovery & Checkpointing](include/rad_ml/core/recovery/RECOVERY.md)
-- [Research Tools & Methodology](include/rad_ml/research/RESEARCH.md)
-- [Adaptive Protection](include/rad_ml/core/radiation/RADIATION.md)
+- [Research Tools](include/rad_ml/research/RESEARCH.md)
+- [Simulating Specific Particle Types](include/rad_ml/radiation/PARTICLE_TYPES.md)
+- [Modeling Mission-Phase-Dependent Environments](include/rad_ml/radiation/MISSION_PHASES.md)
+- [Advanced Simulation & Modeling](include/rad_ml/radiation/ADVANCED_SIMULATION.md)
+- [FAQ](FAQ/FAQ.md)
 
 ---
 
@@ -1529,3 +1532,77 @@ For detailed documentation on specific components and features:
 - [SpaceLabs Engineering Reference](SpaceLabsEngineeringReference.md)
 
 # Library Structure and Dependencies
+
+```
+
+## Example: Custom Two-Week LEO Mission Test
+
+This example demonstrates how to use the framework to model and simulate a two-week mission in Low Earth Orbit (LEO):
+
+- **Defines a mission phase in LEO** using the default environment parameters.
+- **Calculates total radiation exposure** over two weeks.
+- **Prints the environment at a specific mission time (e.g., day 7).**
+- **Does not use protection mechanisms** (e.g., TMR, scrubbing) — this is a baseline scenario.
+
+### Key Code Snippet
+```cpp
+#include <rad_ml/radiation/environment.hpp>
+#include <rad_ml/radiation/space_mission.hpp>
+
+using namespace rad_ml::radiation;
+
+// Define a two-week LEO mission phase
+auto leo_env = Environment::createEnvironment(EnvironmentType::LOW_EARTH_ORBIT);
+MissionPhase leo_phase("LEO Phase", MissionPhaseType::EARTH_ORBIT, leo_env,
+                       std::chrono::hours(24 * 14), 1.0, 2.0);
+SpaceMission mission("Two-Week LEO Mission", MissionTarget::EARTH_LEO);
+mission.addPhase(leo_phase);
+double total_exposure = mission.calculateTotalRadiationExposure();
+std::cout << "Total radiation exposure over 2 weeks in LEO: " << total_exposure << std::endl;
+```
+
+### Sample Output
+```
+Total radiation exposure over 2 weeks in LEO: 0.12096 (flux-time product)
+Environment at day 7: Low Earth Orbit
+```
+
+See the full example: [`examples/custom_leo_mission.cpp`](examples/custom_leo_mission.cpp)
+
+## Example: Custom Two-Week SAA Mission Test
+
+This example demonstrates how to use the framework to model and simulate a two-week mission in the South Atlantic Anomaly (SAA):
+
+- **Defines a mission phase in SAA** using a custom environment with higher SEU flux.
+- **Calculates total radiation exposure** over two weeks.
+- **Prints the environment at a specific mission time (e.g., day 7).**
+- **Does not use protection mechanisms** (e.g., TMR, scrubbing) — this is a baseline scenario for a high-radiation region.
+
+### Key Code Snippet
+```cpp
+#include <rad_ml/radiation/environment.hpp>
+#include <rad_ml/radiation/space_mission.hpp>
+
+using namespace rad_ml::radiation;
+
+// Define a two-week SAA mission phase
+auto saa_env = std::make_shared<Environment>(EnvironmentType::CUSTOM, "South Atlantic Anomaly");
+saa_env->setSEUFlux(1e-6f);  // Higher flux for SAA
+saa_env->setSEUCrossSection(1e-14f);
+MissionPhase saa_phase("SAA Phase", MissionPhaseType::EARTH_ORBIT, saa_env,
+                      std::chrono::hours(24 * 14), 1.0, 2.0);
+SpaceMission mission("Two-Week SAA Mission", MissionTarget::EARTH_LEO);
+mission.addPhase(saa_phase);
+double total_exposure = mission.calculateTotalRadiationExposure();
+std::cout << "Total radiation exposure over 2 weeks in SAA: " << total_exposure << std::endl;
+```
+
+### Sample Output
+```
+Total radiation exposure over 2 weeks in SAA: 1.2096 (flux-time product)
+Environment at day 7: South Atlantic Anomaly
+```
+
+See the full example: [`examples/custom_saa_mission.cpp`](examples/custom_saa_mission.cpp)
+
+---
