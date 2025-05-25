@@ -11,7 +11,7 @@ The `rad_ml` framework is an open-source toolkit for developing, simulating, and
 ## How is this different from GEANT4?
 
 - **GEANT4** is a comprehensive, physics-accurate particle transport toolkit used for simulating the passage of particles through matter (e.g., in high-energy physics, medical physics, and shielding design).
-- **Space-Radiation-Tolerant** focuses on the *system and ML level*: simulating the effects of radiation on neural networks, embedded systems, and mission-critical software, with fast, abstracted models suitable for rapid prototyping and research.
+- **rad_ml** focuses on the *system and ML level*: simulating the effects of radiation on neural networks, embedded systems, and mission-critical software, with fast, abstracted models suitable for rapid prototyping and research.
 - If you need detailed, physics-level simulation, use GEANT4. If you want to study ML robustness, error mitigation, or system-level effects, use rad_ml.
 
 ---
@@ -43,6 +43,23 @@ The `rad_ml` framework is an open-source toolkit for developing, simulating, and
 
 ---
 
+## Can I simulate specific particle types (protons, heavy ions, etc.)?
+
+**Yes!** While the framework abstracts over particle type at the system level, you can accurately simulate the effects of any particle (proton, heavy ion, neutron, etc.) by setting the appropriate flux and cross-section parameters for your scenario.
+
+- For a detailed guide, see: [Simulating Specific Particle Types](include/rad_ml/radiation/PARTICLE_TYPES.md)
+- Advanced users can also use custom properties (LET, energy, TID, SEL probability) for more detailed modeling.
+
+---
+
+## Can I model time-varying or mission-phase-dependent environments?
+
+**Yes!** The framework supports complex mission profiles with multiple phases, each having its own radiation environment, duration, and shielding. This allows you to simulate realistic, time-varying exposure scenarios for space missions and other applications.
+
+- For a detailed guide, see: [Modeling Mission-Phase-Dependent Environments](include/rad_ml/radiation/MISSION_PHASES.md)
+
+---
+
 ## How do I contribute?
 
 - See [CONTRIBUTING.md](CONTRIBUTING.md) (if available) or open an issue/pull request on GitHub.
@@ -56,6 +73,8 @@ The `rad_ml` framework is an open-source toolkit for developing, simulating, and
 - [Radiation Modeling](include/rad_ml/radiation/RADIATION.md)
 - [Recovery & Checkpointing](include/rad_ml/core/recovery/RECOVERY.md)
 - [Research Tools](include/rad_ml/research/RESEARCH.md)
+- [Simulating Specific Particle Types](include/rad_ml/radiation/PARTICLE_TYPES.md)
+- [Modeling Mission-Phase-Dependent Environments](include/rad_ml/radiation/MISSION_PHASES.md)
 - [README.md](README.md) for project overview and quickstart
 
 ---
