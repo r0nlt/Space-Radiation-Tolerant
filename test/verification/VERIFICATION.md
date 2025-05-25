@@ -126,4 +126,4 @@ The scientific validation test can be computationally intensive, especially when
 For researchers needing to understand the underlying physics models and radiation effects being simulated, refer to:
 - NASA Single Event Effects Program documentation
 - ESA Radiation Environment Models documentation
-- The framework's implementation of physics models in `rad_ml/physics/` and `rad_ml/radiation/` 
+- The framework's implementation of physics models in `rad_ml/physics/` and `rad_ml/radiation/`
