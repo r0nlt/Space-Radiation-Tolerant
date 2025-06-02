@@ -1,14 +1,32 @@
 # Radiation-Tolerant Machine Learning Framework
 
 **Author:** Rishab Nuguru
-**Original Copyright:** © 2025 Rishab Nuguru
-**Company:** Space Labs AI
-**License:** GNU Affero General Public License
-**Repository:** https://github.com/r0nlt/Space-Radiation-Tolerant
-**Company Page** https://www.linkedin.com/company/space-labs-ai
-**Version:** v0.9.7
 
-A C++ framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework implements industry-standard radiation tolerance techniques validated against NASA and ESA reference models. Our recent breakthrough (v0.9.3) demonstrates that properly designed neural networks can actually achieve improved performance under radiation conditions.
+**Original Copyright:** © 2025 Rishab Nuguru
+
+**Company:** Space-Labs-AI
+
+**License:** GNU Affero General Public License
+
+**Repository:** https://github.com/r0nlt/Space-Radiation-Tolerant
+
+**Company Page:** https://www.linkedin.com/company/space-radiation-tolerant
+
+**Version:** v1.0.0
+
+A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework implements radiation tolerance techniques inspired by industry practices and research in space radiation effects.
+
+## About Space-Radiation-Tolerant
+
+Space-Radiation-Tolerant is an open-source software company focused on developing radiation-tolerant computing solutions for space applications.
+
+### Our Approach
+
+- **Open Source First**: All our software is released under the AGPL v3 license
+- **Research-Driven**: Our solutions are based on current research in radiation effects and mitigation
+- **Community Focused**: We welcome contributions and collaboration from the open-source community
+- **Quality Assurance**: Rigorous testing and continuous improvement of our software
+- **Documentation**: Comprehensive documentation and examples for all our tools
 
 ## Important Note for Students
 
@@ -67,7 +85,7 @@ The Student Guide provides easy-to-follow steps for:
 
 ## How Radiation Affects Computing
 
-When high-energy particles from space radiation strike semiconductor materials in computing hardware, they can cause several types of errors:
+High-energy particles from space radiation strike semiconductor materials in computing hardware, they can cause several types of errors:
 
 - **Single Event Upset (SEU)**: A change in state caused by one ionizing particle striking a sensitive node in a microelectronic device
 - **Multiple Bit Upset (MBU)**: Multiple bits flipped from a single particle strike
@@ -76,7 +94,7 @@ When high-energy particles from space radiation strike semiconductor materials i
 
 These effects can corrupt data in memory, alter computational results, or even permanently damage hardware. In space environments where maintenance is impossible, radiation tolerance becomes critical for mission success.
 
-This framework addresses these challenges through software-based protection mechanisms that detect and correct radiation-induced errors, allowing ML systems to operate reliably even in harsh radiation environments.
+Space-Radiation-Tolerant addresses these challenges through software-based protection mechanisms that detect and correct radiation-induced errors, allowing ML systems to operate reliably even in harsh radiation environments. The software framework is intended to work alongside hardware protection strategies to achieve enhanced protection through hybrid protection methods.
 
 ## Quick Start Guide
 
@@ -437,11 +455,11 @@ Recent breakthroughs in our Monte Carlo testing with neural network fine-tuning 
 
 ### Key Findings
 
-Our extensive Monte Carlo simulations (3240 configurations) revealed that:
+Extensive Monte Carlo simulations (3240 configurations) revealed that:
 
 1. **Architecture Over Protection**: Wider neural network architectures (32-16 nodes) demonstrated superior radiation tolerance compared to standard architectures with explicit protection mechanisms.
 
-2. **Counterintuitive Performance**: The best-performing configuration actually achieved **146.84% accuracy preservation** in a Mars radiation environment - meaning it performed *better* under radiation than in normal conditions.
+2. **Counterintuitive Performance**: The best-performing configuration actually achieved **146.84% accuracy preservation** in a Mars radiation environment - meaning it performed *better* under radiation than in normal conditions. This is something I determined that was due to noise, I did another test in the same radiation environment on Mars to further investigate and I still got counterintuitive performance due to the nature of how the algorithm was functioning within the radiation environments set for Mars within the simulation.
 
 3. **Optimal Configuration**:
    - **Architecture**: Wide (32-16) neural network
@@ -449,11 +467,11 @@ Our extensive Monte Carlo simulations (3240 configurations) revealed that:
    - **Protection Level**: None (0% memory overhead)
    - **Training Parameters**: 500 epochs, near-zero learning rate, 0.5 dropout rate
 
-4. **Training Factors Matter**: Networks trained with high dropout rates (0.5) demonstrated significantly enhanced radiation tolerance, likely due to the inherent redundancy introduced during training.
+4. **Training Factors Matter**: Networks trained with high dropout rates (0.5) demonstrated significantly enhanced radiation tolerance, likely due to the inherent redundancy introduced during training. Further testing revealed that pre-trained networks consistently showed improved radiation tolerance across multiple test scenarios.
 
 ### Implications
 
-These findings represent a paradigm shift in how we approach radiation-tolerant neural networks:
+There is hope for AI in space, these findings can help people develop an AI that can reliably communicate with people in real time when needed to without having to worry about memory loss issues due to radiation effects. AI can not autonomously operate in LEO observing out earth as well as climate change. The cost now to make and design hardware like this will have to change:
 
 1. **Natural Tolerance**: Some neural network architectures appear to possess inherent radiation tolerance without requiring explicit protection mechanisms.
 
@@ -546,7 +564,7 @@ The framework introduces several novel scientific and technical advancements:
 
 ### Robust Error Recovery Under Radiation
 
-Our recent testing with gradient size mismatch protection demonstrates a significant breakthrough in radiation-tolerant machine learning:
+Recent testing with gradient size mismatch protection demonstrates a significant breakthrough in radiation-tolerant machine learning:
 
 - **Resilient Neural Network Training**: Framework maintains training stability even when 30% of samples experience radiation-induced memory errors
 - **Minimal Accuracy Impact**: Testing shows the ability to converge to optimal accuracy despite frequent gradient corruption
@@ -561,7 +579,7 @@ These advancements collectively represent a significant step forward in radiatio
 
 ### Overall Design
 
-The rad-tolerant-ml framework follows a layered architecture designed to provide radiation protection at multiple levels:
+Space-Radiation-Tolerant follows a layered architecture designed to provide radiation protection at multiple levels:
 
 1. **Memory Layer**: The foundation that ensures data integrity through protected memory regions and continuous scrubbing.
 2. **Redundancy Layer**: Implements various TMR strategies to protect computation through redundant execution and voting.
@@ -668,33 +686,32 @@ The framework can adapt its protection level based on the radiation environment:
 2. When entering high-radiation zones (Van Allen Belts), protection is automatically strengthened
 3. During solar events, maximum protection is applied to critical components
 
-## Standards Compliance and Certifications
+## Development Standards and Best Practices
 
-The framework has been designed and tested in alignment with the following space and radiation-related standards:
+This project follows industry best practices and is designed with consideration for space and radiation-related standards. While not formally certified, the development approach is informed by:
 
-- **Space Systems Standards**:
-  - ECSS-Q-ST-60-15C: Radiation hardness assurance for EEE components
-  - ISO 24113:2019: Space systems — Space debris mitigation requirements
-  - CCSDS 130.1-G-3: TM Space Data Link Protocol
+- **Space Systems Best Practices**:
+  - Radiation hardening considerations for electronic components
+  - Space debris mitigation principles
+  - Space data link protocol guidelines
 
-- **Radiation Testing Standards**:
-  - JEDEC JESD57: Test Procedures for the Measurement of SEEs in Semiconductor Devices
-  - MIL-STD-883 Method 1019: Ionizing radiation (total dose) test procedure
-  - ASTM F1192: Standard Guide for the Measurement of Single Event Phenomena
+- **Radiation Testing Considerations**:
+  - Single Event Effects (SEE) testing methodologies
+  - Total ionizing dose (TID) considerations
+  - Radiation hardening techniques
 
-- **Software Quality Standards**:
-  - DO-178C Level B: Software Considerations in Airborne Systems and Equipment Certification
-  - NASA-STD-8739.8: Software Assurance and Software Safety Standard
-  - MISRA C++: 2008 Guidelines for the use of C++ language in critical systems
+- **Software Quality Practices**:
+  - Critical system development guidelines
+  - Software safety considerations
+  - MISRA C++ coding guidelines where applicable
 
-- **Compliance Testing**:
-  - Validated against ESA Single Event Effect Test Method and Guidelines
-  - Conforms to NASA Goddard Space Flight Center Radiation Effects & Analysis techniques
-  - Meets JPL institutional coding standard compliance for flight software
+- **Development Approach**:
+  - Regular code reviews and testing
+  - Documentation of design decisions
+  - Continuous integration and testing
+  - Version control and change management
 
-## Recent Enhancements
-
-The framework has recently been enhanced with several significant features:
+## History of Enhancements
 
 ### 1. Auto Architecture Search Enhancement (v0.9.7)
 - Fixed critical bug in the architecture testing framework where all configurations produced identical performance metrics
@@ -822,21 +839,21 @@ This capability is particularly valuable for small satellites, CubeSats, and dee
 
 ## Industry Recognition and Benchmarks
 
-The framework's effectiveness has been validated through comprehensive Monte Carlo testing:
+The framework's effectiveness has been evaluated through comprehensive Monte Carlo testing:
 
-- **Monte Carlo Validation**:
+- **Monte Carlo Testing**:
   - 3,000,000+ test cases across 6 radiation environments
   - 42 unique simulation configurations
   - 500-sample synthetic datasets with 10 inputs and 3 outputs per test
-  - Complete neural network validation in each environment
+  - Complete neural network testing in each environment
 
-- **Benchmark Test Results**:
+- **Test Results**:
   - Successfully corrected 96.40% of errors using Reed-Solomon (12,8) with 4-bit symbols
   - Demonstrated counterintuitive protection behavior with MODERATE outperforming VERY_HIGH in extreme environments
   - ADAPTIVE protection achieved 85.58% correction effectiveness in Solar Probe conditions
-  - Successfully validated framework across error rates spanning four orders of magnitude (10^-6 to 10^-4)
+  - Successfully tested framework across error rates spanning four orders of magnitude (10^-6 to 10^-4)
 
-- **Comparative Analysis**:
+- **Performance Comparison**:
   - **vs. Hardware TMR**: Provides comparable protection at significantly lower cost
   - **vs. ABFT Methods**: More effective at handling multi-bit upsets
   - **vs. ECC Memory**: Offers protection beyond memory to computational elements
@@ -851,7 +868,7 @@ The framework's effectiveness has been validated through comprehensive Monte Car
   | ABFT Methods         | 150-200%             | 50-100%         | ~80%                              |
   | ECC Memory Only      | 5-10%                | 12.5%           | ~40%                              |
 
-These benchmarks demonstrate the framework's effectiveness at providing radiation tolerance through software-based protection mechanisms, with particular strength in extreme radiation environments where traditional approaches often fail.
+These test results demonstrate the framework's effectiveness at providing radiation tolerance through software-based protection mechanisms, with particular strength in extreme radiation environments where traditional approaches often fail.
 
 ## Potential Applications
 
@@ -1000,7 +1017,7 @@ Ongoing collaboration with space agencies and research institutions will drive t
 
 ## Conclusion
 
-The radiation-tolerant machine learning framework has several potential applications:
+The Space-Radiation-Tolerant machine learning framework has several potential applications:
 
 1. **Satellite Image Processing**: On-board processing of images from satellites operating in high-radiation environments.
 2. **Space Exploration**: Real-time data analysis for rovers and probes exploring planets or moons with high radiation levels.
@@ -1128,10 +1145,11 @@ This project and its work is licensed under the AGPL v3 license
 - ESA's ECSS-Q-ST-60-15C radiation hardness assurance standard
 - JEDEC JESD57 test procedures
 - MIL-STD-883 Method 1019 radiation test procedures
+- Nuclear and Radiation Research on Materials
 
 ## Contributing
 
-Contributions to improve the radiation-tolerant ML framework are welcome. Please follow these guidelines:
+Contributions to improve the framework are welcome. Please follow these guidelines:
 
 ### How to Contribute
 
@@ -1196,10 +1214,12 @@ For a complete history of previous releases, please see the [VERSION_HISTORY.md]
 
 For questions, feedback, or collaboration opportunities:
 
+- **Company**: Space-Radiation-Tolerant
 - **Author**: Rishab Nuguru
 - **Email**: rnuguruworkspace@gmail.com
 - **GitHub**: [github.com/r0nlt](https://github.com/r0nlt)
 - **Project Repository**: [github.com/r0nlt/Space-Radiation-Tolerant](https://github.com/r0nlt/Space-Radiation-Tolerant)
+- **LinkedIn**: [linkedin.com/company/space-labs-ai](https://www.linkedin.com/company/space-labs-ai)
 
 For reporting bugs or requesting features, please open an issue on the GitHub repository.
 
@@ -1209,7 +1229,7 @@ If you use this framework in your research, please cite it as follows:
 
 ```
 Nuguru, R. (2025). Radiation-Tolerant Machine Learning Framework: Software for Space-Based ML Applications.
-GitHub repository: https://github.com/r0nlt/Space-Radiation-Tolerant
+Space-Radiation-Tolerant. GitHub repository: https://github.com/r0nlt/Space-Radiation-Tolerant
 ```
 
 BibTeX:
@@ -1218,7 +1238,7 @@ BibTeX:
   author       = {Nuguru, Rishab},
   title        = {Radiation-Tolerant Machine Learning Framework: Software for Space-Based ML Applications},
   year         = {2025},
-  publisher    = {GitHub},
+  publisher    = {Space-Radiation-Tolerant},
   url          = {https://github.com/r0nlt/Space-Radiation-Tolerant}
 }
 ```
@@ -1227,22 +1247,22 @@ If you've published a paper describing this work, ensure to update the citation 
 
 ## Validation Results
 
-The framework has been extensively validated using Monte Carlo testing across various radiation environments and protection configurations. Key results include:
+The framework has been tested using Monte Carlo simulations across various radiation environments and protection configurations. Key results include:
 
-### Mission-Critical Validation (v0.9.4)
+### Mission-Critical Testing (v0.9.4)
 
-A comprehensive 48-hour simulated space mission was conducted to validate the framework's performance in realistic operational conditions:
+A comprehensive 48-hour simulated space mission was conducted to evaluate the framework's performance in realistic operational conditions:
 
-- **100% Error Correction Rate**: All detected radiation-induced errors were successfully corrected
-- **30% Sample Corruption Handling**: Framework maintained stable operation despite ~30% of samples experiencing gradient size mismatches
+- **Error Correction Performance**: All detected radiation-induced errors were successfully corrected in testing
+- **Sample Corruption Handling**: Framework maintained stable operation despite ~30% of samples experiencing gradient size mismatches
 - **Adaptive Protection Efficiency**: Protection overhead dynamically scaled from 25% (LEO) to 200% (radiation spikes)
 - **Multi-Environment Operation**: Successfully adapted to all space environments (LEO, MEO, GEO, LUNAR, MARS, SAA)
 - **Radiation Spike Resilience**: System continued uninterrupted operation during multiple simulated radiation spikes
 - **Successful Learning**: Neural network maintained learning capability (20.8% final accuracy) despite challenging conditions
 
-This mission-critical validation confirms the framework's ability to maintain continuous operation in harsh radiation environments with no system crashes, validating its readiness for deployment in space applications.
+This mission-critical testing demonstrates the framework's ability to maintain continuous operation in simulated radiation environments with no system crashes.
 
-### Radiation Environment Testing
+### Radiation Environment Testing Results
 
 | Environment      | Error Rate | No Protection | Minimal | Moderate | High   | Very High | Adaptive |
 |------------------|------------|--------------|---------|----------|--------|-----------|----------|
@@ -1253,47 +1273,7 @@ This mission-critical validation confirms the framework's ability to maintain co
 | Mars             | 5×10^-5    | 0% preserved | 0%      | 70%      | 86.21% | 73.55%    | 92.18%   |
 | Solar Probe      | 10^-4      | 0% preserved | 0%      | 100%     | 48.78% | 0%        | 85.58%   |
 
-### Reed-Solomon ECC Performance
-
-| Configuration       | Symbol Size | Memory Overhead | Correctable Errors |
-|--------------------|-------------|-----------------|-------------------|
-| RS(12,8)           | 4-bit       | 50%             | 96.40%            |
-| RS(12,4)           | 8-bit       | 200%            | 93.50%            |
-| RS(20,4)           | 8-bit       | 400%            | 83.00%            |
-
-### Neural Network Architecture and Training Impact
-
-| Architecture | Environment | Protection | Epochs | Dropout | Normal Accuracy | Radiation Accuracy | Preservation | Overhead |
-|--------------|------------|------------|--------|---------|-----------------|-------------------|------------|----------|
-| Wide (32-16) | Mars       | None       | 500    | 0.50    | 38.16%          | 56.04%            | 146.84%    | 0.00%    |
-| Standard (16-8) | Solar Probe | None     | 100    | 0.00    | 41.06%          | 42.03%            | 102.35%    | 0.00%    |
-| Standard (16-8) | GEO      | None       | 100    | 0.20    | 41.06%          | 41.55%            | 101.18%    | 0.00%    |
-| Standard (16-8) | Solar Probe | Adaptive | 1000   | 0.20    | 41.06%          | 41.06%            | 100.00%    | 75.00%   |
-
-### Quantum Field Theory Enhancement Results
-
-| Condition                   | Classical Model | Quantum Model | Improvement |
-|-----------------------------|-----------------|---------------|-------------|
-| Room Temperature (300K)     | 0.12% error     | 0.11% error   | <1%         |
-| Low Temperature (77K)       | 3.96% error     | 0.11% error   | ~3.85%      |
-| Nanoscale Device (10nm)     | 8.71% error     | 0.11% error   | ~8.60%      |
-| Extreme Conditions (4.2K, 5nm) | 22.25% error | 0.11% error   | ~22.14%     |
-
-### Key Validation Insights
-
-1. **Optimal Protection Levels**: While intuition might suggest that maximum protection (VERY_HIGH) would always perform best, our testing revealed that in extreme radiation environments (Solar Probe), MODERATE protection (50% overhead) actually provided better results than VERY_HIGH protection (200% overhead). This counter-intuitive finding is due to increased error vectors in environments with very high particle flux.
-
-2. **Symbol Size Impact**: 4-bit symbols in Reed-Solomon ECC consistently outperformed 8-bit symbols for neural network protection, providing better correction rates with lower memory overhead. This is particularly relevant for resource-constrained spacecraft systems.
-
-3. **Adaptive Protection Efficiency**: The ADAPTIVE protection strategy consistently delivered near-optimal protection across all environments with moderate overhead (75%), validating the effectiveness of the framework's dynamic protection adjustment algorithms.
-
-4. **Error Rate Scaling**: The framework effectively handled error rates spanning four orders of magnitude (10^-6 to 10^-4), demonstrating its suitability for missions ranging from LEO to deep space and solar missions.
-
-5. **Architecture and Training Effects**: Our most surprising discovery was that neural network architecture and training methodology have more impact on radiation tolerance than explicit protection mechanisms. Wide networks (32-16) with high dropout (0.5) demonstrated performance improvements under radiation (146.84% accuracy preservation) without any protection overhead, challenging conventional approaches to radiation-tolerant computing.
-
-6. **Quantum Field Effects**: The integration of quantum field theory provides substantial benefits in specific environmental regimes, particularly in cryogenic space applications and nanoscale devices. This enhancement transforms the framework from empirical approximation to a first-principles physics model in quantum-dominated environments.
-
-These validation results have been compared with industry standards and NASA radiation models, confirming that the framework meets or exceeds the requirements for radiation-tolerant computing in space applications.
+These testing results demonstrate the framework's effectiveness at providing radiation tolerance through software-based protection mechanisms, with particular strength in extreme radiation environments where traditional approaches often fail.
 
 ## Mission Simulator Enhancements (v0.9.6)
 
