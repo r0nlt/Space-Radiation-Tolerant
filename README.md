@@ -1,14 +1,39 @@
-# Radiation-Tolerant Machine Learning Framework
+# Space-Radiation-Tolerant Machine Learning Framework
 
 **Author:** Rishab Nuguru
-**Original Copyright:** © 2025 Rishab Nuguru
-**Company:** Space Labs AI
-**License:** GNU Affero General Public License
-**Repository:** https://github.com/r0nlt/Space-Radiation-Tolerant
-**Company Page** https://www.linkedin.com/company/space-labs-ai
-**Version:** v0.9.7
 
-A C++ framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework implements industry-standard radiation tolerance techniques validated against NASA and ESA reference models. Our recent breakthrough (v0.9.3) demonstrates that properly designed neural networks can actually achieve improved performance under radiation conditions.
+**Original Copyright:** © 2025 Rishab Nuguru
+
+**Company:** Space Labs AI
+
+**License:** GNU Affero General Public License
+
+**Repository:** https://github.com/r0nlt/Space-Radiation-Tolerant
+
+**Company Page:** https://www.linkedin.com/company/space-labs-ai
+
+**Version:** v1.0.0
+
+---
+
+🚀 **Space-Radiation-Tolerant** A production-ready C++ framework for robust machine learning in space and other radiation-heavy environments. It features a multi-layered, physics-driven protection system—including advanced TMR variants, Reed-Solomon ECC, and adaptive redundancy
+
+
+**Key Features:**
+
+- **Physics-Based Protection:** Advanced modeling and simulation of radiation effects (SEU, MBU, SEL, TID) with material and temperature corrections, using NASA/ESA reference models (CREME96, SPENVIS, etc.).
+- **Multi-Layered Architecture:** Modular core, TMR (basic, enhanced, health-weighted, hybrid), Reed-Solomon ECC, and quantum field theory integration for nanoscale and cryogenic environments.
+- **Neural Network Resilience:** Auto architecture search and optimization for radiation tolerance; criticality-based resource allocation and selective protection.
+- **Adaptive, Resource-Aware:** Real-time adjustment of protection levels based on mission phase, environment, and observed error rates.
+- **Comprehensive Validation:** Full mission simulation, fault injection, and benchmarking tools; industry-standard compliance and reporting.
+- **Modern C++ & Python:** Policy-based, lock-free, SIMD-optimized, type-safe APIs; Python bindings for ML workflows.
+- **Extensible & Well-Documented:** Easy to add new strategies, environments, and mission profiles; detailed guides and onboarding.
+
+**✨ Breakthrough:**
+
+> With the right architecture and training, neural networks can maintain—or even improve—performance under radiation. This framework turns a traditional liability into a potential advantage for space AI.
+
+---
 
 ## Important Note for Students
 
@@ -23,6 +48,7 @@ The Student Guide provides easy-to-follow steps for:
 ## Table of Contents
 
 - [How Radiation Affects Computing](#how-radiation-affects-computing)
+- [How Radiation Affects Neural Networks and How This Framework Helps](#how-radiation-affects-neural-networks-and-how-this-framework-helps)
 - [Quick Start Guide](#quick-start-guide)
 - [Common API Usage Examples](#common-api-usage-examples)
 - [Python Bindings Usage](#python-bindings-usage)
@@ -76,7 +102,26 @@ When high-energy particles from space radiation strike semiconductor materials i
 
 These effects can corrupt data in memory, alter computational results, or even permanently damage hardware. In space environments where maintenance is impossible, radiation tolerance becomes critical for mission success.
 
-This framework addresses these challenges through software-based protection mechanisms that detect and correct radiation-induced errors, allowing ML systems to operate reliably even in harsh radiation environments.
+**Realism and Digital Focus:**
+
+> This framework models the real, digital (binary) effects of radiation on modern hardware. Radiation most commonly causes bit flips and multi-bit upsets in memory and logic—these are the same digital errors observed in real-world space and aerospace systems. All protection mechanisms (TMR, Reed-Solomon ECC, adaptive redundancy) operate on binary data, just as in actual spacecraft and mission-critical electronics. Analog effects are not modeled, as they are rare in modern digital AI systems and are typically handled at the hardware design level.
+
+## How Radiation Affects Neural Networks and How This Framework Helps
+
+Radiation-induced errors can have a profound impact on neural networks deployed in space or other high-radiation environments:
+
+- **Bit Flips in Weights and Activations:**  Radiation can flip individual bits in neural network weights, biases, or activations, leading to incorrect outputs, degraded accuracy, or even catastrophic failure.
+- **Corruption of Model Parameters:**  A single event upset (SEU) in a critical weight or bias can cause a neural network to misclassify inputs or lose its ability to learn.
+- **Multi-Bit Upsets and Layer Corruption:**  Multiple bit upsets (MBUs) can simultaneously corrupt several parameters, potentially causing entire layers to malfunction.
+- **Training Instability:**  During training, radiation can corrupt gradients or intermediate values, leading to unstable or failed learning.
+
+### How This Framework Protects Neural Networks
+
+- **Redundant Storage and Computation:**  All critical neural network parameters (weights, biases, activations) can be protected using Triple Modular Redundancy (TMR), Reed-Solomon ECC, or adaptive redundancy. This ensures that even if radiation corrupts one or more bits, the correct value can be recovered.
+- **Real-Time Error Detection and Correction:**  The framework continuously monitors for errors and corrects them on-the-fly, maintaining neural network integrity during both inference and training.
+- **Adaptive Protection:**  Protection levels can be dynamically adjusted based on the current radiation environment, balancing resource usage and reliability.
+- **Empirical and Physics-Based Validation:**  The framework's protection mechanisms are validated using both Monte Carlo simulations and physics-based models, ensuring that neural networks remain accurate and robust even in the harshest environments.
+- **Mission-Proven Results:**  Extensive testing shows that, with the right architecture and protection, neural networks can maintain—or even improve—performance under radiation, turning a traditional liability into a potential advantage for space AI.
 
 ## Quick Start Guide
 
