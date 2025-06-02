@@ -1312,9 +1312,19 @@ The mission simulator provides a powerful tool for:
 
 These enhancements significantly improve the framework's value for space mission planning and ML system design for radiation environments.
 
-## Memory Safety Best Practices (v0.9.6)
+## Limitations
 
-The framework now includes several best practices for developing radiation-tolerant software with robust memory safety:
+1. **Limit 1**: The framework is designed for specific hardware configuration. It is not portable to all platforms. Espcially ones that may be highly resource strained or non-standard archetecture.
+    - **Impact**: Developers need to adapt and optamize there code for their own hardware, or just some features like hardware acceleration or various protection methods depending on what mission the nerual network is going to attempt. For the study done, any type of hardware leaving LEO will need a hybird protection strategy.
+
+2. **Limit 2**: The software framework is not proven to work in real file. This is based on empiracal simulations and a real world simulation and tuning is required for any kind of mission.
+    - **Impact**: Space-Radiation-Tolerant is just a research tool and project and is not yet certified for space use. It is something that does help get us closer to sustiable exploration. Real world validation is the next step!
+
+3. **Limit 3**: There is significant computational overhead. All the way up to 200%, normally this would be a problem but from what I understand these sorts of things are normal espcialyl when you are sending hardware to space. Even though certain parts of the software acheive better results. A reak world hardware issue does exist.
+    - **Impact**: I belive a hardware can exist to have a CPU and onbaorrded GPU with an AI entity that uses an hybrid protection strategy to autnomosaly study space.
+
+4. **Important Limit** The software is not formally certified and is just a fun project by a solo dev.
+    - **Impact**: Sustainability within space exploration
 
 ### Key Memory Safety Principles
 
