@@ -41,6 +41,7 @@ The Student Guide provides easy-to-follow steps for:
 ## Table of Contents
 
 - [How Radiation Affects Computing](#how-radiation-affects-computing)
+- [How to Build](#how-to-build)
 - [Quick Start Guide](#quick-start-guide)
 - [Common API Usage Examples](#common-api-usage-examples)
 - [Python Bindings Usage](#python-bindings-usage)
@@ -95,6 +96,61 @@ High-energy particles from space radiation strike semiconductor materials in com
 These effects can corrupt data in memory, alter computational results, or even permanently damage hardware. In space environments where maintenance is impossible, radiation tolerance becomes critical for mission success.
 
 Space-Radiation-Tolerant addresses these challenges through software-based protection mechanisms that detect and correct radiation-induced errors, allowing ML systems to operate reliably even in harsh radiation environments. The software framework is intended to work alongside hardware protection strategies to achieve enhanced protection through hybrid protection methods.
+
+## How to Build
+
+### 1. Create a Build Directory
+It's best practice to build out-of-source:
+```bash
+mkdir build
+cd build
+```
+
+### 2. Configure CMake (with Custom Paths if Needed)
+
+If your dependencies (like Eigen or Boost) are in non-standard locations, or you want to set a custom install prefix, specify them as follows:
+
+```bash
+cmake -DEIGEN3_INCLUDE_DIR=/path/to/eigen \
+      -DBOOST_ROOT=/path/to/boost \
+      -DCMAKE_INSTALL_PREFIX=/your/install/path \
+      ..
+```
+- You can add as many `-DVARIABLE=VALUE` options as needed.
+- To use a specific compiler:
+  ```bash
+  cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ ..
+  ```
+
+**Common variables:**
+- `EIGEN3_INCLUDE_DIR` — Path to Eigen headers
+- `BOOST_ROOT` — Path to Boost installation
+- `CMAKE_INSTALL_PREFIX` — Where to install after `make install`
+- `CMAKE_C_COMPILER` and `CMAKE_CXX_COMPILER` — Custom compiler paths
+
+### 3. Build the Project
+```bash
+make -j$(nproc)
+```
+
+### 4. Install (Optional)
+```bash
+make install
+```
+
+### 5. Troubleshooting
+- If CMake cannot find a dependency, check the error message for the variable to override.
+- If you see a pybind11 CMake error, run:
+  ```bash
+  ../apply-patches.sh
+  cmake ..
+  ```
+
+**Tip:**
+To see all configurable CMake variables, run:
+```bash
+cmake -LH ..
+```
 
 ## Quick Start Guide
 
