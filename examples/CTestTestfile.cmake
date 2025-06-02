@@ -1,8 +1,9 @@
-# CMake generated Testfile for 
+# CMake generated Testfile for
+# You are gonna need to change this.
 # Source directory: /Users/rishabnuguru/space/examples
 # Build directory: /Users/rishabnuguru/space/examples
-# 
-# This file includes the relevant testing commands required for 
+#
+# This file includes the relevant testing commands required for
 # testing this directory and lists subdirectories to be tested as well.
 add_test(architecture_test_run "/Users/rishabnuguru/space/examples/architecture_test")
 set_tests_properties(architecture_test_run PROPERTIES  _BACKTRACE_TRIPLES "/Users/rishabnuguru/space/examples/CMakeLists.txt;41;add_test;/Users/rishabnuguru/space/examples/CMakeLists.txt;0;")
