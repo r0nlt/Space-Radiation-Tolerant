@@ -51,3 +51,17 @@ install(TARGETS architecture_test residual_network_test auto_arch_search_example
 # These will be enabled as they are implemented
 # add_subdirectory(fault_injection)
 # add_subdirectory(radiation_sim)
+
+add_executable(spacecraft_telemetry spacecraft_telemetry.cpp)
+target_link_libraries(spacecraft_telemetry
+    PRIVATE
+        space_containers
+)
+target_include_directories(spacecraft_telemetry
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+)
+
+# Install examples
+install(TARGETS spacecraft_telemetry
+        RUNTIME DESTINATION bin/examples)

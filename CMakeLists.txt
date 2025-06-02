@@ -4,6 +4,14 @@ project(RadiationTolerantML)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Add space_containers library as an INTERFACE library since it's header-only
+add_library(space_containers INTERFACE)
+
+target_include_directories(space_containers
+    INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 # Set modern CMake policies
 if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
@@ -106,7 +114,6 @@ add_subdirectory(src/rad_ml/research)
 
 # Add examples
 add_subdirectory(examples)
-
 # Add executable for Monte Carlo validation test
 add_executable(monte_carlo_validation test/verification/monte_carlo_validation.cpp)
 target_link_libraries(monte_carlo_validation rad_ml_tmr rad_ml_testing)
