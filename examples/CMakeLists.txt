@@ -55,6 +55,25 @@ target_link_libraries(vae_space_mission_test
 )
 target_include_directories(vae_space_mission_test PRIVATE ${CMAKE_SOURCE_DIR})
 
+# Add VAE validation test
+add_executable(vae_validation_test vae_validation_test.cpp)
+target_link_libraries(vae_validation_test
+    rad_ml_research
+    rad_ml_tmr
+    rad_ml_testing
+)
+target_include_directories(vae_validation_test PRIVATE ${CMAKE_SOURCE_DIR})
+
+# VAE Production Example
+add_executable(vae_production_example vae_production_example.cpp)
+target_link_libraries(vae_production_example rad_ml_research)
+target_include_directories(vae_production_example PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# VAE Comprehensive Test Suite
+add_executable(vae_comprehensive_test vae_comprehensive_test.cpp)
+target_link_libraries(vae_comprehensive_test rad_ml_research)
+target_include_directories(vae_comprehensive_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # Add tests
 add_test(NAME architecture_test_run COMMAND architecture_test)
 add_test(NAME residual_network_test_run COMMAND residual_network_test)
@@ -63,10 +82,14 @@ add_test(NAME radiation_aware_training_example_run COMMAND radiation_aware_train
 add_test(NAME multi_particle_simulation_example_test COMMAND multi_particle_simulation_example)
 add_test(NAME vae_example_run COMMAND vae_example)
 add_test(NAME vae_space_mission_test_run COMMAND vae_space_mission_test)
+add_test(NAME vae_validation_test_run COMMAND vae_validation_test)
+add_test(NAME vae_production_example_run COMMAND vae_production_example)
+add_test(NAME vae_comprehensive_test COMMAND vae_comprehensive_test)
 
 # Installation
-install(TARGETS architecture_test residual_network_test auto_arch_search_example radiation_aware_training_example multi_particle_simulation_example vae_example vae_space_mission_test
-    DESTINATION bin/examples)
+install(TARGETS architecture_test residual_network_test auto_arch_search_example radiation_aware_training_example multi_particle_simulation_example vae_example vae_space_mission_test vae_validation_test vae_production_example vae_comprehensive_test
+        DESTINATION bin
+        COMPONENT examples)
 
 # These will be enabled as they are implemented
 # add_subdirectory(fault_injection)

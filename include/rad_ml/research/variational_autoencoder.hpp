@@ -1,9 +1,12 @@
 /**
  * @file variational_autoencoder.hpp
- * @brief Radiation-tolerant Variational Autoencoder implementation
+ * @brief Production-ready Radiation-tolerant Variational Autoencoder implementation
  *
  * This file implements a VAE with radiation protection that can operate reliably
  * in space environments while maintaining generative capabilities.
+ *
+ * PRODUCTION VERSION: Includes proper gradient computation, optimizers,
+ * checkpointing, validation, and performance optimizations.
  */
 
 #ifndef RAD_ML_RESEARCH_VARIATIONAL_AUTOENCODER_HPP
@@ -50,25 +53,76 @@ enum class VAELossType {
 };
 
 /**
- * @brief Configuration for VAE training
+ * @brief Optimizer types for training
  */
-struct VAEConfig {
-    size_t latent_dim = 10;        ///< Latent space dimensionality
-    float beta = 1.0f;             ///< β parameter for β-VAE
-    float learning_rate = 0.001f;  ///< Learning rate
-    int batch_size = 32;           ///< Batch size for training
-    int epochs = 100;              ///< Number of training epochs
-    SamplingTechnique sampling = SamplingTechnique::REPARAMETERIZED;
-    VAELossType loss_type = VAELossType::STANDARD_ELBO;
-    bool use_interpolation = true;      ///< Enable interpolation capabilities
-    float interpolation_weight = 0.1f;  ///< Weight for interpolation loss
+enum class OptimizerType {
+    SGD,      ///< Stochastic Gradient Descent
+    ADAM,     ///< Adam optimizer
+    RMSPROP,  ///< RMSprop optimizer
+    ADAGRAD   ///< AdaGrad optimizer
 };
 
 /**
- * @brief Radiation-tolerant Variational Autoencoder
+ * @brief Training metrics and statistics
+ */
+struct TrainingMetrics {
+    std::vector<float> train_losses;
+    std::vector<float> val_losses;
+    std::vector<float> kl_losses;
+    std::vector<float> reconstruction_losses;
+    float best_val_loss = std::numeric_limits<float>::max();
+    int best_epoch = 0;
+    int epochs_without_improvement = 0;
+};
+
+/**
+ * @brief Configuration for VAE training and architecture
+ */
+struct VAEConfig {
+    // Architecture parameters
+    size_t latent_dim = 10;             ///< Latent space dimensionality
+    float beta = 1.0f;                  ///< β parameter for β-VAE
+    bool use_interpolation = true;      ///< Enable interpolation capabilities
+    float interpolation_weight = 0.1f;  ///< Weight for interpolation loss
+
+    // Training parameters
+    float learning_rate = 0.001f;  ///< Learning rate
+    int batch_size = 32;           ///< Batch size for training
+    int epochs = 100;              ///< Number of training epochs
+    OptimizerType optimizer = OptimizerType::ADAM;
+
+    // Adam optimizer parameters
+    float adam_beta1 = 0.9f;     ///< Adam β₁ parameter
+    float adam_beta2 = 0.999f;   ///< Adam β₂ parameter
+    float adam_epsilon = 1e-8f;  ///< Adam ε parameter
+
+    // Regularization
+    float weight_decay = 0.0f;  ///< L2 weight decay
+    float dropout_rate = 0.0f;  ///< Dropout rate (if supported)
+
+    // Validation and early stopping
+    float validation_split = 0.2f;           ///< Fraction of data for validation
+    int early_stopping_patience = 10;        ///< Epochs to wait before early stopping
+    float early_stopping_min_delta = 1e-4f;  ///< Minimum improvement for early stopping
+
+    // Checkpointing
+    bool enable_checkpointing = true;               ///< Save model checkpoints
+    int checkpoint_frequency = 10;                  ///< Save checkpoint every N epochs
+    std::string checkpoint_dir = "./checkpoints/";  ///< Directory for checkpoints
+
+    // Advanced options
+    SamplingTechnique sampling = SamplingTechnique::REPARAMETERIZED;
+    VAELossType loss_type = VAELossType::STANDARD_ELBO;
+    bool use_learning_rate_decay = true;  ///< Enable learning rate decay
+    float lr_decay_factor = 0.95f;        ///< Decay factor per epoch
+    int lr_decay_frequency = 20;          ///< Apply decay every N epochs
+};
+
+/**
+ * @brief Production-ready Radiation-tolerant Variational Autoencoder
  *
  * This class implements a VAE with radiation protection capabilities,
- * including encoder, decoder, and interpolation components as shown in the architecture.
+ * including proper gradient computation, optimizers, validation, and checkpointing.
  *
  * @tparam T Value type (typically float)
  */
@@ -167,52 +221,66 @@ class VariationalAutoencoder {
                                          uint64_t seed = 0);
 
     /**
-     * @brief Train the VAE using provided data
+     * @brief Production training with validation, early stopping, and checkpointing
      *
-     * @param data Training data
-     * @param epochs Number of training epochs
-     * @param batch_size Batch size
-     * @param learning_rate Learning rate
-     * @return Final training loss
+     * @param train_data Training data
+     * @param val_data Validation data (optional, will split from train_data if not provided)
+     * @return Training metrics
      */
-    float train(const std::vector<std::vector<T>>& data, int epochs = -1, int batch_size = -1,
-                float learning_rate = -1.0f);
+    TrainingMetrics trainProduction(const std::vector<std::vector<T>>& train_data,
+                                    const std::vector<std::vector<T>>& val_data = {});
 
     /**
-     * @brief Evaluate the VAE on test data
+     * @brief Batch training for better performance
+     *
+     * @param batches Pre-batched training data
+     * @param val_batches Pre-batched validation data
+     * @return Training metrics
+     */
+    TrainingMetrics trainBatched(const std::vector<std::vector<std::vector<T>>>& batches,
+                                 const std::vector<std::vector<std::vector<T>>>& val_batches = {});
+
+    /**
+     * @brief Comprehensive evaluation with multiple metrics
      *
      * @param data Test data
-     * @return Reconstruction error
+     * @return Map of metric names to values
      */
-    float evaluate(const std::vector<std::vector<T>>& data);
+    std::unordered_map<std::string, float> evaluateComprehensive(
+        const std::vector<std::vector<T>>& data);
 
     /**
-     * @brief Calculate VAE loss (ELBO)
+     * @brief Save complete model state including optimizer state
      *
-     * @param input Original input
-     * @param reconstruction Reconstructed output
-     * @param mean Latent mean
-     * @param log_var Latent log variance
-     * @return Total loss
-     */
-    float calculateLoss(const std::vector<T>& input, const std::vector<T>& reconstruction,
-                        const std::vector<T>& mean, const std::vector<T>& log_var);
-
-    /**
-     * @brief Save VAE model to file
-     *
-     * @param filename Output filename
+     * @param filepath Path to save the model
      * @return Success status
      */
-    bool saveToFile(const std::string& filename) const;
+    bool saveModel(const std::string& filepath) const;
 
     /**
-     * @brief Load VAE model from file
+     * @brief Load complete model state including optimizer state
      *
-     * @param filename Input filename
+     * @param filepath Path to load the model from
      * @return Success status
      */
-    bool loadFromFile(const std::string& filename);
+    bool loadModel(const std::string& filepath);
+
+    /**
+     * @brief Save checkpoint during training
+     *
+     * @param epoch Current epoch
+     * @param metrics Current training metrics
+     * @return Success status
+     */
+    bool saveCheckpoint(int epoch, const TrainingMetrics& metrics) const;
+
+    /**
+     * @brief Load from checkpoint
+     *
+     * @param checkpoint_path Path to checkpoint file
+     * @return Success status and loaded epoch number
+     */
+    std::pair<bool, int> loadCheckpoint(const std::string& checkpoint_path);
 
     /**
      * @brief Get encoder network
@@ -240,7 +308,11 @@ class VariationalAutoencoder {
      *
      * @param config New configuration
      */
-    void setConfig(const VAEConfig& config) { config_ = config; }
+    void setConfig(const VAEConfig& config)
+    {
+        config_ = config;
+        initializeOptimizer();
+    }
 
     /**
      * @brief Get latent dimension
@@ -255,6 +327,13 @@ class VariationalAutoencoder {
      * @return Input dimensionality
      */
     size_t getInputDim() const { return input_dim_; }
+
+    /**
+     * @brief Training metrics
+     *
+     * @return Current training metrics
+     */
+    TrainingMetrics getTrainingMetrics() const { return training_metrics_; }
 
     /**
      * @brief Apply radiation effects to the VAE
@@ -276,20 +355,32 @@ class VariationalAutoencoder {
      */
     void resetErrorStats();
 
+    // Legacy training method (kept for compatibility)
+    float train(const std::vector<std::vector<T>>& data, int epochs = -1, int batch_size = -1,
+                float learning_rate = -1.0f);
+    float evaluate(const std::vector<std::vector<T>>& data);
+    float calculateLoss(const std::vector<T>& input, const std::vector<T>& reconstruction,
+                        const std::vector<T>& mean, const std::vector<T>& log_var);
+
+    // File I/O (legacy, use saveModel/loadModel for production)
+    bool saveToFile(const std::string& filename) const;
+    bool loadFromFile(const std::string& filename);
+
    private:
     // Network components
     std::unique_ptr<neural::ProtectedNeuralNetwork<T>> encoder_;
     std::unique_ptr<neural::ProtectedNeuralNetwork<T>> decoder_;
     std::unique_ptr<neural::ProtectedNeuralNetwork<T>> interpolator_;
 
-    // Network dimensions
+    // Architecture parameters
     size_t input_dim_;
     size_t latent_dim_;
     std::vector<size_t> hidden_dims_;
 
-    // Protection and configuration
+    // Configuration and state
     neural::ProtectionLevel protection_level_;
     VAEConfig config_;
+    TrainingMetrics training_metrics_;
 
     // Error tracking
     mutable struct {
@@ -298,101 +389,65 @@ class VariationalAutoencoder {
         uint64_t uncorrectable_errors = 0;
     } error_stats_;
 
-    // Random number generator
+    // Random number generation
     mutable std::mt19937 rng_;
 
-    /**
-     * @brief Initialize encoder network
-     */
+    // Optimizer state
+    struct OptimizerState {
+        // Adam optimizer state
+        std::vector<std::vector<T>> m_encoder, v_encoder;  // Moment estimates for encoder
+        std::vector<std::vector<T>> m_decoder, v_decoder;  // Moment estimates for decoder
+        std::vector<std::vector<T>> m_interpolator,
+            v_interpolator;  // Moment estimates for interpolator
+        int step_count = 0;
+        float current_lr;
+    } optimizer_state_;
+
+    // Network initialization
     void initializeEncoder();
-
-    /**
-     * @brief Initialize decoder network
-     */
     void initializeDecoder();
-
-    /**
-     * @brief Initialize interpolator network
-     */
     void initializeInterpolator();
+    void initializeOptimizer();
 
-    /**
-     * @brief Apply logarithmic transformation (as shown in architecture)
-     *
-     * @param input Input vector
-     * @return Transformed vector
-     */
+    // Data preprocessing
     std::vector<T> applyLogarithmics(const std::vector<T>& input) const;
-
-    /**
-     * @brief Apply inverse logarithmic transformation
-     *
-     * @param input Input vector
-     * @return Transformed vector
-     */
     std::vector<T> applyInverseLogarithmics(const std::vector<T>& input) const;
-
-    /**
-     * @brief Apply standardization (as shown in architecture)
-     *
-     * @param input Input vector
-     * @return Standardized vector
-     */
     std::vector<T> applyStandardization(const std::vector<T>& input) const;
-
-    /**
-     * @brief Apply inverse standardization
-     *
-     * @param input Input vector
-     * @return De-standardized vector
-     */
     std::vector<T> applyInverseStandardization(const std::vector<T>& input) const;
 
-    /**
-     * @brief Compute KL divergence for VAE loss
-     *
-     * @param mean Mean vector
-     * @param log_var Log variance vector
-     * @return KL divergence value
-     */
+    // Loss computation
     T computeKLDivergence(const std::vector<T>& mean, const std::vector<T>& log_var) const;
-
-    /**
-     * @brief Compute reconstruction loss
-     *
-     * @param input Original input
-     * @param reconstruction Reconstructed output
-     * @return Reconstruction loss
-     */
     T computeReconstructionLoss(const std::vector<T>& input,
                                 const std::vector<T>& reconstruction) const;
-
-    /**
-     * @brief Compute interpolation loss (L_INF from architecture)
-     *
-     * @param latent1 First latent vector
-     * @param latent2 Second latent vector
-     * @param interpolated Interpolated result
-     * @return Interpolation loss
-     */
     T computeInterpolationLoss(const std::vector<T>& latent1, const std::vector<T>& latent2,
                                const std::vector<T>& interpolated) const;
 
-    /**
-     * @brief Update network weights (simplified training step)
-     *
-     * @param loss Current loss value
-     * @param learning_rate Learning rate
-     */
-    void updateWeights(T loss, T learning_rate);
+    // Production training methods
+    void updateWeightsProduction(const std::vector<T>& encoder_grad,
+                                 const std::vector<T>& decoder_grad,
+                                 const std::vector<T>& interpolator_grad = {});
 
-    /**
-     * @brief Protect latent variables with radiation tolerance
-     *
-     * @param latent Latent vector to protect
-     * @param radiation_level Current radiation level
-     */
+    std::vector<T> computeEncoderGradients(const std::vector<T>& input,
+                                           const std::vector<T>& reconstruction,
+                                           const std::vector<T>& mean,
+                                           const std::vector<T>& log_var);
+
+    std::vector<T> computeDecoderGradients(const std::vector<T>& input,
+                                           const std::vector<T>& reconstruction,
+                                           const std::vector<T>& latent);
+
+    // Data splitting and batching
+    std::pair<std::vector<std::vector<T>>, std::vector<std::vector<T>>> splitTrainValidation(
+        const std::vector<std::vector<T>>& data);
+
+    std::vector<std::vector<std::vector<T>>> createBatches(const std::vector<std::vector<T>>& data,
+                                                           int batch_size);
+
+    // Radiation protection
     void protectLatentVariables(std::vector<T>& latent, double radiation_level) const;
+
+    // Legacy method (kept for compatibility)
+    void updateWeights(T loss, T learning_rate);
 };
 
 }  // namespace research
