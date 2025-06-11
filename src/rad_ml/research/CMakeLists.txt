@@ -5,6 +5,7 @@ set(RAD_ML_RESEARCH_SOURCES
     architecture_tester.cpp
     auto_arch_search.cpp
     radiation_aware_training.cpp
+    variational_autoencoder.cpp
     # Other source files will be added as they are implemented
 )
 
@@ -35,4 +36,4 @@ install(TARGETS rad_ml_research
 # Build tests if enabled
 if(BUILD_TESTING)
     add_subdirectory(tests)
-endif() 
+endif()

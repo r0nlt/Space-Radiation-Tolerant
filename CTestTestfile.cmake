@@ -1,9 +1,8 @@
-# CMake generated Testfile for
-# You are gonna need to change this.
+# CMake generated Testfile for 
 # Source directory: /Users/rishabnuguru/space
 # Build directory: /Users/rishabnuguru/space
-#
-# This file includes the relevant testing commands required for
+# 
+# This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
 add_test(monte_carlo_validation "/Users/rishabnuguru/space/monte_carlo_validation")
 set_tests_properties(monte_carlo_validation PROPERTIES  _BACKTRACE_TRIPLES "/Users/rishabnuguru/space/CMakeLists.txt;113;add_test;/Users/rishabnuguru/space/CMakeLists.txt;0;")
