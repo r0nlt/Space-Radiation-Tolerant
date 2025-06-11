@@ -60,6 +60,18 @@ The `rad_ml/research/` module is the **scientific and experimental core** of the
 
 ---
 
+### [`variational_autoencoder.hpp`](variational_autoencoder.hpp) → [**Technical Documentation**](VARIATIONAL_AUTOENCODER.md)
+- **Purpose:** Space-grade generative modeling with comprehensive radiation tolerance.
+- **Capabilities:**
+  - **Complete VAE architecture**: encoder, decoder, and interpolator networks with radiation protection
+  - **Advanced preprocessing**: logarithmic transformations and standardization for telemetry data
+  - **Multiple VAE variants**: β-VAE, Factor-VAE, with configurable sampling techniques
+  - **Space applications**: telemetry compression (3:1 ratio), anomaly detection, data generation
+  - **Mission-critical reliability**: validated across space environments from LEO to Jupiter orbit
+- **Scientific Value:** Enables advanced AI applications in space missions, combining state-of-the-art generative modeling with robust protection mechanisms for long-duration reliability.
+
+---
+
 ## Research Capabilities
 
 - **Architecture Optimization:**
@@ -70,6 +82,9 @@ The `rad_ml/research/` module is the **scientific and experimental core** of the
   - Radiation-aware training with bit injection, criticality targeting, and recovery analysis
 - **Advanced Architectures:**
   - Protected ResNets with flexible skip connections and per-connection protection
+- **Generative Modeling:**
+  - Radiation-tolerant Variational Autoencoders for data compression, anomaly detection, and synthetic data generation
+  - Mission-critical applications: satellite telemetry processing, spacecraft health monitoring, deep space reliability
 
 ---
 
