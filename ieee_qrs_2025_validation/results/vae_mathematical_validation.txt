@@ -1,0 +1,297 @@
+2025-06-14 13:26:02 [INFO] Starting Comprehensive VAE Test Suite
+2025-06-14 13:26:02 [INFO] === Starting Comprehensive VAE Test Suite ===
+2025-06-14 13:26:02 [INFO] --- Testing VAE Construction ---
+2025-06-14 13:26:02 [INFO] Running: Basic VAE Construction
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=12, latent_dim=8
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Basic VAE Construction
+2025-06-14 13:26:02 [INFO] Running: Architecture Variations
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=10, latent_dim=5
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=10, latent_dim=5
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=10, latent_dim=5
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=10, latent_dim=5
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Architecture Variations
+2025-06-14 13:26:02 [INFO] Running: Protection Levels
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Protection Levels
+2025-06-14 13:26:02 [INFO] --- Testing Encoder/Decoder ---
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=6, latent_dim=3
+2025-06-14 13:26:02 [INFO] Running: Encoder Output Dimensions
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Encoder Output Dimensions
+2025-06-14 13:26:02 [INFO] Running: Decoder Output Dimensions
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Decoder Output Dimensions
+2025-06-14 13:26:02 [INFO] Running: Encode-Decode Round Trip
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Encode-Decode Round Trip
+2025-06-14 13:26:02 [INFO] --- Testing Sampling Functions ---
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:02 [INFO] Running: Sampling Determinism
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Sampling Determinism
+2025-06-14 13:26:02 [INFO] Running: Sampling Statistics
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Sampling Statistics
+2025-06-14 13:26:02 [INFO] --- Testing Loss Functions ---
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:02 [INFO] Running: Loss Calculation
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Loss Calculation
+2025-06-14 13:26:02 [INFO] Running: KL Divergence Properties
+2025-06-14 13:26:02 [INFO] ✓ PASSED: KL Divergence Properties
+2025-06-14 13:26:02 [INFO] --- Testing Optimizer ---
+2025-06-14 13:26:02 [INFO] Running: Optimizer Initialization
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:02 [INFO] Starting production VAE training:
+2025-06-14 13:26:02 [INFO]   Training samples: 1
+2025-06-14 13:26:02 [INFO]   Validation samples: 1
+2025-06-14 13:26:02 [INFO] Epoch 0 | Train Loss: 9.950434 | Val Loss: 5.029212 | KL: 0.323798 | Recon: 9.626637
+2025-06-14 13:26:02 [INFO] Epoch 10 | Train Loss: 9.612534 | Val Loss: 5.131361 | KL: 0.323798 | Recon: 9.288736
+2025-06-14 13:26:02 [INFO] Early stopping at epoch 19
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Optimizer Initialization
+2025-06-14 13:26:02 [INFO] --- Testing Training Pipeline ---
+2025-06-14 13:26:02 [INFO] Running: Training Convergence
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:02 [INFO] Starting production VAE training:
+2025-06-14 13:26:02 [INFO]   Training samples: 80
+2025-06-14 13:26:02 [INFO]   Validation samples: 20
+2025-06-14 13:26:02 [INFO] Epoch 0 | Train Loss: 1.955027 | Val Loss: 2.123820 | KL: 0.501657 | Recon: 1.453370
+2025-06-14 13:26:02 [INFO] Epoch 9 | Train Loss: 1.968533 | Val Loss: 2.101913 | KL: 0.501657 | Recon: 1.466877
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Training Convergence
+2025-06-14 13:26:02 [INFO] Running: Early Stopping
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:02 [INFO] Starting production VAE training:
+2025-06-14 13:26:02 [INFO]   Training samples: 40
+2025-06-14 13:26:02 [INFO]   Validation samples: 10
+2025-06-14 13:26:02 [INFO] Epoch 0 | Train Loss: 0.169011 | Val Loss: 0.177575 | KL: 0.000000 | Recon: 0.169011
+2025-06-14 13:26:02 [INFO] Early stopping at epoch 4
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Early Stopping
+2025-06-14 13:26:02 [INFO] --- Testing Data Handling ---
+2025-06-14 13:26:02 [INFO] Running: Data Format Handling
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=3, latent_dim=2
+2025-06-14 13:26:02 [INFO] Starting production VAE training:
+2025-06-14 13:26:02 [INFO]   Training samples: 1
+2025-06-14 13:26:02 [INFO]   Validation samples: 1
+2025-06-14 13:26:02 [INFO] Epoch 0 | Train Loss: 0.436146 | Val Loss: 0.383490 | KL: 0.000000 | Recon: 0.436146
+2025-06-14 13:26:02 [INFO] Epoch 2 | Train Loss: 0.348172 | Val Loss: 0.116871 | KL: 0.000000 | Recon: 0.348172
+2025-06-14 13:26:02 [INFO] Starting production VAE training:
+2025-06-14 13:26:02 [INFO]   Training samples: 1
+2025-06-14 13:26:02 [INFO]   Validation samples: 1
+2025-06-14 13:26:02 [INFO] Epoch 0 | Train Loss: 4.029034 | Val Loss: 7.003234 | KL: 1.003645 | Recon: 3.025389
+2025-06-14 13:26:02 [INFO] Epoch 2 | Train Loss: 3.693181 | Val Loss: 9.031343 | KL: 1.003645 | Recon: 2.689536
+2025-06-14 13:26:02 [INFO] Starting production VAE training:
+2025-06-14 13:26:02 [INFO]   Training samples: 1
+2025-06-14 13:26:02 [INFO]   Validation samples: 1
+2025-06-14 13:26:02 [INFO] Epoch 0 | Train Loss: 0.228149 | Val Loss: 1.082229 | KL: 0.036912 | Recon: 0.191237
+2025-06-14 13:26:02 [INFO] Epoch 2 | Train Loss: 0.242793 | Val Loss: 1.103616 | KL: 0.036912 | Recon: 0.205881
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Data Format Handling
+2025-06-14 13:26:02 [INFO] --- Testing Model Persistence ---
+2025-06-14 13:26:02 [INFO] Running: Model Save/Load
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=6, latent_dim=3
+2025-06-14 13:26:02 [INFO] Starting production VAE training:
+2025-06-14 13:26:02 [INFO]   Training samples: 40
+2025-06-14 13:26:02 [INFO]   Validation samples: 10
+2025-06-14 13:26:02 [INFO] Epoch 0 | Train Loss: 11.135546 | Val Loss: 11.270798 | KL: 0.029885 | Recon: 11.105661
+2025-06-14 13:26:02 [INFO] Epoch 4 | Train Loss: 11.214195 | Val Loss: 11.290091 | KL: 0.029885 | Recon: 11.184311
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=6, latent_dim=3
+2025-06-14 13:26:02 [INFO] Model loading not fully implemented - test skipped
+2025-06-14 13:26:02 [INFO] ✓ PASSED: Model Save/Load
+2025-06-14 13:26:02 [INFO] --- Testing Variational Properties ---
+2025-06-14 13:26:02 [INFO] Running: Latent Space Regularization
+2025-06-14 13:26:02 [INFO] VariationalAutoencoder initialized with input_dim=6, latent_dim=3
+2025-06-14 13:26:02 [INFO] Starting production VAE training:
+2025-06-14 13:26:02 [INFO]   Training samples: 160
+2025-06-14 13:26:02 [INFO]   Validation samples: 40
+2025-06-14 13:26:02 [INFO] Epoch 0 | Train Loss: 1.805556 | Val Loss: 1.401338 | KL: 0.274301 | Recon: 1.531254
+2025-06-14 13:26:03 [INFO] Epoch 10 | Train Loss: 1.807652 | Val Loss: 1.401939 | KL: 0.274301 | Recon: 1.533351
+2025-06-14 13:26:03 [INFO] Early stopping at epoch 11
+2025-06-14 13:26:03 [INFO] ✓ PASSED: Latent Space Regularization
+2025-06-14 13:26:03 [INFO] --- Testing Reconstruction Quality ---
+2025-06-14 13:26:03 [INFO] Running: Reconstruction Accuracy
+2025-06-14 13:26:03 [INFO] VariationalAutoencoder initialized with input_dim=6, latent_dim=3
+2025-06-14 13:26:03 [INFO] Starting production VAE training:
+2025-06-14 13:26:03 [INFO]   Training samples: 80
+2025-06-14 13:26:03 [INFO]   Validation samples: 20
+2025-06-14 13:26:03 [INFO] Epoch 0 | Train Loss: 12.154532 | Val Loss: 12.111063 | KL: 0.222689 | Recon: 11.931843
+2025-06-14 13:26:03 [INFO] Epoch 10 | Train Loss: 12.183051 | Val Loss: 12.091022 | KL: 0.222689 | Recon: 11.960361
+2025-06-14 13:26:03 [INFO] Epoch 19 | Train Loss: 12.165122 | Val Loss: 12.106624 | KL: 0.222689 | Recon: 11.942432
+2025-06-14 13:26:03 [INFO] ✓ PASSED: Reconstruction Accuracy
+2025-06-14 13:26:03 [INFO] --- Testing Latent Space Properties ---
+2025-06-14 13:26:03 [INFO] Running: Latent Space Continuity
+2025-06-14 13:26:03 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:03 [INFO] Starting production VAE training:
+2025-06-14 13:26:03 [INFO]   Training samples: 40
+2025-06-14 13:26:03 [INFO]   Validation samples: 10
+2025-06-14 13:26:03 [INFO] Epoch 0 | Train Loss: 0.145600 | Val Loss: 0.095696 | KL: 0.000000 | Recon: 0.145600
+2025-06-14 13:26:03 [INFO] Epoch 10 | Train Loss: 0.133212 | Val Loss: 0.123043 | KL: 0.000000 | Recon: 0.133212
+2025-06-14 13:26:03 [INFO] Early stopping at epoch 10
+2025-06-14 13:26:03 [INFO] ✓ PASSED: Latent Space Continuity
+2025-06-14 13:26:03 [INFO] --- Testing Training Performance ---
+2025-06-14 13:26:03 [INFO] Running: Training Scalability
+2025-06-14 13:26:03 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:03 [INFO] Starting production VAE training:
+2025-06-14 13:26:03 [INFO]   Training samples: 40
+2025-06-14 13:26:03 [INFO]   Validation samples: 10
+2025-06-14 13:26:03 [INFO] Epoch 0 | Train Loss: 1.715205 | Val Loss: 2.120630 | KL: 0.839455 | Recon: 0.875750
+2025-06-14 13:26:03 [INFO] Epoch 4 | Train Loss: 1.755315 | Val Loss: 2.211167 | KL: 0.839455 | Recon: 0.915860
+2025-06-14 13:26:03 [INFO] Data size 50: 27.000000 ms
+2025-06-14 13:26:03 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:03 [INFO] Starting production VAE training:
+2025-06-14 13:26:03 [INFO]   Training samples: 80
+2025-06-14 13:26:03 [INFO]   Validation samples: 20
+2025-06-14 13:26:03 [INFO] Epoch 0 | Train Loss: 1.435629 | Val Loss: 1.503891 | KL: 0.686526 | Recon: 0.749102
+2025-06-14 13:26:03 [INFO] Epoch 4 | Train Loss: 1.444562 | Val Loss: 1.516807 | KL: 0.686526 | Recon: 0.758035
+2025-06-14 13:26:03 [INFO] Data size 100: 66.000000 ms
+2025-06-14 13:26:03 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:03 [INFO] Starting production VAE training:
+2025-06-14 13:26:03 [INFO]   Training samples: 160
+2025-06-14 13:26:03 [INFO]   Validation samples: 40
+2025-06-14 13:26:03 [INFO] Epoch 0 | Train Loss: 1.742875 | Val Loss: 1.628770 | KL: 0.838639 | Recon: 0.904236
+2025-06-14 13:26:03 [INFO] Epoch 4 | Train Loss: 1.731378 | Val Loss: 1.639636 | KL: 0.838639 | Recon: 0.892739
+2025-06-14 13:26:03 [INFO] Data size 200: 123.000000 ms
+2025-06-14 13:26:03 [INFO] ✓ PASSED: Training Scalability
+2025-06-14 13:26:03 [INFO] --- Testing Inference Performance ---
+2025-06-14 13:26:03 [INFO] Running: Inference Performance
+2025-06-14 13:26:03 [INFO] VariationalAutoencoder initialized with input_dim=12, latent_dim=8
+2025-06-14 13:26:04 [INFO] Average inference time: 722.502991 μs
+2025-06-14 13:26:04 [INFO] ✓ PASSED: Inference Performance
+2025-06-14 13:26:04 [INFO] --- Testing Memory Usage ---
+2025-06-14 13:26:04 [INFO] Running: Memory Efficiency
+2025-06-14 13:26:04 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:04 [INFO] Starting production VAE training:
+2025-06-14 13:26:04 [INFO]   Training samples: 16
+2025-06-14 13:26:04 [INFO]   Validation samples: 4
+2025-06-14 13:26:04 [INFO] Epoch 0 | Train Loss: 20.231941 | Val Loss: 20.062632 | KL: 0.341601 | Recon: 19.890343
+2025-06-14 13:26:04 [INFO] Epoch 10 | Train Loss: 20.191795 | Val Loss: 20.186056 | KL: 0.341601 | Recon: 19.850191
+2025-06-14 13:26:04 [INFO] Early stopping at epoch 11
+2025-06-14 13:26:04 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:04 [INFO] Starting production VAE training:
+2025-06-14 13:26:04 [INFO]   Training samples: 16
+2025-06-14 13:26:04 [INFO]   Validation samples: 4
+2025-06-14 13:26:04 [INFO] Epoch 0 | Train Loss: 19.966570 | Val Loss: 19.622219 | KL: 0.234246 | Recon: 19.732323
+2025-06-14 13:26:04 [INFO] Epoch 10 | Train Loss: 19.965645 | Val Loss: 19.912872 | KL: 0.234246 | Recon: 19.731398
+2025-06-14 13:26:04 [INFO] Early stopping at epoch 10
+2025-06-14 13:26:04 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:04 [INFO] Starting production VAE training:
+2025-06-14 13:26:04 [INFO]   Training samples: 16
+2025-06-14 13:26:04 [INFO]   Validation samples: 4
+2025-06-14 13:26:04 [INFO] Epoch 0 | Train Loss: 20.940468 | Val Loss: 21.071281 | KL: 0.803268 | Recon: 20.137199
+2025-06-14 13:26:04 [INFO] Epoch 10 | Train Loss: 20.893677 | Val Loss: 20.612705 | KL: 0.803268 | Recon: 20.090408
+2025-06-14 13:26:04 [INFO] Early stopping at epoch 15
+2025-06-14 13:26:04 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:04 [INFO] Starting production VAE training:
+2025-06-14 13:26:04 [INFO]   Training samples: 16
+2025-06-14 13:26:04 [INFO]   Validation samples: 4
+2025-06-14 13:26:04 [INFO] Epoch 0 | Train Loss: 21.114704 | Val Loss: 21.086245 | KL: 0.784613 | Recon: 20.330090
+2025-06-14 13:26:04 [INFO] Epoch 10 | Train Loss: 21.052259 | Val Loss: 21.336710 | KL: 0.784613 | Recon: 20.267649
+2025-06-14 13:26:05 [INFO] Epoch 20 | Train Loss: 21.087093 | Val Loss: 20.973965 | KL: 0.784613 | Recon: 20.302479
+2025-06-14 13:26:05 [INFO] Early stopping at epoch 22
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:05 [INFO] Starting production VAE training:
+2025-06-14 13:26:05 [INFO]   Training samples: 16
+2025-06-14 13:26:05 [INFO]   Validation samples: 4
+2025-06-14 13:26:05 [INFO] Epoch 0 | Train Loss: 20.667810 | Val Loss: 20.585678 | KL: 0.278156 | Recon: 20.389658
+2025-06-14 13:26:05 [INFO] Epoch 10 | Train Loss: 20.640381 | Val Loss: 20.568981 | KL: 0.278156 | Recon: 20.362225
+2025-06-14 13:26:05 [INFO] Epoch 20 | Train Loss: 20.521450 | Val Loss: 20.514133 | KL: 0.278156 | Recon: 20.243292
+2025-06-14 13:26:05 [INFO] Early stopping at epoch 21
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:05 [INFO] Starting production VAE training:
+2025-06-14 13:26:05 [INFO]   Training samples: 16
+2025-06-14 13:26:05 [INFO]   Validation samples: 4
+2025-06-14 13:26:05 [INFO] Epoch 0 | Train Loss: 20.648882 | Val Loss: 20.669985 | KL: 0.775752 | Recon: 19.873129
+2025-06-14 13:26:05 [INFO] Epoch 10 | Train Loss: 20.588900 | Val Loss: 20.515633 | KL: 0.775752 | Recon: 19.813150
+2025-06-14 13:26:05 [INFO] Epoch 20 | Train Loss: 20.671831 | Val Loss: 20.741510 | KL: 0.775752 | Recon: 19.896080
+2025-06-14 13:26:05 [INFO] Early stopping at epoch 20
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:05 [INFO] Starting production VAE training:
+2025-06-14 13:26:05 [INFO]   Training samples: 16
+2025-06-14 13:26:05 [INFO]   Validation samples: 4
+2025-06-14 13:26:05 [INFO] Epoch 0 | Train Loss: 20.844814 | Val Loss: 20.889469 | KL: 1.171108 | Recon: 19.673706
+2025-06-14 13:26:05 [INFO] Epoch 10 | Train Loss: 20.969368 | Val Loss: 20.719719 | KL: 1.171108 | Recon: 19.798262
+2025-06-14 13:26:05 [INFO] Early stopping at epoch 19
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:05 [INFO] Starting production VAE training:
+2025-06-14 13:26:05 [INFO]   Training samples: 16
+2025-06-14 13:26:05 [INFO]   Validation samples: 4
+2025-06-14 13:26:05 [INFO] Epoch 0 | Train Loss: 19.829624 | Val Loss: 19.698271 | KL: 0.192705 | Recon: 19.636921
+2025-06-14 13:26:05 [INFO] Epoch 10 | Train Loss: 19.786116 | Val Loss: 19.952057 | KL: 0.192705 | Recon: 19.593409
+2025-06-14 13:26:05 [INFO] Epoch 20 | Train Loss: 19.748278 | Val Loss: 19.925879 | KL: 0.192705 | Recon: 19.555573
+2025-06-14 13:26:05 [INFO] Early stopping at epoch 21
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:05 [INFO] Starting production VAE training:
+2025-06-14 13:26:05 [INFO]   Training samples: 16
+2025-06-14 13:26:05 [INFO]   Validation samples: 4
+2025-06-14 13:26:05 [INFO] Epoch 0 | Train Loss: 21.039501 | Val Loss: 20.913986 | KL: 1.052356 | Recon: 19.987148
+2025-06-14 13:26:05 [INFO] Epoch 10 | Train Loss: 21.034056 | Val Loss: 20.976330 | KL: 1.052356 | Recon: 19.981703
+2025-06-14 13:26:05 [INFO] Early stopping at epoch 14
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=8, latent_dim=4
+2025-06-14 13:26:05 [INFO] Starting production VAE training:
+2025-06-14 13:26:05 [INFO]   Training samples: 16
+2025-06-14 13:26:05 [INFO]   Validation samples: 4
+2025-06-14 13:26:05 [INFO] Epoch 0 | Train Loss: 20.365278 | Val Loss: 20.566559 | KL: 0.199947 | Recon: 20.165331
+2025-06-14 13:26:05 [INFO] Epoch 10 | Train Loss: 20.405304 | Val Loss: 20.387463 | KL: 0.199947 | Recon: 20.205355
+2025-06-14 13:26:05 [INFO] Epoch 20 | Train Loss: 20.613194 | Val Loss: 20.629778 | KL: 0.199947 | Recon: 20.413246
+2025-06-14 13:26:05 [INFO] Early stopping at epoch 20
+2025-06-14 13:26:05 [INFO] ✓ PASSED: Memory Efficiency
+2025-06-14 13:26:05 [INFO] --- Testing Radiation Tolerance ---
+2025-06-14 13:26:05 [INFO] Running: Radiation Robustness
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:05 [INFO] ✓ PASSED: Radiation Robustness
+2025-06-14 13:26:05 [INFO] Running: Error Correction Statistics
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:05 [INFO] ✓ PASSED: Error Correction Statistics
+2025-06-14 13:26:05 [INFO] --- Testing Edge Cases ---
+2025-06-14 13:26:05 [INFO] Running: Extreme Input Values
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:05 [INFO] ✓ PASSED: Extreme Input Values
+2025-06-14 13:26:05 [INFO] Running: Minimal Data Training
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=2, latent_dim=1
+2025-06-14 13:26:05 [INFO] Starting production VAE training:
+2025-06-14 13:26:05 [INFO]   Training samples: 0
+2025-06-14 13:26:05 [INFO]   Validation samples: 1
+2025-06-14 13:26:05 [INFO] Epoch 0 | Train Loss: nan | Val Loss: 1.444997 | KL: nan | Recon: nan
+2025-06-14 13:26:05 [INFO] Epoch 2 | Train Loss: nan | Val Loss: 2.024770 | KL: nan | Recon: nan
+2025-06-14 13:26:05 [INFO] ✓ PASSED: Minimal Data Training
+2025-06-14 13:26:05 [INFO] --- Testing Stress Conditions ---
+2025-06-14 13:26:05 [INFO] Running: High Radiation Stress
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:05 [ERROR] ✗ FAILED: High Radiation Stress
+2025-06-14 13:26:05 [INFO] --- Testing Spacecraft Data Patterns ---
+2025-06-14 13:26:05 [INFO] Running: Spacecraft Telemetry Patterns
+2025-06-14 13:26:05 [INFO] VariationalAutoencoder initialized with input_dim=12, latent_dim=8
+2025-06-14 13:26:05 [INFO] Starting production VAE training:
+2025-06-14 13:26:05 [INFO]   Training samples: 400
+2025-06-14 13:26:05 [INFO]   Validation samples: 100
+2025-06-14 13:26:05 [INFO] Epoch 0 | Train Loss: 13899.071289 | Val Loss: 13725.070312 | KL: 1.786673 | Recon: 13897.285156
+2025-06-14 13:26:08 [INFO] Epoch 10 | Train Loss: 13898.833984 | Val Loss: 13724.419922 | KL: 1.786673 | Recon: 13897.046875
+2025-06-14 13:26:12 [INFO] Epoch 20 | Train Loss: 13899.233398 | Val Loss: 13726.727539 | KL: 1.786673 | Recon: 13897.446289
+2025-06-14 13:26:12 [INFO] Early stopping at epoch 22
+2025-06-14 13:26:12 [INFO] ✓ PASSED: Spacecraft Telemetry Patterns
+2025-06-14 13:26:12 [INFO] --- Testing Anomaly Detection ---
+2025-06-14 13:26:12 [INFO] Running: Anomaly Detection
+2025-06-14 13:26:12 [INFO] VariationalAutoencoder initialized with input_dim=6, latent_dim=3
+2025-06-14 13:26:12 [INFO] Starting production VAE training:
+2025-06-14 13:26:12 [INFO]   Training samples: 160
+2025-06-14 13:26:12 [INFO]   Validation samples: 40
+2025-06-14 13:26:12 [INFO] Epoch 0 | Train Loss: 1.910690 | Val Loss: 2.042548 | KL: 0.576962 | Recon: 1.333728
+2025-06-14 13:26:12 [INFO] Epoch 10 | Train Loss: 1.932651 | Val Loss: 2.047738 | KL: 0.576962 | Recon: 1.355689
+2025-06-14 13:26:13 [INFO] Epoch 19 | Train Loss: 1.912923 | Val Loss: 2.050095 | KL: 0.576962 | Recon: 1.335962
+2025-06-14 13:26:13 [INFO] ✓ PASSED: Anomaly Detection
+2025-06-14 13:26:13 [INFO] --- Testing Reproducibility ---
+2025-06-14 13:26:13 [INFO] Running: Training Reproducibility
+2025-06-14 13:26:13 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:13 [INFO] Starting production VAE training:
+2025-06-14 13:26:13 [INFO]   Training samples: 3
+2025-06-14 13:26:13 [INFO]   Validation samples: 1
+2025-06-14 13:26:13 [INFO] Epoch 0 | Train Loss: 16.510445 | Val Loss: 10.102861 | KL: 2.038378 | Recon: 14.472066
+2025-06-14 13:26:13 [INFO] Epoch 4 | Train Loss: 15.067966 | Val Loss: 9.506622 | KL: 2.038378 | Recon: 13.029587
+2025-06-14 13:26:13 [INFO] VariationalAutoencoder initialized with input_dim=4, latent_dim=2
+2025-06-14 13:26:13 [INFO] Starting production VAE training:
+2025-06-14 13:26:13 [INFO]   Training samples: 3
+2025-06-14 13:26:13 [INFO]   Validation samples: 1
+2025-06-14 13:26:13 [INFO] Epoch 0 | Train Loss: 13.104897 | Val Loss: 27.838060 | KL: 2.112574 | Recon: 10.992325
+2025-06-14 13:26:13 [INFO] Epoch 4 | Train Loss: 12.665230 | Val Loss: 27.351780 | KL: 2.112574 | Recon: 10.552656
+2025-06-14 13:26:13 [INFO] ✓ PASSED: Training Reproducibility
+2025-06-14 13:26:13 [INFO] 
+=== TEST SUITE RESULTS ===
+2025-06-14 13:26:13 [INFO] Total Tests: 29
+2025-06-14 13:26:13 [INFO] Passed: 28
+2025-06-14 13:26:13 [INFO] Failed: 1
+2025-06-14 13:26:13 [INFO] Success Rate: 96.551720%
+2025-06-14 13:26:13 [INFO] 🎉 EXCELLENT: Production ready!

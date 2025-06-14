@@ -1,0 +1,237 @@
+[2025-06-14 13:25:36] 🚀 Starting IEEE QRS 2025 Comprehensive Validation
+[2025-06-14 13:25:36] 📦 Building validation components...
+-- GTest include directories: 
+-- GTest libraries: GTest::gtest
+-- Using Eigen3 from: /usr/local/include/eigen3
+-- Cursor IDE configuration created at /Users/rishabnuguru/space/.cursor.json
+-- Enabled compilation database for Cursor IDE
+-- Custom radiation-tolerant pattern highlighting configured
+-- clangd configuration created at /Users/rishabnuguru/space/.clangd
+-- VS Code integration configured
+-- IDE integrations configured successfully
+-- 
+-- ==== Radiation Tolerant ML Framework Configuration ====
+-- Build type:                 Release
+-- C++ Standard:               C++17
+-- Python bindings:            OFF
+-- IDE integration:            ON
+-- Testing enabled:            ON
+-- Visualization:              OFF
+-- ======================================================
+-- Configuring done (0.3s)
+-- Generating done (0.7s)
+-- Build files have been written to: /Users/rishabnuguru/space
+[  2%] Built target rad_ml_tmr
+[  6%] Built target rad_ml_testing
+[ 10%] Built target rad_ml_qft
+[ 12%] Building CXX object CMakeFiles/realistic_space_validation.dir/test/verification/realistic_space_validation.cpp.o
+[ 13%] Building CXX object CMakeFiles/modern_features_test.dir/test/verification/modern_features_test.cpp.o
+[ 15%] Building CXX object CMakeFiles/neural_network_validation.dir/test/verification/monte_carlo_neuralnetwork.cpp.o
+[ 16%] Building CXX object CMakeFiles/space_monte_carlo_validation.dir/test/verification/space_monte_carlo_validation.cpp.o
+[ 17%] Building CXX object CMakeFiles/enhanced_tmr_test.dir/test/verification/enhanced_tmr_test.cpp.o
+[ 19%] Building CXX object CMakeFiles/nasa_esa_standard_test.dir/src/nasa_esa_standard_runner.cpp.o
+[ 20%] Building CXX object CMakeFiles/nasa_esa_standard_test.dir/src/validation/nasa_esa_validation_protocol.cpp.o
+[ 21%] Building CXX object src/rad_ml/research/CMakeFiles/rad_ml_research.dir/variational_autoencoder.cpp.o
+[ 23%] Building CXX object CMakeFiles/monte_carlo_neuralnetwork.dir/test/verification/monte_carlo_neuralnetwork.cpp.o
+[ 24%] Building CXX object CMakeFiles/quantum_field_example.dir/examples/quantum_field_example.cpp.o
+[ 26%] Building CXX object CMakeFiles/scientific_validation_test.dir/test/verification/scientific_validation_test.cpp.o
+[ 27%] Building CXX object CMakeFiles/radiation_stress_test.dir/test/verification/radiation_stress_test.cpp.o
+[ 28%] Building CXX object CMakeFiles/systematic_fault_test.dir/test/verification/systematic_fault_test.cpp.o
+[ 31%] Building CXX object CMakeFiles/quantum_field_validation_test.dir/test/verification/quantum_field_validation_test.cpp.o
+[ 32%] Building CXX object CMakeFiles/realistic_leo_mission_test.dir/test/verification/realistic_leo_mission_test.cpp.o
+[ 32%] Building CXX object CMakeFiles/ieee754_tmr_test.dir/test/verification/ieee754_tmr_test.cpp.o
+[ 38%] Built target monte_carlo_validation
+[ 38%] Built target framework_verification_test
+In file included from /Users/rishabnuguru/space/test/verification/ieee754_tmr_test.cpp:14:
+/Users/rishabnuguru/space/include/rad_ml/core/redundancy/space_enhanced_tmr.hpp:746:9: warning: 'ENABLE_TESTING' macro redefined [-Wmacro-redefined]
+  746 | #define ENABLE_TESTING
+      |         ^
+<command line>:1:9: note: previous definition is here
+    1 | #define ENABLE_TESTING 1
+      |         ^
+In file included from /Users/rishabnuguru/space/test/verification/space_monte_carlo_validation.cpp:22:
+/Users/rishabnuguru/space/test/verification/../../include/rad_ml/core/redundancy/space_enhanced_tmr.hpp:746:9: warning: 'ENABLE_TESTING' macro redefined [-Wmacro-redefined]
+  746 | #define ENABLE_TESTING
+      |         ^
+<command line>:1:9: note: previous definition is here
+    1 | #define ENABLE_TESTING 1
+      |         ^
+In file included from /Users/rishabnuguru/space/test/verification/realistic_space_validation.cpp:25:
+/Users/rishabnuguru/space/test/verification/../../include/rad_ml/core/redundancy/space_enhanced_tmr.hpp:746:9: warning: 'ENABLE_TESTING' macro redefined [-Wmacro-redefined]
+  746 | #define ENABLE_TESTING
+      |         ^
+<command line>:1:9: note: previous definition is here
+    1 | #define ENABLE_TESTING 1
+      |         ^
+1 warning generated.
+[ 39%] Linking CXX executable space_monte_carlo_validation
+[ 41%] Linking CXX executable enhanced_tmr_test
+1 warning generated.
+[ 42%] Linking CXX executable ieee754_tmr_test
+[ 42%] Built target ieee754_tmr_test
+[ 42%] Built target space_monte_carlo_validation
+[ 42%] Built target enhanced_tmr_test
+1 warning generated.
+[ 43%] Linking CXX executable modern_features_test
+[ 45%] Linking CXX executable realistic_space_validation
+[ 45%] Built target modern_features_test
+[ 45%] Built target realistic_space_validation
+[ 46%] Linking CXX executable scientific_validation_test
+[ 46%] Built target scientific_validation_test
+[ 47%] Linking CXX executable nasa_esa_standard_test
+[ 49%] Linking CXX executable quantum_field_example
+[ 49%] Built target nasa_esa_standard_test
+[ 49%] Built target quantum_field_example
+[ 50%] Linking CXX executable radiation_stress_test
+[ 52%] Linking CXX executable systematic_fault_test
+[ 52%] Built target radiation_stress_test
+[ 53%] Linking CXX executable quantum_field_validation_test
+[ 53%] Built target systematic_fault_test
+[ 54%] Linking CXX executable realistic_leo_mission_test
+[ 54%] Built target quantum_field_validation_test
+[ 56%] Linking CXX static library librad_ml_research.a
+[ 56%] Built target realistic_leo_mission_test
+[ 60%] Built target rad_ml_research
+[ 61%] Building CXX object examples/CMakeFiles/multi_particle_simulation_example.dir/multi_particle_simulation_example.cpp.o
+[ 63%] Building CXX object examples/simple_nn/CMakeFiles/simple_nn.dir/main.cpp.o
+[ 64%] Building CXX object examples/CMakeFiles/residual_network_test.dir/residual_network_test.cpp.o
+[ 65%] Building CXX object examples/CMakeFiles/radiation_aware_training_example.dir/radiation_aware_training_example.cpp.o
+[ 67%] Building CXX object src/rad_ml/research/tests/CMakeFiles/rad_ml_research_tests.dir/residual_network_test.cpp.o
+[ 68%] Building CXX object examples/CMakeFiles/vae_space_mission_test.dir/vae_space_mission_test.cpp.o
+[ 69%] Building CXX object examples/CMakeFiles/vae_production_example.dir/vae_production_example.cpp.o
+[ 71%] Building CXX object examples/mission_simulator/CMakeFiles/mission_simulator.dir/mission_simulator.cpp.o
+[ 72%] Building CXX object examples/CMakeFiles/vae_example.dir/vae_example.cpp.o
+[ 73%] Building CXX object src/rad_ml/research/tests/CMakeFiles/rad_ml_research_tests.dir/architecture_tester_test.cpp.o
+[ 75%] Building CXX object examples/CMakeFiles/vae_validation_test.dir/vae_validation_test.cpp.o
+[ 76%] Building CXX object examples/CMakeFiles/auto_arch_search_example.dir/auto_arch_search_example.cpp.o
+[ 78%] Building CXX object examples/CMakeFiles/architecture_test.dir/architecture_test.cpp.o
+[ 79%] Building CXX object examples/CMakeFiles/vae_comprehensive_test.dir/vae_comprehensive_test.cpp.o
+[ 80%] Linking CXX executable neural_network_validation
+[ 82%] Linking CXX executable monte_carlo_neuralnetwork
+[ 82%] Built target neural_network_validation
+[ 82%] Built target monte_carlo_neuralnetwork
+[ 83%] Linking CXX executable simple_nn
+[ 83%] Built target simple_nn
+[ 84%] Linking CXX executable architecture_test
+[ 84%] Built target architecture_test
+[ 86%] Linking CXX executable auto_arch_search_example
+[ 87%] Linking CXX executable vae_production_example
+[ 89%] Linking CXX executable vae_example
+[ 89%] Built target auto_arch_search_example
+[ 90%] Linking CXX executable vae_validation_test
+[ 90%] Built target vae_production_example
+[ 90%] Built target vae_example
+[ 90%] Built target vae_validation_test
+[ 91%] Linking CXX executable vae_space_mission_test
+[ 91%] Built target vae_space_mission_test
+[ 93%] Linking CXX executable mission_simulator
+[ 94%] Linking CXX executable vae_comprehensive_test
+[ 94%] Built target mission_simulator
+[ 94%] Built target vae_comprehensive_test
+[ 95%] Linking CXX executable multi_particle_simulation_example
+[ 97%] Linking CXX executable radiation_aware_training_example
+[ 97%] Built target multi_particle_simulation_example
+[ 97%] Built target radiation_aware_training_example
+[ 98%] Linking CXX executable residual_network_test
+[ 98%] Built target residual_network_test
+[100%] Linking CXX executable rad_ml_research_tests
+ld: warning: ignoring duplicate libraries: '/usr/local/lib/libgtest.a'
+[100%] Built target rad_ml_research_tests
+[2025-06-14 13:26:02] 🧮 Running VAE Mathematical Validation...
+[2025-06-14 13:26:13] ✅ VAE mathematical validation completed
+[2025-06-14 13:26:13] 🔧 Running TMR Theoretical Validation...
+[2025-06-14 13:26:13] ✅ TMR theoretical validation completed
+[2025-06-14 13:26:13] ☢️  Running Radiation Stress Tests...
+[2025-06-14 13:26:13]    Testing radiation level 0.1 with protection NONE
+[2025-06-14 13:26:14]    Testing radiation level 0.1 with protection TMR_ONLY
+[2025-06-14 13:26:15]    Testing radiation level 0.1 with protection VAE_ONLY
+[2025-06-14 13:26:16]    Testing radiation level 0.1 with protection TMR_VAE_HYBRID
+[2025-06-14 13:26:18]    Testing radiation level 0.3 with protection NONE
+[2025-06-14 13:26:19]    Testing radiation level 0.3 with protection TMR_ONLY
+[2025-06-14 13:26:20]    Testing radiation level 0.3 with protection VAE_ONLY
+[2025-06-14 13:26:21]    Testing radiation level 0.3 with protection TMR_VAE_HYBRID
+[2025-06-14 13:26:23]    Testing radiation level 0.5 with protection NONE
+[2025-06-14 13:26:24]    Testing radiation level 0.5 with protection TMR_ONLY
+[2025-06-14 13:26:25]    Testing radiation level 0.5 with protection VAE_ONLY
+[2025-06-14 13:26:26]    Testing radiation level 0.5 with protection TMR_VAE_HYBRID
+[2025-06-14 13:26:27]    Testing radiation level 0.7 with protection NONE
+[2025-06-14 13:26:28]    Testing radiation level 0.7 with protection TMR_ONLY
+[2025-06-14 13:26:29]    Testing radiation level 0.7 with protection VAE_ONLY
+[2025-06-14 13:26:30]    Testing radiation level 0.7 with protection TMR_VAE_HYBRID
+[2025-06-14 13:26:31]    Testing radiation level 0.9 with protection NONE
+[2025-06-14 13:26:32]    Testing radiation level 0.9 with protection TMR_ONLY
+[2025-06-14 13:26:33]    Testing radiation level 0.9 with protection VAE_ONLY
+[2025-06-14 13:26:34]    Testing radiation level 0.9 with protection TMR_VAE_HYBRID
+[2025-06-14 13:26:35] ✅ Radiation stress testing completed
+[2025-06-14 13:26:35] 🚀 Running Mission Scenario Tests...
+[2025-06-14 13:26:35]    Simulating leo_iss scenario
+[2025-06-14 13:26:36]    Simulating geo_satellite scenario
+[2025-06-14 13:26:36]    Simulating mars_mission scenario
+[2025-06-14 13:26:36]    Simulating jupiter_flyby scenario
+[2025-06-14 13:26:36] ✅ Mission scenario testing completed
+[2025-06-14 13:26:36] 📈 Running Comparative Analysis...
+[2025-06-14 13:26:44] ✅ Comparative analysis completed
+[2025-06-14 13:26:44] 🧠 Running Neural Network Validation...
+[2025-06-14 13:29:55] ✅ Neural network validation completed
+[2025-06-14 13:29:55] 🎲 Running Monte Carlo Validation...
+[2025-06-14 13:30:17] ✅ Monte Carlo validation completed
+[2025-06-14 13:30:17] ⚛️  Running Quantum Field Theory Tests...
+[2025-06-14 13:30:18] ✅ Quantum field theory validation completed
+[2025-06-14 13:30:18] ⚡ Running Performance Benchmarks...
+[2025-06-14 13:30:18]    Running benchmark: systematic_fault_test
+[2025-06-14 13:30:19]    Running benchmark: ieee754_tmr_test
+[2025-06-14 13:30:19]    Running benchmark: enhanced_tmr_test
+[2025-06-14 13:30:19] 📊 Running Statistical Analysis Framework...
+🏛️  IEEE QRS 2025 Scientific Validation Framework
+   Radiation-Tolerant Machine Learning with VAE and TMR
+   Author: Rishab Nuguru, Space-Labs-AI
+======================================================================
+🚀 Starting IEEE QRS 2025 Comprehensive Validation
+============================================================
+📊 Validating VAE Mathematical Properties...
+   ✓ ELBO Convergence: 0.1457
+   ✓ KL Divergence Validity: 0.3510
+   ✓ Reconstruction Accuracy: 0.3704
+🔧 Validating TMR Theoretical Properties...
+   ✓ Voting Accuracy: 0.1860
+   ✓ Error Detection Rate: 0.1179
+   ✓ Error Correction Rate: 0.0628
+🔬 Analyzing VAE+TMR Hybrid Synergy...
+   Testing leo_mission...
+   Testing deep_space...
+   Testing solar_storm...
+☢️  Running Radiation Stress Tests...
+   Testing leo_mission scenario...
+   Testing deep_space scenario...
+   Testing solar_storm scenario...
+🚀 Running Mission Scenario Tests...
+   Simulating LEO_ISS...
+   Simulating GEO_Satellite...
+   Simulating Mars_Mission...
+   Simulating Jupiter_Flyby...
+📈 Running Comparative Analysis...
+   Testing baseline_no_protection...
+   Testing traditional_ecc...
+   Testing simple_tmr...
+   Testing rad_ml_vae_tmr...
+📊 Performing Statistical Analysis...
+📏 Calculating Confidence Intervals...
+🔬 Performing Hypothesis Testing...
+⚡ Running Performance Benchmarks...
+Traceback (most recent call last):
+  File "ieee_qrs_2025_validation_framework.py", line 856, in <module>
+    main()
+  File "ieee_qrs_2025_validation_framework.py", line 840, in main
+    results = validator.run_comprehensive_validation()
+  File "ieee_qrs_2025_validation_framework.py", line 145, in run_comprehensive_validation
+    validation_results["scalability_analysis"] = self._analyze_scalability()
+AttributeError: 'IEEE_QRS_2025_Validator' object has no attribute '_analyze_scalability'
+[2025-06-14 13:31:12] ✅ Python statistical analysis completed
+[2025-06-14 13:31:12] 📄 Generating Comprehensive Validation Report...
+[2025-06-14 13:31:12] 📋 Generating Final Results Summary...
+=======================================================================
+🎉 IEEE QRS 2025 Validation COMPLETED!
+=======================================================================
+[2025-06-14 13:31:12] ✅ Total tests completed:       33
+[2025-06-14 13:31:12] ✅ All critical validations completed successfully
+[2025-06-14 13:31:12] 🏁 IEEE QRS 2025 validation framework execution completed

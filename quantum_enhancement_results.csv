@@ -1,26 +1,8 @@
 Material,Scenario,Classical Defects,Quantum Defects,Percent Difference,Tunneling Contribution (%),Zero-Point Contribution (%),Execution Time (ms)
-Silicon,Standard,37.3319,37.353,0.0565466,0.1,16.4553,0
-Silicon,High Energy,307.332,307.488,0.0507952,0.1,16.4553,0
-Silicon,Quantum Dominant,37.3319,37.4374,0.282733,0.1,164.553,0
-Silicon,Nanoscale Device,37.3319,37.4374,0.282733,0.1,32.9106,0
-Silicon,Extreme Cold,37.3319,37.4374,0.282733,0.1,82.2765,0
-Germanium,Standard,37.6383,37.6597,0.0567647,0.1,16.4553,0
-Germanium,High Energy,307.638,307.795,0.0508276,0.1,16.4553,0
-Germanium,Quantum Dominant,37.6383,37.7451,0.283823,0.1,164.553,0
-Germanium,Nanoscale Device,37.6383,37.7451,0.283823,0.1,32.9106,0
-Germanium,Extreme Cold,37.6383,37.7451,0.283823,0.1,82.2765,0
-GaAs,Standard,37.6315,37.6529,0.0567599,0.1,16.4553,0
-GaAs,High Energy,307.632,307.788,0.0508269,0.1,16.4553,0
-GaAs,Quantum Dominant,37.6315,37.7383,0.283799,0.1,164.553,0
-GaAs,Nanoscale Device,37.6315,37.7383,0.283799,0.1,32.9106,0
-GaAs,Extreme Cold,37.6315,37.7383,0.283799,0.1,82.2765,0
-Silicon (Low Temp),Standard,39.2055,39.615,1.04436,0.1,16.4553,0
-Silicon (Low Temp),High Energy,309.206,312.059,0.922821,0.1,16.4553,0
-Silicon (Low Temp),Quantum Dominant,39.2055,41.2528,5.22179,0.1,164.553,0
-Silicon (Low Temp),Nanoscale Device,39.2055,41.2528,5.22179,0.1,32.9106,0
-Silicon (Low Temp),Extreme Cold,39.2055,41.2528,5.22179,0.1,82.2765,0
-Silicon (High Temp),Standard,35.4582,35.4713,0.0370581,0.1,16.4553,0
-Silicon (High Temp),High Energy,305.458,305.562,0.0339272,0.1,16.4553,0
-Silicon (High Temp),Quantum Dominant,35.4582,35.5239,0.185291,0.1,164.553,0
-Silicon (High Temp),Nanoscale Device,35.4582,35.5239,0.185291,0.1,32.9106,0
-Silicon (High Temp),Extreme Cold,35.4582,35.5239,0.185291,0.1,82.2765,0
+Silicon,Standard,600,783.401,30.5669,6.35269e-66,-1.59044e+10,0
+Silicon,High Energy,6000,7834.01,30.5669,6.35269e-66,-1.59044e+10,0
+Silicon,Quantum Dominant,600,850,41.6667,2.35919e-06,-1.59044e+11,0
+Germanium,Standard,600,783.401,30.5669,6.35269e-66,-1.59044e+10,0
+Germanium,High Energy,6000,7834.01,30.5669,6.35269e-66,-1.59044e+10,0
+Germanium,Quantum Dominant,600,850,41.6667,2.35919e-06,-1.59044e+11,0
+GaAs,Standard,600,783.401,30.5669,6.35269e-66,-1.59044e+10,0

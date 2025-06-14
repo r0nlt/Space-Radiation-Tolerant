@@ -81,6 +81,7 @@ add_library(rad_ml_testing STATIC
 add_library(rad_ml_qft STATIC
     src/rad_ml/physics/quantum_field_theory.cpp
     src/rad_ml/physics/quantum_models.cpp
+    src/rad_ml/physics/quantum_enhanced_radiation.cpp
 )
 
 target_link_libraries(rad_ml_qft
@@ -133,8 +134,21 @@ add_executable(enhanced_tmr_test test/verification/enhanced_tmr_test.cpp)
 target_link_libraries(enhanced_tmr_test rad_ml_tmr rad_ml_testing)
 add_test(NAME enhanced_tmr_test COMMAND enhanced_tmr_test)
 
-add_executable(scientific_validation_test test/verification/scientific_validation_test.cpp)
-target_link_libraries(scientific_validation_test rad_ml_tmr rad_ml_testing)
+add_executable(scientific_validation_test
+    test/scientific_validation/scientific_validation_test.cpp
+)
+
+target_link_libraries(scientific_validation_test
+    rad_ml_qft
+    rad_ml_research
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
+target_include_directories(scientific_validation_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/third_party/eigen
+)
+
 add_test(NAME scientific_validation_test COMMAND scientific_validation_test)
 
 add_executable(radiation_stress_test test/verification/radiation_stress_test.cpp)

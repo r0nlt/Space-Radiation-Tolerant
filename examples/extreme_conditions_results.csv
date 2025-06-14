@@ -1,0 +1,13 @@
+Defect Type,Classical Model,Quantum Model,Difference (%)
+complex,10502.3,10502.3,0
+dislocation,33.5773,33.5773,0
+interstitial,43549.8,43549.8,0
+vacancy,59141.9,59141.9,0
+
+Simulation Parameters
+Temperature (K),4.2
+Feature Size (nm),5
+Radiation Intensity (rad/s),100000
+Simulation Time (s),1
+Quantum Corrections,Disabled
+Simulation Error (%),30.2255

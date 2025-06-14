@@ -1,0 +1,81 @@
+===== IEEE-754 TMR Voting Test =====
+
+Test: Basic Majority Voting
+Values: 1, 1, 2
+Result: 1
+Status: PASS
+
+Test: All Values Different
+Values: 1, 2, 3
+Result: 2
+Status: PASS
+
+Test: One NaN Value
+Values: 1, nan, 3
+Result: 1
+Status: PASS
+
+Test: One Infinity Value
+Values: 1, inf, 3
+Result: 1
+Status: PASS
+
+Test: All NaN Values
+Values: nan, nan, nan
+Result: nan
+Status: PASS
+
+Test: Mix of Special Values
+Values: inf, nan, -inf
+Result: 0
+Status: PASS
+
+Test: Denormal Values
+Values: 1.4013e-45, 1.4013e-45, 0
+Result: 1.4013e-45
+Status: PASS
+
+Test: Double with Mantissa Bit Flips
+Values: 3.14159, 3.14159, 3.14159
+Result: 3.14159
+Status: PASS
+
+Test: Double with Exponent Bit Flips
+Values: 3.14159, 6.28319, 12.5664
+Result: 6.28319
+Status: PASS
+
+Test: Double with Sign Bit Flips
+Values: 3.14159, -3.14159, -3.14159
+Result: -3.14159
+Status: PASS
+
+Test: Float with Multiple Bit Errors
+Values: 2.71828, 2.71853, 2.96047
+Result: 2.71853
+Status: PASS
+
+Test: Near-zero Values
+Values: 1.17549e-37, 1.17549e-37, 1.17549e-38
+Result: 1.17549e-37
+Status: PASS
+
+Test: Large Values
+Values: 1.70141e+38, 1.70141e+38, 1.53127e+38
+Result: 1.70141e+38
+Status: PASS
+
+Test: All Different But Close
+Values: 3.14159, 3.14158, 3.1416
+Result: 3.14159
+Status: PASS
+
+Test: Double Precision
+Values: 3.14159, 3.14159, 3.14159
+Result: 3.14159
+Status: PASS
+
+===== Test Summary =====
+Passed: 15 / 15 tests
+Success Rate: 100%
+

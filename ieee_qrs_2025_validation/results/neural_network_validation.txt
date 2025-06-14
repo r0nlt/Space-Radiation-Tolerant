@@ -1,0 +1,370 @@
+===================================================
+ Monte Carlo Validation of Rad-Tolerant ML Framework
+===================================================
+Generating synthetic dataset...
+Generated 500 samples with 10 inputs and 3 outputs.
+
+Running 168 Monte Carlo simulations...
+Simulation 1/168: LEO Equatorial with protection level NONE and fine-tuning level NONE (0% complete)
+Simulation 2/168: LEO Equatorial with protection level NONE and fine-tuning level BASIC (1% complete)
+Simulation 3/168: LEO Equatorial with protection level NONE and fine-tuning level STANDARD (1% complete)
+Simulation 4/168: LEO Equatorial with protection level NONE and fine-tuning level ADVANCED (2% complete)
+Simulation 5/168: LEO Equatorial with protection level MINIMAL and fine-tuning level NONE (2% complete)
+Simulation 6/168: LEO Equatorial with protection level MINIMAL and fine-tuning level BASIC (3% complete)
+Simulation 7/168: LEO Equatorial with protection level MINIMAL and fine-tuning level STANDARD (4% complete)
+Simulation 8/168: LEO Equatorial with protection level MINIMAL and fine-tuning level ADVANCED (4% complete)
+Simulation 9/168: LEO Equatorial with protection level MODERATE and fine-tuning level NONE (5% complete)
+Simulation 10/168: LEO Equatorial with protection level MODERATE and fine-tuning level BASIC (5% complete)
+Simulation 11/168: LEO Equatorial with protection level MODERATE and fine-tuning level STANDARD (6% complete)
+Simulation 12/168: LEO Equatorial with protection level MODERATE and fine-tuning level ADVANCED (7% complete)
+Simulation 13/168: LEO Equatorial with protection level HIGH and fine-tuning level NONE (7% complete)
+Simulation 14/168: LEO Equatorial with protection level HIGH and fine-tuning level BASIC (8% complete)
+Simulation 15/168: LEO Equatorial with protection level HIGH and fine-tuning level STANDARD (8% complete)
+Simulation 16/168: LEO Equatorial with protection level HIGH and fine-tuning level ADVANCED (9% complete)
+Simulation 17/168: LEO Equatorial with protection level VERY_HIGH and fine-tuning level NONE (10% complete)
+Simulation 18/168: LEO Equatorial with protection level VERY_HIGH and fine-tuning level BASIC (10% complete)
+Simulation 19/168: LEO Equatorial with protection level VERY_HIGH and fine-tuning level STANDARD (11% complete)
+Simulation 20/168: LEO Equatorial with protection level VERY_HIGH and fine-tuning level ADVANCED (11% complete)
+Simulation 21/168: LEO Equatorial with protection level ADAPTIVE and fine-tuning level NONE (12% complete)
+Simulation 22/168: LEO Equatorial with protection level ADAPTIVE and fine-tuning level BASIC (13% complete)
+Simulation 23/168: LEO Equatorial with protection level ADAPTIVE and fine-tuning level STANDARD (13% complete)
+Simulation 24/168: LEO Equatorial with protection level ADAPTIVE and fine-tuning level ADVANCED (14% complete)
+Simulation 25/168: LEO Polar with protection level NONE and fine-tuning level NONE (14% complete)
+Simulation 26/168: LEO Polar with protection level NONE and fine-tuning level BASIC (15% complete)
+Simulation 27/168: LEO Polar with protection level NONE and fine-tuning level STANDARD (16% complete)
+Simulation 28/168: LEO Polar with protection level NONE and fine-tuning level ADVANCED (16% complete)
+Simulation 29/168: LEO Polar with protection level MINIMAL and fine-tuning level NONE (17% complete)
+Simulation 30/168: LEO Polar with protection level MINIMAL and fine-tuning level BASIC (17% complete)
+Simulation 31/168: LEO Polar with protection level MINIMAL and fine-tuning level STANDARD (18% complete)
+Simulation 32/168: LEO Polar with protection level MINIMAL and fine-tuning level ADVANCED (19% complete)
+Simulation 33/168: LEO Polar with protection level MODERATE and fine-tuning level NONE (19% complete)
+Simulation 34/168: LEO Polar with protection level MODERATE and fine-tuning level BASIC (20% complete)
+Simulation 35/168: LEO Polar with protection level MODERATE and fine-tuning level STANDARD (20% complete)
+Simulation 36/168: LEO Polar with protection level MODERATE and fine-tuning level ADVANCED (21% complete)
+Simulation 37/168: LEO Polar with protection level HIGH and fine-tuning level NONE (22% complete)
+Simulation 38/168: LEO Polar with protection level HIGH and fine-tuning level BASIC (22% complete)
+Simulation 39/168: LEO Polar with protection level HIGH and fine-tuning level STANDARD (23% complete)
+Simulation 40/168: LEO Polar with protection level HIGH and fine-tuning level ADVANCED (23% complete)
+Simulation 41/168: LEO Polar with protection level VERY_HIGH and fine-tuning level NONE (24% complete)
+Simulation 42/168: LEO Polar with protection level VERY_HIGH and fine-tuning level BASIC (25% complete)
+Simulation 43/168: LEO Polar with protection level VERY_HIGH and fine-tuning level STANDARD (25% complete)
+Simulation 44/168: LEO Polar with protection level VERY_HIGH and fine-tuning level ADVANCED (26% complete)
+Simulation 45/168: LEO Polar with protection level ADAPTIVE and fine-tuning level NONE (26% complete)
+Simulation 46/168: LEO Polar with protection level ADAPTIVE and fine-tuning level BASIC (27% complete)
+Simulation 47/168: LEO Polar with protection level ADAPTIVE and fine-tuning level STANDARD (27% complete)
+Simulation 48/168: LEO Polar with protection level ADAPTIVE and fine-tuning level ADVANCED (28% complete)
+Simulation 49/168: MEO with protection level NONE and fine-tuning level NONE (29% complete)
+Simulation 50/168: MEO with protection level NONE and fine-tuning level BASIC (29% complete)
+Simulation 51/168: MEO with protection level NONE and fine-tuning level STANDARD (30% complete)
+Simulation 52/168: MEO with protection level NONE and fine-tuning level ADVANCED (30% complete)
+Simulation 53/168: MEO with protection level MINIMAL and fine-tuning level NONE (31% complete)
+Simulation 54/168: MEO with protection level MINIMAL and fine-tuning level BASIC (32% complete)
+Simulation 55/168: MEO with protection level MINIMAL and fine-tuning level STANDARD (32% complete)
+Simulation 56/168: MEO with protection level MINIMAL and fine-tuning level ADVANCED (33% complete)
+Simulation 57/168: MEO with protection level MODERATE and fine-tuning level NONE (33% complete)
+Simulation 58/168: MEO with protection level MODERATE and fine-tuning level BASIC (34% complete)
+Simulation 59/168: MEO with protection level MODERATE and fine-tuning level STANDARD (35% complete)
+Simulation 60/168: MEO with protection level MODERATE and fine-tuning level ADVANCED (35% complete)
+Simulation 61/168: MEO with protection level HIGH and fine-tuning level NONE (36% complete)
+Simulation 62/168: MEO with protection level HIGH and fine-tuning level BASIC (36% complete)
+Simulation 63/168: MEO with protection level HIGH and fine-tuning level STANDARD (37% complete)
+Simulation 64/168: MEO with protection level HIGH and fine-tuning level ADVANCED (38% complete)
+Simulation 65/168: MEO with protection level VERY_HIGH and fine-tuning level NONE (38% complete)
+Simulation 66/168: MEO with protection level VERY_HIGH and fine-tuning level BASIC (39% complete)
+Simulation 67/168: MEO with protection level VERY_HIGH and fine-tuning level STANDARD (39% complete)
+Simulation 68/168: MEO with protection level VERY_HIGH and fine-tuning level ADVANCED (40% complete)
+Simulation 69/168: MEO with protection level ADAPTIVE and fine-tuning level NONE (41% complete)
+Simulation 70/168: MEO with protection level ADAPTIVE and fine-tuning level BASIC (41% complete)
+Simulation 71/168: MEO with protection level ADAPTIVE and fine-tuning level STANDARD (42% complete)
+Simulation 72/168: MEO with protection level ADAPTIVE and fine-tuning level ADVANCED (42% complete)
+Simulation 73/168: GEO with protection level NONE and fine-tuning level NONE (43% complete)
+Simulation 74/168: GEO with protection level NONE and fine-tuning level BASIC (44% complete)
+Simulation 75/168: GEO with protection level NONE and fine-tuning level STANDARD (44% complete)
+Simulation 76/168: GEO with protection level NONE and fine-tuning level ADVANCED (45% complete)
+Simulation 77/168: GEO with protection level MINIMAL and fine-tuning level NONE (45% complete)
+Simulation 78/168: GEO with protection level MINIMAL and fine-tuning level BASIC (46% complete)
+Simulation 79/168: GEO with protection level MINIMAL and fine-tuning level STANDARD (47% complete)
+Simulation 80/168: GEO with protection level MINIMAL and fine-tuning level ADVANCED (47% complete)
+Simulation 81/168: GEO with protection level MODERATE and fine-tuning level NONE (48% complete)
+Simulation 82/168: GEO with protection level MODERATE and fine-tuning level BASIC (48% complete)
+Simulation 83/168: GEO with protection level MODERATE and fine-tuning level STANDARD (49% complete)
+Simulation 84/168: GEO with protection level MODERATE and fine-tuning level ADVANCED (50% complete)
+Simulation 85/168: GEO with protection level HIGH and fine-tuning level NONE (50% complete)
+Simulation 86/168: GEO with protection level HIGH and fine-tuning level BASIC (51% complete)
+Simulation 87/168: GEO with protection level HIGH and fine-tuning level STANDARD (51% complete)
+Simulation 88/168: GEO with protection level HIGH and fine-tuning level ADVANCED (52% complete)
+Simulation 89/168: GEO with protection level VERY_HIGH and fine-tuning level NONE (52% complete)
+Simulation 90/168: GEO with protection level VERY_HIGH and fine-tuning level BASIC (53% complete)
+Simulation 91/168: GEO with protection level VERY_HIGH and fine-tuning level STANDARD (54% complete)
+Simulation 92/168: GEO with protection level VERY_HIGH and fine-tuning level ADVANCED (54% complete)
+Simulation 93/168: GEO with protection level ADAPTIVE and fine-tuning level NONE (55% complete)
+Simulation 94/168: GEO with protection level ADAPTIVE and fine-tuning level BASIC (55% complete)
+Simulation 95/168: GEO with protection level ADAPTIVE and fine-tuning level STANDARD (56% complete)
+Simulation 96/168: GEO with protection level ADAPTIVE and fine-tuning level ADVANCED (57% complete)
+Simulation 97/168: Lunar with protection level NONE and fine-tuning level NONE (57% complete)
+Simulation 98/168: Lunar with protection level NONE and fine-tuning level BASIC (58% complete)
+Simulation 99/168: Lunar with protection level NONE and fine-tuning level STANDARD (58% complete)
+Simulation 100/168: Lunar with protection level NONE and fine-tuning level ADVANCED (59% complete)
+Simulation 101/168: Lunar with protection level MINIMAL and fine-tuning level NONE (60% complete)
+Simulation 102/168: Lunar with protection level MINIMAL and fine-tuning level BASIC (60% complete)
+Simulation 103/168: Lunar with protection level MINIMAL and fine-tuning level STANDARD (61% complete)
+Simulation 104/168: Lunar with protection level MINIMAL and fine-tuning level ADVANCED (61% complete)
+Simulation 105/168: Lunar with protection level MODERATE and fine-tuning level NONE (62% complete)
+Simulation 106/168: Lunar with protection level MODERATE and fine-tuning level BASIC (63% complete)
+Simulation 107/168: Lunar with protection level MODERATE and fine-tuning level STANDARD (63% complete)
+Simulation 108/168: Lunar with protection level MODERATE and fine-tuning level ADVANCED (64% complete)
+Simulation 109/168: Lunar with protection level HIGH and fine-tuning level NONE (64% complete)
+Simulation 110/168: Lunar with protection level HIGH and fine-tuning level BASIC (65% complete)
+Simulation 111/168: Lunar with protection level HIGH and fine-tuning level STANDARD (66% complete)
+Simulation 112/168: Lunar with protection level HIGH and fine-tuning level ADVANCED (66% complete)
+Simulation 113/168: Lunar with protection level VERY_HIGH and fine-tuning level NONE (67% complete)
+Simulation 114/168: Lunar with protection level VERY_HIGH and fine-tuning level BASIC (67% complete)
+Simulation 115/168: Lunar with protection level VERY_HIGH and fine-tuning level STANDARD (68% complete)
+Simulation 116/168: Lunar with protection level VERY_HIGH and fine-tuning level ADVANCED (69% complete)
+Simulation 117/168: Lunar with protection level ADAPTIVE and fine-tuning level NONE (69% complete)
+Simulation 118/168: Lunar with protection level ADAPTIVE and fine-tuning level BASIC (70% complete)
+Simulation 119/168: Lunar with protection level ADAPTIVE and fine-tuning level STANDARD (70% complete)
+Simulation 120/168: Lunar with protection level ADAPTIVE and fine-tuning level ADVANCED (71% complete)
+Simulation 121/168: Mars with protection level NONE and fine-tuning level NONE (72% complete)
+Simulation 122/168: Mars with protection level NONE and fine-tuning level BASIC (72% complete)
+Simulation 123/168: Mars with protection level NONE and fine-tuning level STANDARD (73% complete)
+Simulation 124/168: Mars with protection level NONE and fine-tuning level ADVANCED (73% complete)
+Simulation 125/168: Mars with protection level MINIMAL and fine-tuning level NONE (74% complete)
+Simulation 126/168: Mars with protection level MINIMAL and fine-tuning level BASIC (75% complete)
+Simulation 127/168: Mars with protection level MINIMAL and fine-tuning level STANDARD (75% complete)
+Simulation 128/168: Mars with protection level MINIMAL and fine-tuning level ADVANCED (76% complete)
+Simulation 129/168: Mars with protection level MODERATE and fine-tuning level NONE (76% complete)
+Simulation 130/168: Mars with protection level MODERATE and fine-tuning level BASIC (77% complete)
+Simulation 131/168: Mars with protection level MODERATE and fine-tuning level STANDARD (77% complete)
+Simulation 132/168: Mars with protection level MODERATE and fine-tuning level ADVANCED (78% complete)
+Simulation 133/168: Mars with protection level HIGH and fine-tuning level NONE (79% complete)
+Simulation 134/168: Mars with protection level HIGH and fine-tuning level BASIC (79% complete)
+Simulation 135/168: Mars with protection level HIGH and fine-tuning level STANDARD (80% complete)
+Simulation 136/168: Mars with protection level HIGH and fine-tuning level ADVANCED (80% complete)
+Simulation 137/168: Mars with protection level VERY_HIGH and fine-tuning level NONE (81% complete)
+Simulation 138/168: Mars with protection level VERY_HIGH and fine-tuning level BASIC (82% complete)
+Simulation 139/168: Mars with protection level VERY_HIGH and fine-tuning level STANDARD (82% complete)
+Simulation 140/168: Mars with protection level VERY_HIGH and fine-tuning level ADVANCED (83% complete)
+Simulation 141/168: Mars with protection level ADAPTIVE and fine-tuning level NONE (83% complete)
+Simulation 142/168: Mars with protection level ADAPTIVE and fine-tuning level BASIC (84% complete)
+Simulation 143/168: Mars with protection level ADAPTIVE and fine-tuning level STANDARD (85% complete)
+Simulation 144/168: Mars with protection level ADAPTIVE and fine-tuning level ADVANCED (85% complete)
+Simulation 145/168: Solar Probe with protection level NONE and fine-tuning level NONE (86% complete)
+Simulation 146/168: Solar Probe with protection level NONE and fine-tuning level BASIC (86% complete)
+Simulation 147/168: Solar Probe with protection level NONE and fine-tuning level STANDARD (87% complete)
+Simulation 148/168: Solar Probe with protection level NONE and fine-tuning level ADVANCED (88% complete)
+Simulation 149/168: Solar Probe with protection level MINIMAL and fine-tuning level NONE (88% complete)
+Simulation 150/168: Solar Probe with protection level MINIMAL and fine-tuning level BASIC (89% complete)
+Simulation 151/168: Solar Probe with protection level MINIMAL and fine-tuning level STANDARD (89% complete)
+Simulation 152/168: Solar Probe with protection level MINIMAL and fine-tuning level ADVANCED (90% complete)
+Simulation 153/168: Solar Probe with protection level MODERATE and fine-tuning level NONE (91% complete)
+Simulation 154/168: Solar Probe with protection level MODERATE and fine-tuning level BASIC (91% complete)
+Simulation 155/168: Solar Probe with protection level MODERATE and fine-tuning level STANDARD (92% complete)
+Simulation 156/168: Solar Probe with protection level MODERATE and fine-tuning level ADVANCED (92% complete)
+Simulation 157/168: Solar Probe with protection level HIGH and fine-tuning level NONE (93% complete)
+Simulation 158/168: Solar Probe with protection level HIGH and fine-tuning level BASIC (94% complete)
+Simulation 159/168: Solar Probe with protection level HIGH and fine-tuning level STANDARD (94% complete)
+Simulation 160/168: Solar Probe with protection level HIGH and fine-tuning level ADVANCED (95% complete)
+Simulation 161/168: Solar Probe with protection level VERY_HIGH and fine-tuning level NONE (95% complete)
+Simulation 162/168: Solar Probe with protection level VERY_HIGH and fine-tuning level BASIC (96% complete)
+Simulation 163/168: Solar Probe with protection level VERY_HIGH and fine-tuning level STANDARD (97% complete)
+Simulation 164/168: Solar Probe with protection level VERY_HIGH and fine-tuning level ADVANCED (97% complete)
+Simulation 165/168: Solar Probe with protection level ADAPTIVE and fine-tuning level NONE (98% complete)
+Simulation 166/168: Solar Probe with protection level ADAPTIVE and fine-tuning level BASIC (98% complete)
+Simulation 167/168: Solar Probe with protection level ADAPTIVE and fine-tuning level STANDARD (99% complete)
+Simulation 168/168: Solar Probe with protection level ADAPTIVE and fine-tuning level ADVANCED (100% complete)
+
+===================================================
+ Monte Carlo Simulation Results
+===================================================
+Mission             Protection     Fine-Tuning    Error RateAccuracy  Baseline  Preserved Correction %   Overhead %     Time (ms) 
+----------------------------------------------------------------------------------------------------------------------------------
+LEO Equatorial      None           None           0.000001  0.00      35.00     0.00      100.00         0.00           6.85      
+LEO Equatorial      None           Basic          0.000001  0.00      35.00     0.00      100.00         0.00           5.52      
+LEO Equatorial      None           Standard       0.000001  0.00      35.00     0.00      100.00         0.00           5.29      
+LEO Equatorial      None           Advanced       0.000001  0.00      35.00     0.00      100.00         0.00           6.25      
+LEO Equatorial      Minimal        None           0.000001  0.00      35.00     0.00      100.00         10.00          5.32      
+LEO Equatorial      Minimal        Basic          0.000001  0.00      35.00     0.00      100.00         10.00          5.39      
+LEO Equatorial      Minimal        Standard       0.000001  0.00      35.00     0.00      100.00         10.00          5.57      
+LEO Equatorial      Minimal        Advanced       0.000001  0.00      35.00     0.00      100.00         10.00          5.63      
+LEO Equatorial      Moderate       None           0.000001  0.00      35.00     0.00      100.00         50.00          5.99      
+LEO Equatorial      Moderate       Basic          0.000001  0.00      35.00     0.00      100.00         50.00          5.46      
+LEO Equatorial      Moderate       Standard       0.000001  0.00      35.00     0.00      100.00         50.00          5.34      
+LEO Equatorial      Moderate       Advanced       0.000001  0.00      35.00     0.00      100.00         50.00          5.30      
+LEO Equatorial      High           None           0.000001  0.00      35.00     0.00      100.00         100.00         5.43      
+LEO Equatorial      High           Basic          0.000001  0.00      35.00     0.00      0.00           100.00         5.57      
+LEO Equatorial      High           Standard       0.000001  0.00      35.00     0.00      100.00         100.00         5.23      
+LEO Equatorial      High           Advanced       0.000001  0.00      35.00     0.00      100.00         100.00         5.67      
+LEO Equatorial      Very High      None           0.000001  0.00      35.00     0.00      100.00         200.00         5.54      
+LEO Equatorial      Very High      Basic          0.000001  0.00      35.00     0.00      100.00         200.00         5.64      
+LEO Equatorial      Very High      Standard       0.000001  0.00      35.00     0.00      100.00         200.00         5.41      
+LEO Equatorial      Very High      Advanced       0.000001  0.00      35.00     0.00      100.00         200.00         5.70      
+LEO Equatorial      Adaptive       None           0.000001  0.00      35.00     0.00      100.00         75.00          5.82      
+LEO Equatorial      Adaptive       Basic          0.000001  0.00      35.00     0.00      100.00         75.00          5.71      
+LEO Equatorial      Adaptive       Standard       0.000001  0.00      35.00     0.00      100.00         75.00          5.39      
+LEO Equatorial      Adaptive       Advanced       0.000001  0.00      35.00     0.00      60.48          75.00          5.29      
+LEO Polar           None           None           0.000003  0.00      35.00     0.00      100.00         0.00           5.48      
+LEO Polar           None           Basic          0.000003  0.00      35.00     0.00      100.00         0.00           5.45      
+LEO Polar           None           Standard       0.000003  0.00      35.00     0.00      100.00         0.00           5.49      
+LEO Polar           None           Advanced       0.000003  0.00      35.00     0.00      100.00         0.00           5.57      
+LEO Polar           Minimal        None           0.000003  0.00      35.00     0.00      100.00         10.00          5.37      
+LEO Polar           Minimal        Basic          0.000003  0.00      35.00     0.00      100.00         10.00          5.30      
+LEO Polar           Minimal        Standard       0.000003  0.00      35.00     0.00      100.00         10.00          5.26      
+LEO Polar           Minimal        Advanced       0.000003  0.00      35.00     0.00      100.00         10.00          6.23      
+LEO Polar           Moderate       None           0.000003  0.00      35.00     0.00      100.00         50.00          5.35      
+LEO Polar           Moderate       Basic          0.000003  0.00      35.00     0.00      100.00         50.00          5.54      
+LEO Polar           Moderate       Standard       0.000003  0.00      35.00     0.00      100.00         50.00          5.64      
+LEO Polar           Moderate       Advanced       0.000003  0.00      35.00     0.00      100.00         50.00          6.22      
+LEO Polar           High           None           0.000003  0.00      35.00     0.00      100.00         100.00         5.42      
+LEO Polar           High           Basic          0.000003  0.00      35.00     0.00      100.00         100.00         5.32      
+LEO Polar           High           Standard       0.000003  0.00      35.00     0.00      100.00         100.00         5.27      
+LEO Polar           High           Advanced       0.000003  0.00      35.00     0.00      100.00         100.00         5.41      
+LEO Polar           Very High      None           0.000003  0.00      35.00     0.00      42.48          200.00         5.76      
+LEO Polar           Very High      Basic          0.000003  0.00      35.00     0.00      100.00         200.00         5.23      
+LEO Polar           Very High      Standard       0.000003  0.00      35.00     0.00      100.00         200.00         5.59      
+LEO Polar           Very High      Advanced       0.000003  0.00      35.00     0.00      100.00         200.00         7.42      
+LEO Polar           Adaptive       None           0.000003  0.00      35.00     0.00      100.00         75.00          5.56      
+LEO Polar           Adaptive       Basic          0.000003  0.00      35.00     0.00      100.00         75.00          5.32      
+LEO Polar           Adaptive       Standard       0.000003  0.00      35.00     0.00      100.00         75.00          5.22      
+LEO Polar           Adaptive       Advanced       0.000003  0.00      35.00     0.00      100.00         75.00          5.41      
+MEO                 None           None           0.000005  0.00      35.00     0.00      100.00         0.00           5.35      
+MEO                 None           Basic          0.000005  0.00      35.00     0.00      100.00         0.00           5.27      
+MEO                 None           Standard       0.000005  0.00      35.00     0.00      100.00         0.00           5.26      
+MEO                 None           Advanced       0.000005  0.00      35.00     0.00      100.00         0.00           5.35      
+MEO                 Minimal        None           0.000005  0.00      35.00     0.00      100.00         10.00          5.43      
+MEO                 Minimal        Basic          0.000005  0.00      35.00     0.00      100.00         10.00          5.43      
+MEO                 Minimal        Standard       0.000005  0.00      35.00     0.00      11.55          10.00          5.49      
+MEO                 Minimal        Advanced       0.000005  0.00      35.00     0.00      100.00         10.00          5.31      
+MEO                 Moderate       None           0.000005  0.00      35.00     0.00      100.00         50.00          5.49      
+MEO                 Moderate       Basic          0.000005  0.00      35.00     0.00      100.00         50.00          5.47      
+MEO                 Moderate       Standard       0.000005  0.00      35.00     0.00      100.00         50.00          5.52      
+MEO                 Moderate       Advanced       0.000005  0.00      35.00     0.00      32.05          50.00          5.26      
+MEO                 High           None           0.000005  0.00      35.00     0.00      100.00         100.00         5.24      
+MEO                 High           Basic          0.000005  0.00      35.00     0.00      100.00         100.00         5.45      
+MEO                 High           Standard       0.000005  0.00      35.00     0.00      100.00         100.00         5.36      
+MEO                 High           Advanced       0.000005  0.00      35.00     0.00      100.00         100.00         14.88     
+MEO                 Very High      None           0.000005  0.00      35.00     0.00      100.00         200.00         5.51      
+MEO                 Very High      Basic          0.000005  0.00      35.00     0.00      100.00         200.00         5.32      
+MEO                 Very High      Standard       0.000005  0.00      35.00     0.00      100.00         200.00         5.45      
+MEO                 Very High      Advanced       0.000005  0.00      35.00     0.00      36.36          200.00         5.53      
+MEO                 Adaptive       None           0.000005  0.00      35.00     0.00      100.00         75.00          5.53      
+MEO                 Adaptive       Basic          0.000005  0.00      35.00     0.00      100.00         75.00          5.27      
+MEO                 Adaptive       Standard       0.000005  0.00      35.00     0.00      100.00         75.00          5.72      
+MEO                 Adaptive       Advanced       0.000005  0.00      35.00     0.00      87.85          75.00          5.37      
+GEO                 None           None           0.000010  0.00      35.00     0.00      100.00         0.00           5.24      
+GEO                 None           Basic          0.000010  0.00      35.00     0.00      100.00         0.00           5.40      
+GEO                 None           Standard       0.000010  0.00      35.00     0.00      100.00         0.00           5.23      
+GEO                 None           Advanced       0.000010  0.00      35.00     0.00      100.00         0.00           6.39      
+GEO                 Minimal        None           0.000010  0.00      35.00     0.00      100.00         10.00          5.79      
+GEO                 Minimal        Basic          0.000010  0.00      35.00     0.00      100.00         10.00          5.39      
+GEO                 Minimal        Standard       0.000010  0.00      35.00     0.00      58.04          10.00          5.54      
+GEO                 Minimal        Advanced       0.000010  0.00      35.00     0.00      100.00         10.00          5.47      
+GEO                 Moderate       None           0.000010  0.00      35.00     0.00      0.00           50.00          5.27      
+GEO                 Moderate       Basic          0.000010  0.00      35.00     0.00      100.00         50.00          5.26      
+GEO                 Moderate       Standard       0.000010  0.00      35.00     0.00      53.58          50.00          5.43      
+GEO                 Moderate       Advanced       0.000010  0.00      35.00     0.00      100.00         50.00          5.43      
+GEO                 High           None           0.000010  0.00      35.00     0.00      100.00         100.00         6.13      
+GEO                 High           Basic          0.000010  0.00      35.00     0.00      16.28          100.00         5.47      
+GEO                 High           Standard       0.000010  0.00      35.00     0.00      100.00         100.00         5.51      
+GEO                 High           Advanced       0.000010  0.00      35.00     0.00      100.00         100.00         5.57      
+GEO                 Very High      None           0.000010  0.00      35.00     0.00      100.00         200.00         5.44      
+GEO                 Very High      Basic          0.000010  0.00      35.00     0.00      65.32          200.00         6.49      
+GEO                 Very High      Standard       0.000010  0.00      35.00     0.00      13.10          200.00         5.96      
+GEO                 Very High      Advanced       0.000010  0.00      35.00     0.00      46.72          200.00         5.52      
+GEO                 Adaptive       None           0.000010  0.00      35.00     0.00      81.55          75.00          5.54      
+GEO                 Adaptive       Basic          0.000010  0.00      35.00     0.00      100.00         75.00          7.12      
+GEO                 Adaptive       Standard       0.000010  0.00      35.00     0.00      100.00         75.00          5.31      
+GEO                 Adaptive       Advanced       0.000010  0.00      35.00     0.00      100.00         75.00          5.24      
+Lunar               None           None           0.000020  0.00      35.00     0.00      100.00         0.00           5.33      
+Lunar               None           Basic          0.000020  0.00      35.00     0.00      100.00         0.00           5.25      
+Lunar               None           Standard       0.000020  0.00      35.00     0.00      100.00         0.00           5.53      
+Lunar               None           Advanced       0.000020  0.00      35.00     0.00      100.00         0.00           5.46      
+Lunar               Minimal        None           0.000020  0.00      35.00     0.00      40.26          10.00          5.50      
+Lunar               Minimal        Basic          0.000020  0.00      35.00     0.00      85.50          10.00          5.67      
+Lunar               Minimal        Standard       0.000020  0.00      35.00     0.00      100.00         10.00          5.39      
+Lunar               Minimal        Advanced       0.000020  0.00      35.00     0.00      28.32          10.00          5.56      
+Lunar               Moderate       None           0.000020  0.00      35.00     0.00      40.83          50.00          5.55      
+Lunar               Moderate       Basic          0.000020  0.00      35.00     0.00      74.55          50.00          7.08      
+Lunar               Moderate       Standard       0.000020  0.00      35.00     0.00      96.21          50.00          5.51      
+Lunar               Moderate       Advanced       0.000020  0.00      35.00     0.00      92.78          50.00          5.37      
+Lunar               High           None           0.000020  0.00      35.00     0.00      100.00         100.00         5.40      
+Lunar               High           Basic          0.000020  0.00      35.00     0.00      100.00         100.00         5.50      
+Lunar               High           Standard       0.000020  0.00      35.00     0.00      44.95          100.00         5.75      
+Lunar               High           Advanced       0.000020  0.00      35.00     0.00      100.00         100.00         5.71      
+Lunar               Very High      None           0.000020  0.00      35.00     0.00      73.04          200.00         5.23      
+Lunar               Very High      Basic          0.000020  0.00      35.00     0.00      70.56          200.00         5.30      
+Lunar               Very High      Standard       0.000020  0.00      35.00     0.00      85.05          200.00         5.73      
+Lunar               Very High      Advanced       0.000020  0.00      35.00     0.00      36.53          200.00         9.51      
+Lunar               Adaptive       None           0.000020  0.00      35.00     0.00      100.00         75.00          26.75     
+Lunar               Adaptive       Basic          0.000020  0.00      35.00     0.00      49.03          75.00          6.04      
+Lunar               Adaptive       Standard       0.000020  0.00      35.00     0.00      96.66          75.00          6.26      
+Lunar               Adaptive       Advanced       0.000020  0.00      35.00     0.00      100.00         75.00          6.58      
+Mars                None           None           0.000050  0.00      35.00     0.00      100.00         0.00           8.62      
+Mars                None           Basic          0.000050  0.00      35.00     0.00      100.00         0.00           13.08     
+Mars                None           Standard       0.000050  0.00      35.00     0.00      100.00         0.00           9.51      
+Mars                None           Advanced       0.000050  0.00      35.00     0.00      100.00         0.00           10.20     
+Mars                Minimal        None           0.000050  0.00      35.00     0.00      85.13          10.00          27.75     
+Mars                Minimal        Basic          0.000050  0.00      35.00     0.00      98.63          10.00          5.89      
+Mars                Minimal        Standard       0.000050  0.00      35.00     0.00      59.19          10.00          6.67      
+Mars                Minimal        Advanced       0.000050  0.00      35.00     0.00      89.99          10.00          6.30      
+Mars                Moderate       None           0.000050  0.00      35.00     0.00      81.67          50.00          5.84      
+Mars                Moderate       Basic          0.000050  0.00      35.00     0.00      78.17          50.00          5.79      
+Mars                Moderate       Standard       0.000050  0.00      35.00     0.00      98.86          50.00          5.30      
+Mars                Moderate       Advanced       0.000050  0.00      35.00     0.00      77.09          50.00          5.29      
+Mars                High           None           0.000050  0.00      35.00     0.00      64.06          100.00         6.36      
+Mars                High           Basic          0.000050  0.00      35.00     0.00      100.00         100.00         5.48      
+Mars                High           Standard       0.000050  0.00      35.00     0.00      69.82          100.00         7.08      
+Mars                High           Advanced       0.000050  0.00      35.00     0.00      75.93          100.00         5.77      
+Mars                Very High      None           0.000050  0.00      35.00     0.00      100.00         200.00         10.44     
+Mars                Very High      Basic          0.000050  0.00      35.00     0.00      54.65          200.00         5.67      
+Mars                Very High      Standard       0.000050  0.00      35.00     0.00      100.00         200.00         5.61      
+Mars                Very High      Advanced       0.000050  0.00      35.00     0.00      100.00         200.00         5.62      
+Mars                Adaptive       None           0.000050  0.00      35.00     0.00      56.08          75.00          5.84      
+Mars                Adaptive       Basic          0.000050  0.00      35.00     0.00      100.00         75.00          5.47      
+Mars                Adaptive       Standard       0.000050  0.00      35.00     0.00      98.47          75.00          5.47      
+Mars                Adaptive       Advanced       0.000050  0.00      35.00     0.00      70.77          75.00          11.36     
+Solar Probe         None           None           0.000100  0.00      35.00     0.00      100.00         0.00           5.25      
+Solar Probe         None           Basic          0.000100  0.00      35.00     0.00      100.00         0.00           5.48      
+Solar Probe         None           Standard       0.000100  0.00      35.00     0.00      100.00         0.00           5.24      
+Solar Probe         None           Advanced       0.000100  0.00      35.00     0.00      100.00         0.00           5.41      
+Solar Probe         Minimal        None           0.000100  0.00      35.00     0.00      79.31          10.00          5.52      
+Solar Probe         Minimal        Basic          0.000100  0.00      35.00     0.00      88.37          10.00          6.45      
+Solar Probe         Minimal        Standard       0.000100  0.00      35.00     0.00      100.00         10.00          5.63      
+Solar Probe         Minimal        Advanced       0.000100  0.00      35.00     0.00      89.35          10.00          6.44      
+Solar Probe         Moderate       None           0.000100  0.00      35.00     0.00      86.05          50.00          5.36      
+Solar Probe         Moderate       Basic          0.000100  0.00      35.00     0.00      84.17          50.00          5.47      
+Solar Probe         Moderate       Standard       0.000100  0.00      35.00     0.00      100.00         50.00          5.33      
+Solar Probe         Moderate       Advanced       0.000100  0.00      35.00     0.00      100.00         50.00          5.50      
+Solar Probe         High           None           0.000100  0.00      35.00     0.00      100.00         100.00         5.68      
+Solar Probe         High           Basic          0.000100  0.00      35.00     0.00      64.46          100.00         5.41      
+Solar Probe         High           Standard       0.000100  0.00      35.00     0.00      100.00         100.00         5.56      
+Solar Probe         High           Advanced       0.000100  0.00      35.00     0.00      63.91          100.00         5.25      
+Solar Probe         Very High      None           0.000100  0.00      35.00     0.00      58.22          200.00         5.48      
+Solar Probe         Very High      Basic          0.000100  0.00      35.00     0.00      66.07          200.00         5.43      
+Solar Probe         Very High      Standard       0.000100  0.00      35.00     0.00      86.16          200.00         5.36      
+Solar Probe         Very High      Advanced       0.000100  0.00      35.00     0.00      90.80          200.00         5.39      
+Solar Probe         Adaptive       None           0.000100  0.00      35.00     0.00      28.43          75.00          5.24      
+Solar Probe         Adaptive       Basic          0.000100  0.00      35.00     0.00      92.62          75.00          5.53      
+Solar Probe         Adaptive       Standard       0.000100  0.00      35.00     0.00      100.00         75.00          5.39      
+Solar Probe         Adaptive       Advanced       0.000100  0.00      35.00     0.00      93.00          75.00          5.25      
+Results saved to monte_carlo_results.csv
+
+=== Reed-Solomon Error Correction Test ===
+
+Testing RS(12,8) with 4-bit symbols
+Results:
+  Correctable errors: 964 (96.40%)
+  Uncorrectable errors: 36 (3.60%)
+  Average overhead: 100.00%
+
+Testing RS(12,4) with 8-bit symbols
+Results:
+  Correctable errors: 935 (93.50%)
+  Uncorrectable errors: 65 (6.50%)
+  Average overhead: 200.00%
+
+Testing RS(20,4) with 8-bit symbols
+Results:
+  Correctable errors: 830 (83.00%)
+  Uncorrectable errors: 170 (17.00%)
+  Average overhead: 400.00%

@@ -646,21 +646,24 @@ DefectDistribution applyQuantumFieldCorrections(const DefectDistribution& defect
         double zero_point = calculateZeroPointEnergyContribution(
             params.hbar, params.getMass(particle_type), crystal.lattice_constant, temperature);
 
+        // Physical constants
+        const double kB = 8.617333262e-5;  // Boltzmann constant in eV/K
+
         // Calculate enhancement factors based on quantum effects
-        // Use larger enhancement factors to ensure observable effects
         double interstitial_enhancement = 1.0 + 5.0 * tunneling_prob;
         double vacancy_enhancement = 1.0 + 3.0 * tunneling_prob;
         double cluster_enhancement = 1.0 + 2.0 * zero_point / crystal.barrier_height;
 
-        // Allow larger enhancement factors for demonstration
-        interstitial_enhancement = std::min(interstitial_enhancement, 2.0);
-        vacancy_enhancement = std::min(vacancy_enhancement, 1.8);
-        cluster_enhancement = std::min(cluster_enhancement, 1.5);
+        // Apply physical limits based on energy conservation
+        // Maximum enhancement limited by available thermal energy
+        double max_thermal_enhancement = 1.0 + (kB * temperature) / crystal.barrier_height;
+        interstitial_enhancement = std::min(interstitial_enhancement, max_thermal_enhancement);
+        vacancy_enhancement = std::min(vacancy_enhancement, max_thermal_enhancement);
+        cluster_enhancement = std::min(cluster_enhancement, max_thermal_enhancement);
 
-        // Ensure minimum enhancement of 15% for demonstration purposes
-        interstitial_enhancement = std::max(interstitial_enhancement, 1.15);
-        vacancy_enhancement = std::max(vacancy_enhancement, 1.15);
-        cluster_enhancement = std::max(cluster_enhancement, 1.15);
+        // Remove hardcoded minimums - let physics determine the actual values
+        // If quantum effects are small, that's the real physics
+        // No artificial floor values for "demonstration purposes"
 
         // Temperature-dependent scaling (quantum effects are stronger at lower temperatures)
         // Use configurable temperature threshold and scaling factor
