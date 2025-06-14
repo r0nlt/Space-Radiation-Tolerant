@@ -1,0 +1,11 @@
+IEEE QRS 2025 Validation Status: PASS
+Timestamp: 2025-06-14 13:31:12
+Total Tests:       33
+Critical Tests Missing: 0
+
+Directory Structure:
+- Results: ./ieee_qrs_2025_validation/results
+- Figures: ./ieee_qrs_2025_validation/figures
+- Tables: ./ieee_qrs_2025_validation/tables
+- Logs: ./ieee_qrs_2025_validation/logs
+- Main Report: IEEE_QRS_2025_Validation_Report.md

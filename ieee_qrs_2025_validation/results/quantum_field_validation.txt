@@ -1,0 +1,90 @@
+Quantum Field Theory Framework Enhancement Validation Test
+=======================================================
+
+Testing material: Silicon
+  Scenario: Standard... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.5
+  Particle type 1: interstitial enhancement = 1.64415, vacancy enhancement = 1.38649, cluster enhancement = 1.5
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.5
+Complete. Defect difference: 30.57%
+  Scenario: High Energy... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 1.64, vacancy enhancement = 1.39, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 30.57%
+  Scenario: Quantum Dominant... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 2.00, vacancy enhancement = 1.80, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 41.67%
+
+Testing material: Germanium
+  Scenario: Standard... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 1.64, vacancy enhancement = 1.39, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 30.57%
+  Scenario: High Energy... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 1.64, vacancy enhancement = 1.39, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 30.57%
+  Scenario: Quantum Dominant... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 2.00, vacancy enhancement = 1.80, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 41.67%
+
+Testing material: GaAs
+  Scenario: Standard... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 1.64, vacancy enhancement = 1.39, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 30.57%
+  Scenario: High Energy... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 1.64, vacancy enhancement = 1.39, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 30.57%
+  Scenario: Quantum Dominant... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 2.00, vacancy enhancement = 1.80, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 41.67%
+
+Testing material: Silicon (Low Temp)
+  Scenario: Standard... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 1.64, vacancy enhancement = 1.39, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 125.88%
+  Scenario: High Energy... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 1.64, vacancy enhancement = 1.39, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 125.88%
+  Scenario: Quantum Dominant... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 2.00, vacancy enhancement = 1.80, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 145.08%
+
+Testing material: Silicon (High Temp)
+  Scenario: Standard... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 1.64, vacancy enhancement = 1.39, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 30.57%
+  Scenario: High Energy... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 1.64, vacancy enhancement = 1.39, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 30.57%
+  Scenario: Quantum Dominant... Applying quantum corrections to 3 particle types...
+  Particle type 0: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+  Particle type 1: interstitial enhancement = 2.00, vacancy enhancement = 1.80, cluster enhancement = 1.50
+  Particle type 2: interstitial enhancement = 1.15, vacancy enhancement = 1.15, cluster enhancement = 1.50
+Complete. Defect difference: 41.67%
+
+Quantum enhancement validation test completed.
+Results saved to quantum_enhancement_results.csv

@@ -1,0 +1,41 @@
+Running Monte Carlo simulation with 100 trials per error rate
+Testing 10 error rates from 0.0500% to 5.0%
+Testing protection methods: none, hamming, secded, tmr, rs4, rs8, hybrid_rs4_tmr, hybrid_hamming_rs4
+Testing No Protection:   0%|          | 0/10 [00:00<?, ?it/s]Testing No Protection: 100%|██████████| 10/10 [00:00<00:00, 245.63it/s]
+Testing Hamming Code:   0%|          | 0/10 [00:00<?, ?it/s]Testing Hamming Code:  50%|█████     | 5/10 [00:00<00:00, 41.40it/s]Testing Hamming Code: 100%|██████████| 10/10 [00:00<00:00, 40.79it/s]Testing Hamming Code: 100%|██████████| 10/10 [00:00<00:00, 40.83it/s]
+Testing SEC-DED:   0%|          | 0/10 [00:00<?, ?it/s]Testing SEC-DED:  50%|█████     | 5/10 [00:00<00:00, 42.90it/s]Testing SEC-DED: 100%|██████████| 10/10 [00:00<00:00, 43.24it/s]Testing SEC-DED: 100%|██████████| 10/10 [00:00<00:00, 43.13it/s]
+Testing Triple Modular Redundancy (TMR):   0%|          | 0/10 [00:00<?, ?it/s]Testing Triple Modular Redundancy (TMR): 100%|██████████| 10/10 [00:00<00:00, 98.78it/s]Testing Triple Modular Redundancy (TMR): 100%|██████████| 10/10 [00:00<00:00, 98.50it/s]
+Testing Reed-Solomon (RS4):   0%|          | 0/10 [00:00<?, ?it/s]Testing Reed-Solomon (RS4):  40%|████      | 4/10 [00:00<00:00, 35.11it/s]Testing Reed-Solomon (RS4):  80%|████████  | 8/10 [00:00<00:00, 31.40it/s]Testing Reed-Solomon (RS4): 100%|██████████| 10/10 [00:00<00:00, 31.75it/s]
+Testing Reed-Solomon (RS8):   0%|          | 0/10 [00:00<?, ?it/s]Testing Reed-Solomon (RS8):  40%|████      | 4/10 [00:00<00:00, 35.21it/s]Testing Reed-Solomon (RS8):  80%|████████  | 8/10 [00:00<00:00, 34.28it/s]Testing Reed-Solomon (RS8): 100%|██████████| 10/10 [00:00<00:00, 33.53it/s]
+Testing Hybrid (RS4 + TMR):   0%|          | 0/10 [00:00<?, ?it/s]Testing Hybrid (RS4 + TMR):  30%|███       | 3/10 [00:00<00:00, 23.73it/s]Testing Hybrid (RS4 + TMR):  60%|██████    | 6/10 [00:00<00:00, 23.45it/s]Testing Hybrid (RS4 + TMR):  90%|█████████ | 9/10 [00:00<00:00, 23.62it/s]Testing Hybrid (RS4 + TMR): 100%|██████████| 10/10 [00:00<00:00, 23.99it/s]
+Testing Hybrid (Hamming + RS4):   0%|          | 0/10 [00:00<?, ?it/s]Testing Hybrid (Hamming + RS4):  20%|██        | 2/10 [00:00<00:00, 18.61it/s]Testing Hybrid (Hamming + RS4):  40%|████      | 4/10 [00:00<00:00, 18.67it/s]Testing Hybrid (Hamming + RS4):  60%|██████    | 6/10 [00:00<00:00, 18.70it/s]Testing Hybrid (Hamming + RS4):  80%|████████  | 8/10 [00:00<00:00, 18.83it/s]Testing Hybrid (Hamming + RS4): 100%|██████████| 10/10 [00:00<00:00, 19.49it/s]
+Simulation completed in 2.3 seconds
+Plot saved to results/protection_methods_comparison.png
+
+Comparative Protection Method Performance
+==========================================
++---------------------------------+-------------------+-----------------+--------------------+------------------+------------------+
+| Protection Method               | Memory Overhead   | 50% Threshold   | 0.1% BER Success   | 1% BER Success   | 5% BER Success   |
++=================================+===================+=================+====================+==================+==================+
+| Reed-Solomon (RS8)              | 200.0%            | 0.631%          | N/A                | N/A              | 0.00%            |
++---------------------------------+-------------------+-----------------+--------------------+------------------+------------------+
+| Reed-Solomon (RS4)              | 100.0%            | 0.808%          | N/A                | N/A              | 0.00%            |
++---------------------------------+-------------------+-----------------+--------------------+------------------+------------------+
+| Hybrid (RS4 + TMR)              | 150.0%            | 1.833%          | N/A                | N/A              | 6.00%            |
++---------------------------------+-------------------+-----------------+--------------------+------------------+------------------+
+| Triple Modular Redundancy (TMR) | 200.0%            | 2.397%          | N/A                | N/A              | 11.00%           |
++---------------------------------+-------------------+-----------------+--------------------+------------------+------------------+
+| Hybrid (Hamming + RS4)          | 48.4%             | 2.553%          | N/A                | N/A              | 15.00%           |
++---------------------------------+-------------------+-----------------+--------------------+------------------+------------------+
+| No Protection                   | 0.0%              | 2.997%          | N/A                | N/A              | 25.00%           |
++---------------------------------+-------------------+-----------------+--------------------+------------------+------------------+
+| SEC-DED                         | 37.5%             | 4.129%          | N/A                | N/A              | 40.00%           |
++---------------------------------+-------------------+-----------------+--------------------+------------------+------------------+
+| Hamming Code                    | 31.2%             | 4.303%          | N/A                | N/A              | 42.00%           |
++---------------------------------+-------------------+-----------------+--------------------+------------------+------------------+
+Results saved to results/protection_methods_comparison.csv
+Recommendations saved to results/protection_recommendations.md
+Results are available in the 'results' directory
+- Comparative plot: results/protection_methods_comparison.png
+- Data CSV: results/protection_methods_comparison.csv
+- Recommendations: results/protection_recommendations.md

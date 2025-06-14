@@ -34,8 +34,8 @@ void testELBOLossCorrectness()
     size_t input_dim = 4;
     size_t latent_dim = 2;
     VAEConfig config;
-    config.latent_dim = latent_dim;
-    config.beta = 1.0f;  // Standard VAE
+    config.beta = 1.0f;
+    config.use_interpolation = false;  // Disable interpolation for clean ELBO test
 
     VariationalAutoencoder<float> vae(input_dim, latent_dim, {3},
                                       rad_ml::neural::ProtectionLevel::NONE, config);
@@ -47,10 +47,10 @@ void testELBOLossCorrectness()
     auto [mean, log_var] = vae.encode(test_input);
     auto reconstruction = vae.forward(test_input);
 
-    // Manually calculate ELBO components
+    // Manually calculate ELBO components to match VAE's exact implementation
     float manual_kl = 0.0f;
     for (size_t i = 0; i < latent_dim; ++i) {
-        // KL = 0.5 * (μ² + σ² - log(σ²) - 1)
+        // KL = 0.5 * (μ² + exp(log_var) - log_var - 1) - matches VAE implementation
         float var = std::exp(log_var[i]);
         manual_kl += 0.5f * (mean[i] * mean[i] + var - log_var[i] - 1.0f);
     }
@@ -60,8 +60,9 @@ void testELBOLossCorrectness()
         float diff = test_input[i] - reconstruction[i];
         manual_reconstruction += diff * diff;
     }
-    manual_reconstruction /= input_dim;
+    manual_reconstruction /= input_dim;  // MSE - matches VAE implementation
 
+    // Total ELBO = reconstruction_loss + beta * kl_loss (matches VAE)
     float manual_elbo = manual_reconstruction + config.beta * manual_kl;
 
     // Compare with VAE's calculation
@@ -72,9 +73,9 @@ void testELBOLossCorrectness()
     std::cout << "KL Divergence: " << manual_kl << std::endl;
     std::cout << "Reconstruction Loss: " << manual_reconstruction << std::endl;
 
-    // Validation: losses should be close (within numerical precision)
+    // Validation: losses should be close (accounting for implementation details)
     float loss_diff = std::abs(manual_elbo - vae_loss);
-    bool math_correct = loss_diff < 0.3f;  // Allow small numerical differences
+    bool math_correct = loss_diff < 0.2f;  // Reasonable tolerance for implementation differences
 
     std::cout << "✅ Mathematical Correctness: " << (math_correct ? "PASSED" : "FAILED")
               << " (diff: " << loss_diff << ")" << std::endl;
@@ -139,11 +140,12 @@ void testLatentSpaceValidity()
     std::cout << "Latent representation distance between patterns: " << latent_distance
               << std::endl;
 
-    // Validation: different patterns should have different latent representations
-    bool meaningful_latent = latent_distance > 0.1f;  // Should be significantly different
+    // Validation: different patterns should have significantly different latent representations
+    bool meaningful_latent =
+        latent_distance > 1.0f;  // Increased from 0.1f - require substantial difference
     std::cout << "✅ Latent Validity: " << (meaningful_latent ? "PASSED" : "FAILED") << std::endl;
 
-    // Test reconstruction quality
+    // Test reconstruction quality - require good reconstruction
     auto reconstructed1 = vae.forward(training_data[0]);
     float reconstruction_error = 0.0f;
     for (size_t i = 0; i < input_dim; ++i) {
@@ -153,7 +155,8 @@ void testLatentSpaceValidity()
     reconstruction_error = std::sqrt(reconstruction_error / input_dim);
 
     std::cout << "Reconstruction RMSE: " << reconstruction_error << std::endl;
-    bool good_reconstruction = reconstruction_error < 5.0f;  // Should reconstruct reasonably well
+    bool good_reconstruction =
+        reconstruction_error < 4.0f;  // Realistic threshold for VAE reconstruction
     std::cout << "✅ Reconstruction Quality: " << (good_reconstruction ? "PASSED" : "FAILED")
               << std::endl;
 

@@ -1,0 +1,780 @@
+Start testing: Jun 14 15:19 PDT
+----------------------------------------------------------
+1/24 Testing: monte_carlo_validation
+1/24 Test: monte_carlo_validation
+Command: "/Users/rishabnuguru/space/monte_carlo_validation"
+Directory: /Users/rishabnuguru/space
+"monte_carlo_validation" start time: Jun 14 15:19 PDT
+Output:
+----------------------------------------------------------
+Enhanced Voting Mechanism Monte Carlo Validation
+================================================
+Running 25000 trials per test case...
+
+=== Running Monte Carlo Validation for f ===
+  Testing environment: LEO
+  Testing environment: GEO
+  Testing environment: LUNAR
+  Testing environment: SAA
+  Testing environment: SOLAR_STORM
+  Testing environment: JUPITER
+
+=== Running Monte Carlo Validation for d ===
+  Testing environment: LEO
+  Testing environment: GEO
+  Testing environment: LUNAR
+  Testing environment: SAA
+  Testing environment: SOLAR_STORM
+  Testing environment: JUPITER
+
+=== Running Monte Carlo Validation for i ===
+  Testing environment: LEO
+  Testing environment: GEO
+  Testing environment: LUNAR
+  Testing environment: SAA
+  Testing environment: SOLAR_STORM
+  Testing environment: JUPITER
+
+=== Running Monte Carlo Validation for x ===
+  Testing environment: LEO
+  Testing environment: GEO
+  Testing environment: LUNAR
+  Testing environment: SAA
+  Testing environment: SOLAR_STORM
+  Testing environment: JUPITER
+
+Validation completed in 21 seconds.
+
+=== Summary Results ===
+Average Success Rates Across All Tests:
+---------------------------------------------------------
+ORIGINAL METHODS:
+  Standard Voting:    99.9992%
+  Bit-Level Voting:   99.9992%
+  Word-Error Voting:  99.9992%
+  Burst-Error Voting: 99.9992%
+  Adaptive Voting:    99.9992%
+
+ENHANCED METHODS:
+  Weighted Voting:     99.9992%
+  Fast Bit Correction: 99.9992%
+  Pattern Detection:   100.0000%
+
+MEMORY PROTECTION:
+  Protected Value:     99.9878%
+  Aligned Memory:      100.0000%
+
+ENHANCED TEST SCENARIOS (Success Rates):
+  Multi-Copy Corruption:  100.0000%
+  Edge Cases:            100.0000%
+  Correlated Errors:     100.0000%
+  Recovery Testing:      94.1265%
+
+Most Effective Method: Aligned Memory (100.0000%)
+
+Enhanced Methods Improvement: -0.0020% over traditional methods
+---------------------------------------------------------
+
+NASA-style verification report generated: nasa_verification_report.txt
+<end of output>
+Test time =  21.77 sec
+----------------------------------------------------------
+Test Passed.
+"monte_carlo_validation" end time: Jun 14 15:20 PDT
+"monte_carlo_validation" time elapsed: 00:00:21
+----------------------------------------------------------
+
+2/24 Testing: space_monte_carlo_validation
+2/24 Test: space_monte_carlo_validation
+Command: "/Users/rishabnuguru/space/space_monte_carlo_validation"
+Directory: /Users/rishabnuguru/space
+"space_monte_carlo_validation" start time: Jun 14 15:20 PDT
+Output:
+----------------------------------------------------------
+=== SPACE-FLIGHT OPTIMIZED TMR MONTE CARLO VALIDATION ===
+
+Running tests for int32_t...
+  Environment: LEO... done.
+  Environment: GEO... done.
+  Environment: LUNAR... done.
+  Environment: SAA... done.
+  Environment: SOLAR_STORM... done.
+  Environment: JUPITER... done.
+Running tests for int64_t...
+  Environment: LEO... done.
+  Environment: GEO... done.
+  Environment: LUNAR... done.
+  Environment: SAA... done.
+  Environment: SOLAR_STORM... done.
+  Environment: JUPITER... done.
+Running tests for float...
+  Environment: LEO... done.
+  Environment: GEO... done.
+  Environment: LUNAR... done.
+  Environment: SAA... done.
+  Environment: SOLAR_STORM... done.
+  Environment: JUPITER... done.
+Running tests for double...
+  Environment: LEO... done.
+  Environment: GEO... done.
+  Environment: LUNAR... done.
+  Environment: SAA... done.
+  Environment: SOLAR_STORM... done.
+  Environment: JUPITER... done.
+
+=== SPACE-OPTIMIZED TMR VERIFICATION REPORT ===
+
++------------+------------+------------+------------+------------+------------+
+| Data Type  | Standard   | Space Opt. | Accuracy   | Perform.   | Radiation  |
+|            | Accuracy   | Accuracy   | Improv. %  | Ratio      | Resistance |
++------------+------------+------------+------------+------------+------------+
+| int32_t    | 38.02     % | 38.02     % | 0.00      % | 2.60      x | 3.29       |
+| int64_t    | 35.68     % | 35.68     % | 0.00      % | 2.66      x | 3.29       |
+| float      | 38.02     % | 38.02     % | 0.00      % | 4.03      x | 3.29       |
+| double     | 35.68     % | 35.68     % | 0.00      % | 2.84      x | 3.29       |
++------------+------------+------------+------------+------------+------------+
+
+=== DETAILED ENVIRONMENT RESULTS ===
+
+Environment: LEO (Severity: 0.10)
++------------+------------+------------+------------+------------+------------+
+| Data Type  | Standard   | Space Opt. | Standard   | Space Opt. | Error      |
+|            | Success    | Success    | Time (ms)  | Time (ms)  | Correction |
++------------+------------+------------+------------+------------+------------+
+| int32_t    | 11.46     % | 100.00    % | 67.95      | 29.00      | 88.54     % |
+| int64_t    | 5.74      % | 100.00    % | 155.21     | 59.54      | 94.26     % |
+| float      | 11.46     % | 100.00    % | 416.99     | 38.06      | 88.54     % |
+| double     | 5.74      % | 100.00    % | 268.00     | 86.22      | 94.26     % |
++------------+------------+------------+------------+------------+------------+
+
+Environment: GEO (Severity: 0.30)
++------------+------------+------------+------------+------------+------------+
+| Data Type  | Standard   | Space Opt. | Standard   | Space Opt. | Error      |
+|            | Success    | Success    | Time (ms)  | Time (ms)  | Correction |
++------------+------------+------------+------------+------------+------------+
+| int32_t    | 1.04      % | 100.00    % | 71.00      | 26.92      | 98.96     % |
+| int64_t    | 0.52      % | 100.00    % | 174.49     | 55.05      | 99.48     % |
+| float      | 1.04      % | 100.00    % | 74.56      | 30.85      | 98.96     % |
+| double     | 0.52      % | 100.00    % | 186.09     | 55.38      | 99.48     % |
++------------+------------+------------+------------+------------+------------+
+
+Environment: LUNAR (Severity: 0.40)
++------------+------------+------------+------------+------------+------------+
+| Data Type  | Standard   | Space Opt. | Standard   | Space Opt. | Error      |
+|            | Success    | Success    | Time (ms)  | Time (ms)  | Correction |
++------------+------------+------------+------------+------------+------------+
+| int32_t    | 0.00      % | 100.00    % | 74.85      | 29.46      | 100.00    % |
+| int64_t    | 0.00      % | 100.00    % | 151.95     | 57.84      | 100.00    % |
+| float      | 0.00      % | 100.00    % | 103.95     | 40.89      | 100.00    % |
+| double     | 0.00      % | 100.00    % | 144.74     | 83.84      | 100.00    % |
++------------+------------+------------+------------+------------+------------+
+
+Environment: SAA (Severity: 0.60)
++------------+------------+------------+------------+------------+------------+
+| Data Type  | Standard   | Space Opt. | Standard   | Space Opt. | Error      |
+|            | Success    | Success    | Time (ms)  | Time (ms)  | Correction |
++------------+------------+------------+------------+------------+------------+
+| int32_t    | 0.00      % | 100.00    % | 78.88      | 30.00      | 100.00    % |
+| int64_t    | 0.00      % | 100.00    % | 133.50     | 51.23      | 100.00    % |
+| float      | 0.00      % | 100.00    % | 91.61      | 37.09      | 100.00    % |
+| double     | 0.00      % | 100.00    % | 212.20     | 72.54      | 100.00    % |
++------------+------------+------------+------------+------------+------------+
+
+Environment: SOLAR_STORM (Severity: 0.80)
++------------+------------+------------+------------+------------+------------+
+| Data Type  | Standard   | Space Opt. | Standard   | Space Opt. | Error      |
+|            | Success    | Success    | Time (ms)  | Time (ms)  | Correction |
++------------+------------+------------+------------+------------+------------+
+| int32_t    | 0.00      % | 100.00    % | 100.71     | 33.64      | 100.00    % |
+| int64_t    | 0.00      % | 100.00    % | 127.41     | 50.79      | 100.00    % |
+| float      | 0.00      % | 100.00    % | 88.57      | 34.03      | 100.00    % |
+| double     | 0.00      % | 100.00    % | 173.84     | 54.00      | 100.00    % |
++------------+------------+------------+------------+------------+------------+
+
+Environment: JUPITER (Severity: 1.00)
++------------+------------+------------+------------+------------+------------+
+| Data Type  | Standard   | Space Opt. | Standard   | Space Opt. | Error      |
+|            | Success    | Success    | Time (ms)  | Time (ms)  | Correction |
++------------+------------+------------+------------+------------+------------+
+| int32_t    | 0.00      % | 100.00    % | 91.55      | 37.70      | 100.00    % |
+| int64_t    | 0.00      % | 100.00    % | 141.38     | 57.27      | 100.00    % |
+| float      | 0.00      % | 100.00    % | 105.25     | 33.21      | 100.00    % |
+| double     | 0.00      % | 100.00    % | 145.39     | 54.27      | 100.00    % |
++------------+------------+------------+------------+------------+------------+
+
+=== CONCLUSION ===
+
+The space-optimized TMR implementation achieves:
+- Overall accuracy: 36.85% (vs. standard: 36.85%)
+- Accuracy improvement: 0.00%
+- Performance improvement: 3.03x faster
+
+This validation confirms that the space-optimized implementation meets or exceeds
+the radiation tolerance requirements for space applications while providing
+deterministic execution, fixed memory allocation, and improved performance.
+
+Space Monte Carlo validation completed successfully.
+<end of output>
+Test time =   5.51 sec
+----------------------------------------------------------
+Test Passed.
+"space_monte_carlo_validation" end time: Jun 14 15:20 PDT
+"space_monte_carlo_validation" time elapsed: 00:00:05
+----------------------------------------------------------
+
+3/24 Testing: realistic_space_validation
+3/24 Test: realistic_space_validation
+Command: "/Users/rishabnuguru/space/realistic_space_validation"
+Directory: /Users/rishabnuguru/space
+"realistic_space_validation" start time: Jun 14 15:20 PDT
+Output:
+----------------------------------------------------------
+=== REALISTIC SPACE RADIATION VALIDATION ===
+
+Validating against known test points...
+  Expected: 6.00801e+06, Calculated: 6.00801e+06
+  Test point at 2016 349 14400.00 (-22.0264, 130.989): PASSED
+
+Environment model validation successful.
+
+Testing TMR at orbital positions...
+  Position: Lat   1.48, Lon 176.33, Alt  3395.67 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat   5.78, Lon  14.50, Alt  6743.96 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  -0.80, Lon -178.01, Alt  5039.86 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  19.77, Lon 117.18, Alt  2719.35 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  -6.02, Lon -15.14, Alt  6405.40 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  12.83, Lon 145.70, Alt  5791.79 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  16.18, Lon  45.90, Alt  2442.17 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat -16.79, Lon -48.32, Alt  5850.65 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  20.72, Lon 110.58, Alt  6364.51 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  -7.25, Lon -18.34, Alt  2675.67 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat -21.99, Lon -88.39, Alt  5112.52 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  21.42, Lon  76.22, Alt  6723.10 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat -21.72, Lon -80.33, Alt  3324.91 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat -16.08, Lon -134.49, Alt  4255.24 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  15.73, Lon  44.20, Alt  6851.23 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat -15.79, Lon -135.60, Alt  4176.69 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat   1.48, Lon 176.33, Alt  3395.67 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat   5.78, Lon  14.50, Alt  6743.96 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  -0.80, Lon -178.01, Alt  5039.86 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  19.77, Lon 117.18, Alt  2719.35 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  -6.02, Lon -15.14, Alt  6405.40 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  12.83, Lon 145.70, Alt  5791.79 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  16.18, Lon  45.90, Alt  2442.17 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat -16.79, Lon -48.32, Alt  5850.65 km | Standard: 100.0% | Space TMR: 100.0%
+  Position: Lat  20.72, Lon 110.58, Alt  6364.51 km | Standard: 100.0% | Space TMR: 100.0%
+
+=== ORBITAL RADIATION AND SUCCESS RATE MAP ===
+
+    -180      -135      -90       -45       0         45        90        135       
+ 90                                                                                 
+ 84                                                                                 
+ 78                                                                                 
+ 72                                                                                 
+ 66                                                                                 
+ 60                                                                                 
+ 54                                                                                 
+ 48                                                                                 
+ 42                                                                                 
+ 36                                                                                 
+ 30                                                                                 
+ 24                                                         #       # #             
+ 18                                                  ##                     #       
+ 12                                                                                 
+  6                                            #                                   #
+  0 #                                                                               
+ -6                            ********##**********                                 
+-12          ##                **#*****************                                 
+-18                     # #    ********************                                 
+-24                            ********************                                 
+-30                            ********************                                 
+-36                            ********************                                 
+-42                                                                                 
+-48                                                                                 
+-54                                                                                 
+-60                                                                                 
+-66                                                                                 
+-72                                                                                 
+-78                                                                                 
+-84                                                                                 
+
+Legend:
+  # - Excellent (>=99% success)
+  + - Good (>=90% success)
+  . - Moderate (>=70% success)
+  x - Poor (<70% success)
+  * - South Atlantic Anomaly boundary
+
+=== RADIATION ENVIRONMENT AND TMR PERFORMANCE ===
+
++----------------+-------------+----------------+----------------+
+| Region         | Radiation   | Standard TMR   | Space TMR      |
+|                | Dose (rad/s)| Success Rate   | Success Rate   |
++----------------+-------------+----------------+----------------+
+| Equatorial     | 2.532e-04   | 100.00        % | 100.00        % |
+| South Atlantic Anomaly | 2.026e-03   | 100.00        % | 100.00        % |
+| Overall        | 6.077e-04   | 100.00        % | 100.00        % |
++----------------+-------------+----------------+----------------+
+
+Key Points:
+  Lat: -0.8  , Lon: -178.0 | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: -0.8  , Lon: -178.0 | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: -15.8 , Lon: -135.6 | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: -16.1 , Lon: -134.5 | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: -22.0 , Lon: -88.4  | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: -21.7 , Lon: -80.3  | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: -16.8 , Lon: -48.3  | Dose: 2.026e-03 | Standard: 100.0% | Space-Opt: 100.0% (SAA)
+  Lat: -16.8 , Lon: -48.3  | Dose: 2.026e-03 | Standard: 100.0% | Space-Opt: 100.0% (SAA)
+  Lat: -7.2  , Lon: -18.3  | Dose: 2.026e-03 | Standard: 100.0% | Space-Opt: 100.0% (SAA)
+  Lat: -6.0  , Lon: -15.1  | Dose: 2.026e-03 | Standard: 100.0% | Space-Opt: 100.0% (SAA)
+  Lat: -6.0  , Lon: -15.1  | Dose: 2.026e-03 | Standard: 100.0% | Space-Opt: 100.0% (SAA)
+  Lat: 5.8   , Lon: 14.5   | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 5.8   , Lon: 14.5   | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 15.7  , Lon: 44.2   | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 16.2  , Lon: 45.9   | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 16.2  , Lon: 45.9   | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 21.4  , Lon: 76.2   | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 20.7  , Lon: 110.6  | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 20.7  , Lon: 110.6  | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 19.8  , Lon: 117.2  | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 19.8  , Lon: 117.2  | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 12.8  , Lon: 145.7  | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 12.8  , Lon: 145.7  | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 1.5   , Lon: 176.3  | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+  Lat: 1.5   , Lon: 176.3  | Dose: 2.532e-04 | Standard: 100.0% | Space-Opt: 100.0%
+
+Conclusion:
+The space-optimized TMR implementation shows significant advantages in high-radiation
+environments, particularly in the South Atlantic Anomaly and polar regions. The test
+confirms that your framework meets the requirements for space applications by providing
+effective protection against radiation-induced errors.
+
+Realistic space radiation validation complete.
+<end of output>
+Test time =   0.70 sec
+----------------------------------------------------------
+Test Passed.
+"realistic_space_validation" end time: Jun 14 15:20 PDT
+"realistic_space_validation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/24 Testing: framework_verification_test
+4/24 Test: framework_verification_test
+Command: "/Users/rishabnuguru/space/framework_verification_test"
+Directory: /Users/rishabnuguru/space
+"framework_verification_test" start time: Jun 14 15:20 PDT
+Output:
+----------------------------------------------------------
+=== Testing Radiation Protection Framework ===
+
+Test 1: Normal operation without radiation
+Output: 0.37136
+
+Test 2: Testing basic TMR with corrupted weight
+Output with corrupted weight: 0.37136
+SUCCESS: TMR detected and corrected the error
+SUCCESS: Output remains correct despite corruption
+
+Test 3: Testing Enhanced TMR with corrupted bias
+Output with corrupted bias: 0.37136
+SUCCESS: Enhanced TMR detected and verified the error
+
+Test 4: Testing in simulated radiation environment
+Simulating Jupiter radiation environment:
+Radiation Environment:
+  Mission: Jupiter Mission
+  Altitude: 0.000000 km
+  Inclination: 0.000000 degrees
+  Inside SAA: No
+  Solar Activity: 3.000000/10
+  Shielding: 20.000000 mm
+
+Event Rates (per second):
+  Single Bit Flips: 0.001732
+  Multi-Bit Upsets: 0.000325
+  Single Event Latchups: 0.000065
+  Single Event Transients: 0.000043
+  Total Rate: 0.002165
+
+Running 100 forward passes under radiation...
+SUCCESS RATE: 100%
+Basic TMR Error Stats:
+  Detected Errors: 68
+  Corrected Errors: 68
+  Uncorrectable Errors: 0
+Enhanced TMR Error Stats:
+  Enhanced TMR Error Statistics:
+  Total operations: 100
+  Set operations: 0
+  Get operations: 100
+  CRC validation failures: 0
+  Voting disagreements: 100
+  Copy health scores: [1.000000, 0.100000, 1.000000]
+
+SUCCESS: Framework maintained reasonable accuracy under radiation
+
+=== Framework Verification PASSED ===
+<end of output>
+Test time =   0.48 sec
+----------------------------------------------------------
+Test Passed.
+"framework_verification_test" end time: Jun 14 15:20 PDT
+"framework_verification_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/24 Testing: enhanced_tmr_test
+5/24 Test: enhanced_tmr_test
+Command: "/Users/rishabnuguru/space/enhanced_tmr_test"
+Directory: /Users/rishabnuguru/space
+"enhanced_tmr_test" start time: Jun 14 15:20 PDT
+Output:
+----------------------------------------------------------
+Enhanced TMR Voting Mechanism Test
+==================================
+
+=== Testing with type f ===
+Original: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+
+--- Single Bit Error Test ---
+Copy1 (corrupted): 01000000 01001001 00001111 11011000  (decimal: 3.14159)
+Copy2: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Copy3: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Standard Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Bit-Level Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Detected pattern: 0
+Adaptive Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+
+--- Adjacent Bits Error Test ---
+Copy1 (corrupted): 01000000 01001001 00000011 11010000  (decimal: 3.14086)
+Copy2: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Copy3: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Standard Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Bit-Level Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Detected pattern: 2
+Adaptive Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+
+--- Byte Error Test ---
+Copy1 (corrupted): 01000000 01001001 00001111 00101111  (decimal: 3.14155)
+Copy2: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Copy3: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Standard Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Bit-Level Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Burst Error Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Detected pattern: 2
+Adaptive Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+
+--- Word Error Test ---
+Copy1 (corrupted): 10111111 10110110 11110000 00101111  (decimal: -1.4292)
+Copy2: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Copy3: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Standard Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Word Error Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Detected pattern: 3
+Adaptive Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+
+--- Burst Error Test ---
+Copy1 (corrupted): 01000000 01001000 11111111 11010000  (decimal: 3.14061)
+Copy2: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Copy3: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Standard Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Burst Error Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Detected pattern: 4
+Adaptive Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+
+--- Multiple Copy Corruption Test ---
+Copy1 (corrupted): 01000000 01001001 00001111 11110000  (decimal: 3.1416)
+Copy2 (corrupted): 01000000 01001001 10001111 11010000  (decimal: 3.1494)
+Copy3: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Standard Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Bit-Level Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Detected pattern: 0
+Adaptive Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+
+--- Extreme Case: All Copies Corrupted ---
+Copy1 (corrupted): 01000000 01001001 00001111 01010000  (decimal: 3.14156)
+Copy2 (corrupted): 01000000 01001001 00001110 11010000  (decimal: 3.14153)
+Copy3 (corrupted): 01000000 01001001 00001101 11010000  (decimal: 3.14147)
+Standard Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Bit-Level Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Word Error Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Burst Error Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Detected pattern: 5
+Adaptive Vote Result: 01000000 01001001 00001111 11010000  (decimal: 3.14159)
+Error rates:
+Standard voting: 0%
+Bit-level voting: 0%
+Word error voting: 0%
+Burst error voting: 0%
+Adaptive voting: 0%
+
+=== Testing with type d ===
+Original: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+
+--- Single Bit Error Test ---
+Copy1 (corrupted): 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10011000  (decimal: 2.71828)
+Copy2: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Copy3: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Standard Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Bit-Level Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Detected pattern: 0
+Adaptive Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+
+--- Adjacent Bits Error Test ---
+Copy1 (corrupted): 01000000 00000101 10111111 00001001 10010101 10101010 11111011 10010000  (decimal: 2.71828)
+Copy2: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Copy3: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Standard Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Bit-Level Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Detected pattern: 2
+Adaptive Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+
+--- Byte Error Test ---
+Copy1 (corrupted): 01000000 00000101 10111111 00001001 10010101 10101010 11110111 01101111  (decimal: 2.71828)
+Copy2: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Copy3: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Standard Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Bit-Level Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Burst Error Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Detected pattern: 2
+Adaptive Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+
+--- Word Error Test ---
+Copy1 (corrupted): 10111111 11111010 01000000 11110110 10010101 10101010 11110111 10010000  (decimal: -1.64086)
+Copy2: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Copy3: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Standard Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Word Error Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Detected pattern: 2
+Adaptive Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+
+--- Burst Error Test ---
+Copy1 (corrupted): 01000000 00000101 10111111 00001001 10010101 10101011 00000111 10010000  (decimal: 2.71828)
+Copy2: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Copy3: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Standard Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Burst Error Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Detected pattern: 3
+Adaptive Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+
+--- Multiple Copy Corruption Test ---
+Copy1 (corrupted): 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10110000  (decimal: 2.71828)
+Copy2 (corrupted): 01000000 00000101 10111111 00001001 10010101 10101010 01110111 10010000  (decimal: 2.71828)
+Copy3: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Standard Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Bit-Level Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Detected pattern: 0
+Adaptive Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+
+--- Extreme Case: All Copies Corrupted ---
+Copy1 (corrupted): 01000000 00000101 10111111 00001001 10010101 10101010 11110111 00010000  (decimal: 2.71828)
+Copy2 (corrupted): 01000000 00000101 10111111 00001001 10010101 10101010 11110110 10010000  (decimal: 2.71828)
+Copy3 (corrupted): 01000000 00000101 10111111 00001001 10010101 10101010 11110101 10010000  (decimal: 2.71828)
+Standard Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Bit-Level Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Word Error Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Burst Error Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Detected pattern: 3
+Adaptive Vote Result: 01000000 00000101 10111111 00001001 10010101 10101010 11110111 10010000  (decimal: 2.71828)
+Error rates:
+Standard voting: 0%
+Bit-level voting: 0%
+Word error voting: 0%
+Burst error voting: 0%
+Adaptive voting: 0%
+
+=== Testing with type i ===
+Original: 00000000 00000000 00000000 00101010  (decimal: 42)
+
+--- Single Bit Error Test ---
+Copy1 (corrupted): 00000000 00000000 00000000 00100010  (decimal: 34)
+Copy2: 00000000 00000000 00000000 00101010  (decimal: 42)
+Copy3: 00000000 00000000 00000000 00101010  (decimal: 42)
+Standard Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Bit-Level Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Detected pattern: 0
+Adaptive Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+
+--- Adjacent Bits Error Test ---
+Copy1 (corrupted): 00000000 00000000 00001100 00101010  (decimal: 3114)
+Copy2: 00000000 00000000 00000000 00101010  (decimal: 42)
+Copy3: 00000000 00000000 00000000 00101010  (decimal: 42)
+Standard Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Bit-Level Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Detected pattern: 2
+Adaptive Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+
+--- Byte Error Test ---
+Copy1 (corrupted): 00000000 00000000 00000000 11010101  (decimal: 213)
+Copy2: 00000000 00000000 00000000 00101010  (decimal: 42)
+Copy3: 00000000 00000000 00000000 00101010  (decimal: 42)
+Standard Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Bit-Level Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Burst Error Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Detected pattern: 2
+Adaptive Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+
+--- Word Error Test ---
+Copy1 (corrupted): 11111111 11111111 11111111 11010101  (decimal: -43)
+Copy2: 00000000 00000000 00000000 00101010  (decimal: 42)
+Copy3: 00000000 00000000 00000000 00101010  (decimal: 42)
+Standard Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Word Error Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Detected pattern: 3
+Adaptive Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+
+--- Burst Error Test ---
+Copy1 (corrupted): 00000000 00000001 11110000 00101010  (decimal: 127018)
+Copy2: 00000000 00000000 00000000 00101010  (decimal: 42)
+Copy3: 00000000 00000000 00000000 00101010  (decimal: 42)
+Standard Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Burst Error Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Detected pattern: 4
+Adaptive Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+
+--- Multiple Copy Corruption Test ---
+Copy1 (corrupted): 00000000 00000000 00000000 00001010  (decimal: 10)
+Copy2 (corrupted): 00000000 00000000 10000000 00101010  (decimal: 32810)
+Copy3: 00000000 00000000 00000000 00101010  (decimal: 42)
+Standard Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Bit-Level Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Detected pattern: 0
+Adaptive Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+
+--- Extreme Case: All Copies Corrupted ---
+Copy1 (corrupted): 00000000 00000000 00000000 10101010  (decimal: 170)
+Copy2 (corrupted): 00000000 00000000 00000001 00101010  (decimal: 298)
+Copy3 (corrupted): 00000000 00000000 00000010 00101010  (decimal: 554)
+Standard Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Bit-Level Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Word Error Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Burst Error Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Detected pattern: 5
+Adaptive Vote Result: 00000000 00000000 00000000 00101010  (decimal: 42)
+Error rates:
+Standard voting: 0%
+Bit-level voting: 0%
+Word error voting: 0%
+Burst error voting: 0%
+Adaptive voting: 0%
+
+=== Testing with type x ===
+Original: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+
+--- Single Bit Error Test ---
+Copy1 (corrupted): 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11110111  (decimal: 9223372036854775799)
+Copy2: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Copy3: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Standard Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Bit-Level Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Detected pattern: 0
+Adaptive Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+
+--- Adjacent Bits Error Test ---
+Copy1 (corrupted): 01111111 11111111 11111111 11111111 11111111 11111111 11110011 11111111  (decimal: 9223372036854772735)
+Copy2: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Copy3: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Standard Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Bit-Level Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Detected pattern: 2
+Adaptive Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+
+--- Byte Error Test ---
+Copy1 (corrupted): 01111111 11111111 11111111 11111111 11111111 11111111 11111111 00000000  (decimal: 9223372036854775552)
+Copy2: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Copy3: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Standard Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Bit-Level Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Burst Error Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Detected pattern: 2
+Adaptive Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+
+--- Word Error Test ---
+Copy1 (corrupted): 10000000 00000000 00000000 00000000 11111111 11111111 11111111 11111111  (decimal: -9223372032559808513)
+Copy2: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Copy3: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Standard Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Word Error Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Detected pattern: 2
+Adaptive Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+
+--- Burst Error Test ---
+Copy1 (corrupted): 01111111 11111111 11111111 11111111 11111111 11111110 00001111 11111111  (decimal: 9223372036854648831)
+Copy2: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Copy3: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Standard Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Burst Error Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Detected pattern: 3
+Adaptive Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+
+--- Multiple Copy Corruption Test ---
+Copy1 (corrupted): 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11011111  (decimal: 9223372036854775775)
+Copy2 (corrupted): 01111111 11111111 11111111 11111111 11111111 11111111 01111111 11111111  (decimal: 9223372036854743039)
+Copy3: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Standard Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Bit-Level Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Detected pattern: 0
+Adaptive Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+
+--- Extreme Case: All Copies Corrupted ---
+Copy1 (corrupted): 01111111 11111111 11111111 11111111 11111111 11111111 11111111 01111111  (decimal: 9223372036854775679)
+Copy2 (corrupted): 01111111 11111111 11111111 11111111 11111111 11111111 11111110 11111111  (decimal: 9223372036854775551)
+Copy3 (corrupted): 01111111 11111111 11111111 11111111 11111111 11111111 11111101 11111111  (decimal: 9223372036854775295)
+Standard Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Bit-Level Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Word Error Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Burst Error Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Detected pattern: 3
+Adaptive Vote Result: 01111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111  (decimal: 9223372036854775807)
+Error rates:
+Standard voting: 0%
+Bit-level voting: 0%
+Word error voting: 0%
+Burst error voting: 0%
+Adaptive voting: 0%
+
+=== Statistical Tests with type f (1000 trials) ===
+=== Single Bit Error Results ===
+Standard voting:    100.00%
+Bit-level voting:   100.00%
+Word error voting:  100.00%
+Burst error voting: 100.00%
+Adaptive voting:    100.00%
+
+=== Adjacent Bits Error Results ===
+Standard voting:    100.00%
+Bit-level voting:   100.00%
+Word error voting:  100.00%
+Burst error voting: 100.00%
+Adaptive voting:    100.00%
+
+=== Byte Error Error Results ===
+Standard voting:    100.00%
+Bit-level voting:   100.00%
+Word error voting:  100.00%
+Burst error voting: 100.00%
+Adaptive voting:    100.00%
+
+=== Word Error Error Results ===
+Standard voting:    100.00%
+Bit-level voting:   100.00%
+Word error voting:  100.00%
+Burst error voting: 100.00%
+Adaptive voting:    100.00%
+
+=== Burst Error Error Results ===
+Standard voting:    100.00%
+Bit-level voting:   100.00%
+Word error voting:  100.00%
+Burst error voting: 100.00%
+Adaptive voting:    100.00%
+
+
+All tests completed successfully!
+<end of output>
+Test time =   0.49 sec
+----------------------------------------------------------
+Test Passed.
+"enhanced_tmr_test" end time: Jun 14 15:20 PDT
+"enhanced_tmr_test" time elapsed: 00:00:00
+----------------------------------------------------------
+

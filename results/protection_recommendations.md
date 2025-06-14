@@ -23,11 +23,11 @@ This document provides recommendations for error correction methods in various s
 |-------------|-------------------|----------------------|----------------|
 | Low Earth Orbit (LEO) | No Protection | 99.0% | 0.0% |
 | Medium Earth Orbit (MEO) | No Protection | 99.0% | 0.0% |
-| Geosynchronous Orbit (GEO) | No Protection | 97.0% | 0.0% |
-| Lunar | Hamming Code | 100.0% | 31.2% |
-| Mars | Hamming Code | 98.0% | 31.2% |
-| Solar Probe | Hamming Code | 95.0% | 31.2% |
-| Solar Flare Event | Hamming Code | 49.0% | 31.2% |
+| Geosynchronous Orbit (GEO) | No Protection | 98.0% | 0.0% |
+| Lunar | No Protection | 97.0% | 0.0% |
+| Mars | Hamming Code | 99.0% | 31.2% |
+| Solar Probe | Hamming Code | 94.0% | 31.2% |
+| Solar Flare Event | Hamming Code | 34.0% | 31.2% |
 
 ## 4. Detailed Recommendations
 
@@ -55,7 +55,7 @@ This document provides recommendations for error correction methods in various s
 
 **Recommended Method:** No Protection
 
-**Success Rate:** 97.0%
+**Success Rate:** 98.0%
 
 **Memory Overhead:** 0.0%
 
@@ -63,11 +63,11 @@ This document provides recommendations for error correction methods in various s
 
 ### Lunar
 
-**Recommended Method:** Hamming Code
+**Recommended Method:** No Protection
 
-**Success Rate:** 100.0%
+**Success Rate:** 97.0%
 
-**Memory Overhead:** 31.2%
+**Memory Overhead:** 0.0%
 
 **Justification:** The moderate radiation levels in Lunar (BER ~0.200%) require robust error correction. This method provides the best balance of overhead and protection for this environment. 
 
@@ -75,7 +75,7 @@ This document provides recommendations for error correction methods in various s
 
 **Recommended Method:** Hamming Code
 
-**Success Rate:** 98.0%
+**Success Rate:** 99.0%
 
 **Memory Overhead:** 31.2%
 
@@ -85,7 +85,7 @@ This document provides recommendations for error correction methods in various s
 
 **Recommended Method:** Hamming Code
 
-**Success Rate:** 95.0%
+**Success Rate:** 94.0%
 
 **Memory Overhead:** 31.2%
 
@@ -95,7 +95,7 @@ This document provides recommendations for error correction methods in various s
 
 **Recommended Method:** Hamming Code
 
-**Success Rate:** 49.0%
+**Success Rate:** 34.0%
 
 **Memory Overhead:** 31.2%
 

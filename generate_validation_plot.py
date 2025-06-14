@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 # Load data
-data = pd.read_csv('validation_JUPITER_20.csv')
+data = pd.read_csv('validation_LEO_10.csv')
 
 # Extract detailed error data
 detail_start = data.index[data.iloc[:,0] == 'sample_id'].tolist()[0] + 1
@@ -53,6 +53,6 @@ plt.figtext(0.5, 0.01, f'Environment: {environment}, Radiation Intensity: {inten
 
 # Save figure
 plt.tight_layout(rect=[0, 0.05, 1, 0.95])
-plt.savefig('validation_JUPITER_20_plot.png', dpi=300)
+plt.savefig('validation_LEO_10_plot.png', dpi=300)
 plt.close()
 print('Plot saved successfully')
