@@ -1,0 +1,4 @@
+ParticleType,TotalFlux,PeakFlux,MeanEnergy,Defects,DPA,QuantumEnhancement,FieldEnergyChange
+Proton,1.06957e+10,1695.79,30,7.70089e+13,0.000627305,0,12.6778
+Electron,5.44058e+07,8.62599,2,8.65407e+16,1.66035e-08,2.5852,0
+HeavyIon,4427.67,0.000702003,500,0,4.63038e-05,0,15.608

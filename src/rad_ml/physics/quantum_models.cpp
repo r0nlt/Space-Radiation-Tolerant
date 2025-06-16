@@ -115,8 +115,10 @@ double calculateDisplacementEnergy(const CrystalLattice& crystal, const QFTParam
     double quantum_correction =
         calculateZeroPointEnergyContribution(params.hbar, mass, crystal.lattice_constant, 300.0);
 
-    // Apply scaling correction to fix energy magnitude (1.0e6 converts from MeV to eV range)
-    return (base_energy + quantum_correction) * 1.0e6;
+    // Return displacement energy in eV (removed incorrect 1.0e6 scaling factor)
+    // For Silicon diamond lattice: ~20 + 4*5.431 = ~41.7 eV base
+    // With particle type adjustments: Proton ~62.6 eV, Electron ~20.9 eV
+    return base_energy + quantum_correction;
 }
 
 DefectDistribution simulateDisplacementCascade(const CrystalLattice& crystal, double pka_energy,
