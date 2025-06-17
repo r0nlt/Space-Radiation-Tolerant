@@ -374,6 +374,69 @@ class SpaceEnhancedTMR {
         }
         return T{};
     }
+
+    /**
+     * @brief Check if corruption is detected (for testing only)
+     *
+     * This method is only available when ENABLE_TESTING is defined.
+     *
+     * @return True if any checksum validation fails
+     */
+    bool isCorruptionDetected() const
+    {
+        for (int i = 0; i < 3; ++i) {
+            if (!verifyChecksum(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @brief Get count of valid copies based on checksum validation (for testing only)
+     *
+     * This method is only available when ENABLE_TESTING is defined.
+     *
+     * @return Number of copies with valid checksums
+     */
+    int getValidCopyCount() const
+    {
+        int count = 0;
+        for (int i = 0; i < 3; ++i) {
+            if (verifyChecksum(i)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * @brief Check if checksum-guided correction would be used (for testing only)
+     *
+     * This method is only available when ENABLE_TESTING is defined.
+     *
+     * @param value Reference to store the corrected value
+     * @return True if checksum-guided correction is used, false if majority voting
+     */
+    bool usedChecksumGuidedCorrection(T& value) const
+    {
+        int valid_count = getValidCopyCount();
+        if (valid_count > 0 && valid_count < 3) {
+            get(value);
+            return true;  // Used checksum-guided correction
+        }
+        get(value);
+        return false;  // Used majority voting or no correction needed
+    }
+
+    /**
+     * @brief Check if repair is possible (for testing only)
+     *
+     * This method is only available when ENABLE_TESTING is defined.
+     *
+     * @return True if at least one valid copy exists for repair
+     */
+    bool canRepair() const { return getValidCopyCount() > 0; }
 #endif  // ENABLE_TESTING
 
    private:

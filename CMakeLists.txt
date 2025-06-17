@@ -86,6 +86,7 @@ add_library(rad_ml_qft STATIC
 
 target_link_libraries(rad_ml_qft
     ${CMAKE_THREAD_LIBS_INIT}
+    Eigen3::Eigen
 )
 
 # Define NASA/ESA Standard Test Runner
@@ -110,7 +111,7 @@ add_subdirectory(examples)
 
 # Add executable for Monte Carlo validation test
 add_executable(monte_carlo_validation test/verification/monte_carlo_validation.cpp)
-target_link_libraries(monte_carlo_validation rad_ml_tmr rad_ml_testing)
+target_link_libraries(monte_carlo_validation rad_ml_tmr rad_ml_testing rad_ml_qft)
 add_test(NAME monte_carlo_validation COMMAND monte_carlo_validation)
 
 # Add executable for space-optimized Monte Carlo validation
