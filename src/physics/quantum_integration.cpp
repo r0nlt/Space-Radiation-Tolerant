@@ -109,26 +109,35 @@ double calculateQuantumEnhancementFactor(double temperature, double feature_size
     // Base enhancement (no enhancement = 1.0)
     double enhancement = 1.0;
 
-    // Temperature effect: More pronounced at low temperatures
-    // Adjusted to be more conservative and physically realistic
+    // Temperature effect: More pronounced at low temperatures (but conservative)
     if (temperature < 150.0) {
-        // Use a gradual, physically based scaling that approaches asymptotic limit
-        // Avoid exponential growth that could be too aggressive
-        double temp_factor = std::min(5.0, 150.0 / std::max(temperature, 10.0));
+        // Use proper Arrhenius behavior instead of exponential scaling
+        double activation_energy = 0.05;  // eV (small activation energy for quantum effects)
+        double kB = 8.617333262e-5;       // eV/K
+        double reference_temp = 150.0;    // Reference temperature
 
-        // Cap the maximum enhancement from temperature alone to 4% (down from 5%)
-        enhancement *= (1.0 + temp_factor * 0.04);
+        // Arrhenius temperature dependence (conservative)
+        double temp_factor =
+            std::exp(activation_energy / kB * (1.0 / reference_temp - 1.0 / temperature));
+
+        // Cap the maximum enhancement from temperature alone to 2% (more conservative)
+        enhancement *= (1.0 + std::min(0.02, (temp_factor - 1.0) * 0.02));
     }
 
-    // Size effect: More pronounced at small feature sizes
-    // More conservative scaling based on physical principles
-    if (feature_size < 20.0) {
-        // Linear factor with saturation to avoid unrealistic scaling
-        double size_factor = std::min(4.0, 20.0 / std::max(feature_size, 2.0));
+    // Size effect: More pronounced at small feature sizes (quantum confinement)
+    if (feature_size < 50.0) {
+        // Quantum confinement energy scaling
+        double confinement_factor = 50.0 / std::max(feature_size, 5.0);  // Avoid division by zero
 
-        // Cap the maximum enhancement from size alone to 8% (down from 10%)
-        enhancement *= (1.0 + size_factor * 0.08);
+        // Physical scaling based on 1/L² quantum confinement
+        double size_enhancement = std::pow(confinement_factor, 0.5);  // Square root scaling
+
+        // Cap the maximum enhancement from size alone to 3% (conservative)
+        enhancement *= (1.0 + std::min(0.03, (size_enhancement - 1.0) * 0.03));
     }
+
+    // Ensure total enhancement doesn't exceed 5%
+    enhancement = std::min(enhancement, 1.05);
 
     return enhancement;
 }

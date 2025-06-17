@@ -611,98 +611,67 @@ DefectDistribution applyQuantumFieldCorrections(const DefectDistribution& defect
                                                 const QFTParameters& params, double temperature,
                                                 const std::vector<ParticleType>& particle_types)
 {
-    // Create a copy of the input defect distribution
-    DefectDistribution corrected = defects;
+    DefectDistribution corrected_defects = defects;
 
-    // If no specific particle types requested, process all particles in the defects
-    std::set<ParticleType> types_to_process;
-    if (particle_types.empty()) {
-        // Collect all particle types from the defects
-        for (const auto& [type, _] : corrected.interstitials) {
-            types_to_process.insert(type);
-        }
-        for (const auto& [type, _] : corrected.vacancies) {
-            types_to_process.insert(type);
-        }
-        for (const auto& [type, _] : corrected.clusters) {
-            types_to_process.insert(type);
-        }
-    }
-    else {
-        types_to_process.insert(particle_types.begin(), particle_types.end());
+    // Process all particle types if none specified
+    std::vector<ParticleType> types_to_process = particle_types;
+    if (types_to_process.empty()) {
+        types_to_process = {ParticleType::Proton, ParticleType::Electron, ParticleType::Neutron};
     }
 
-    // Debug output
-    std::cout << "Applying quantum corrections to " << types_to_process.size()
-              << " particle types..." << std::endl;
-
-    // Process each particle type
     for (const auto& particle_type : types_to_process) {
-        // Calculate quantum tunneling probability for this particle
+        // Calculate quantum tunneling probability for this particle (conservative)
         double tunneling_prob = calculateQuantumTunnelingProbability(
             crystal.barrier_height, temperature, params, particle_type);
 
-        // Calculate zero-point energy contribution
+        // Calculate zero-point energy contribution (small effect)
         double zero_point = calculateZeroPointEnergyContribution(
             params.hbar, params.getMass(particle_type), crystal.lattice_constant, temperature);
 
         // Physical constants
         const double kB = 8.617333262e-5;  // Boltzmann constant in eV/K
 
-        // Calculate enhancement factors based on quantum effects
-        double interstitial_enhancement = 1.0 + 5.0 * tunneling_prob;
-        double vacancy_enhancement = 1.0 + 3.0 * tunneling_prob;
-        double cluster_enhancement = 1.0 + 2.0 * zero_point / crystal.barrier_height;
+        // Conservative enhancement factors (maximum 2-3% each)
+        double interstitial_enhancement = 1.0 + std::min(0.02, 2.0 * tunneling_prob);
+        double vacancy_enhancement = 1.0 + std::min(0.015, 1.5 * tunneling_prob);
+        double cluster_enhancement = 1.0 + std::min(0.01, zero_point / crystal.barrier_height);
 
         // Apply physical limits based on energy conservation
-        // Maximum enhancement limited by available thermal energy
-        double max_thermal_enhancement = 1.0 + (kB * temperature) / crystal.barrier_height;
+        double max_thermal_enhancement =
+            1.0 + std::min(0.05, (kB * temperature) / crystal.barrier_height);
         interstitial_enhancement = std::min(interstitial_enhancement, max_thermal_enhancement);
         vacancy_enhancement = std::min(vacancy_enhancement, max_thermal_enhancement);
         cluster_enhancement = std::min(cluster_enhancement, max_thermal_enhancement);
 
-        // Remove hardcoded minimums - let physics determine the actual values
-        // If quantum effects are small, that's the real physics
-        // No artificial floor values for "demonstration purposes"
-
-        // Temperature-dependent scaling (quantum effects are stronger at lower temperatures)
-        // Use configurable temperature threshold and scaling factor
+        // Temperature-dependent scaling (quantum effects stronger at lower temperatures)
         double temp_scale = 1.0;
         if (temperature < params.temperature_threshold) {
-            temp_scale = 1.0 + (params.temperature_threshold - temperature) /
-                                   params.temperature_scaling_factor;
+            // Conservative temperature scaling
+            temp_scale = 1.0 + std::min(0.02, (params.temperature_threshold - temperature) /
+                                                  params.temperature_scaling_factor);
         }
 
-        // Debug output
-        std::cout << "  Particle type " << static_cast<int>(particle_type)
-                  << ": interstitial enhancement = " << interstitial_enhancement
-                  << ", vacancy enhancement = " << vacancy_enhancement
-                  << ", cluster enhancement = " << cluster_enhancement << std::endl;
-
-        // Apply enhancements to each region for this particle type
-        auto it_interstitials = corrected.interstitials.find(particle_type);
-        if (it_interstitials != corrected.interstitials.end()) {
-            for (auto& value : it_interstitials->second) {
-                value *= interstitial_enhancement * temp_scale;
+        // Apply corrections to defect distributions
+        if (corrected_defects.interstitials.count(particle_type)) {
+            for (auto& defect : corrected_defects.interstitials[particle_type]) {
+                defect *= interstitial_enhancement * temp_scale;
             }
         }
 
-        auto it_vacancies = corrected.vacancies.find(particle_type);
-        if (it_vacancies != corrected.vacancies.end()) {
-            for (auto& value : it_vacancies->second) {
-                value *= vacancy_enhancement * temp_scale;
+        if (corrected_defects.vacancies.count(particle_type)) {
+            for (auto& defect : corrected_defects.vacancies[particle_type]) {
+                defect *= vacancy_enhancement * temp_scale;
             }
         }
 
-        auto it_clusters = corrected.clusters.find(particle_type);
-        if (it_clusters != corrected.clusters.end()) {
-            for (auto& value : it_clusters->second) {
-                value *= cluster_enhancement * temp_scale;
+        if (corrected_defects.clusters.count(particle_type)) {
+            for (auto& defect : corrected_defects.clusters[particle_type]) {
+                defect *= cluster_enhancement * temp_scale;
             }
         }
     }
 
-    return corrected;
+    return corrected_defects;
 }
 
 // Explicit template instantiations

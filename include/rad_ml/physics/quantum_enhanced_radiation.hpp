@@ -53,7 +53,7 @@ class QuantumEnhancedRadiation {
    private:
     SemiconductorProperties material_;
     QFTParameters qft_params_;
-    std::mt19937 rng_;
+    mutable std::mt19937 rng_;
 
     // Physical constants
     static constexpr double ELECTRON_CHARGE = 1.602176634e-19;  // Coulombs
@@ -144,6 +144,12 @@ class QuantumEnhancedRadiation {
      */
     uint32_t calculateQuantumMBUSize(double deposited_charge, ParticleType particle_type);
 
+    /**
+     * Calculate quantum-enhanced charge collection efficiency
+     */
+    double calculateQuantumCollectionEfficiency(double deposited_charge,
+                                                MemoryDeviceType device_type);
+
    private:
     /**
      * @brief Calculate quantum defect formation energy
@@ -154,13 +160,9 @@ class QuantumEnhancedRadiation {
     double calculateDefectFormationEnergy(double particle_energy, ParticleType particle_type);
 
     /**
-     * @brief Calculate charge collection efficiency with quantum corrections
-     *
-     * Not all deposited charge is collected - quantum effects determine
-     * how much actually reaches the sensitive node.
+     * Helper function to get physical particle masses
      */
-    double calculateQuantumCollectionEfficiency(double deposited_charge,
-                                                MemoryDeviceType device_type);
+    double getPhysicalMass(ParticleType particle_type) const;
 };
 
 }  // namespace physics
