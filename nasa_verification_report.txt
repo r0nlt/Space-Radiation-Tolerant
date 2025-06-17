@@ -4,7 +4,7 @@
 ==========================================================================
 
 Test Parameters:
-- Monte Carlo Simulations: 25000 trials per test case
+- Monte Carlo Simulations: 100000 trials per test case
 - Confidence Level: 95%
 - Test Data Types: float, double, int32_t, int64_t
 - Test Environments: LEO, GEO, LUNAR, SAA, SOLAR_STORM, JUPITER
@@ -16,7 +16,7 @@ Enhanced Test Scenarios:
 - EDGE_CASES: Tests with boundary values (max, min, near-zero, infinity, NaN)
 - CORRELATED_ERRORS: Tests with spatially correlated bit errors across copies
 - RECOVERY_TEST: Tests recovery capabilities after sequential errors
-- Test Date: 2025-06-14 15:20:20
+- Test Date: 2025-06-17 12:02:46
 
 ==========================================================================
 DATA TYPE: float
@@ -25,7 +25,7 @@ DATA TYPE: float
 ENVIRONMENT: LEO
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -44,7 +44,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -63,7 +63,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -82,7 +82,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -97,11 +97,11 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.8640% [99.8183% - 99.9097%]
+  Protected Value          : 99.8710% [99.8488% - 99.8932%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -124,7 +124,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: GEO
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -143,7 +143,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -162,7 +162,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -181,7 +181,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -196,11 +196,11 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.8920% [99.8513% - 99.9327%]
+  Protected Value          : 99.8820% [99.8607% - 99.9033%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -223,7 +223,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: LUNAR
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -242,7 +242,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -261,7 +261,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -280,7 +280,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -295,11 +295,11 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.8880% [99.8465% - 99.9295%]
+  Protected Value          : 99.8690% [99.8466% - 99.8914%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -322,7 +322,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: SAA
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -341,7 +341,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -360,7 +360,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -379,7 +379,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -394,11 +394,11 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.9080% [99.8704% - 99.9456%]
+  Protected Value          : 99.8820% [99.8607% - 99.9033%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -421,7 +421,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: SOLAR_STORM
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -440,7 +440,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -459,7 +459,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -478,7 +478,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -493,22 +493,22 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.8360% [99.7858% - 99.8862%]
+  Protected Value          : 99.8750% [99.8531% - 99.8969%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
-  Standard Voting          : 99.9720% [99.9513% - 99.9927%]
-  Bit-Level Voting         : 99.9720% [99.9513% - 99.9927%]
-  Word Error Voting        : 99.9720% [99.9513% - 99.9927%]
-  Burst Error Voting       : 99.9720% [99.9513% - 99.9927%]
-  Adaptive Voting          : 99.9720% [99.9513% - 99.9927%]
+  Standard Voting          : 99.9740% [99.9640% - 99.9840%]
+  Bit-Level Voting         : 99.9740% [99.9640% - 99.9840%]
+  Word Error Voting        : 99.9740% [99.9640% - 99.9840%]
+  Burst Error Voting       : 99.9740% [99.9640% - 99.9840%]
+  Adaptive Voting          : 99.9740% [99.9640% - 99.9840%]
 
 ENHANCED METHODS:
-  Weighted Voting          : 99.9720% [99.9513% - 99.9927%]
-  Fast Bit Correction      : 99.9720% [99.9513% - 99.9927%]
+  Weighted Voting          : 99.9740% [99.9640% - 99.9840%]
+  Fast Bit Correction      : 99.9740% [99.9640% - 99.9840%]
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
@@ -520,7 +520,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: JUPITER
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -539,7 +539,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -558,7 +558,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -577,7 +577,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -592,11 +592,11 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.8480% [99.7997% - 99.8963%]
+  Protected Value          : 99.8620% [99.8390% - 99.8850%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -623,7 +623,7 @@ DATA TYPE: double
 ENVIRONMENT: LEO
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -642,7 +642,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -661,7 +661,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -680,7 +680,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -699,7 +699,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -722,7 +722,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: GEO
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -741,7 +741,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -760,7 +760,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -779,7 +779,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -798,7 +798,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -821,7 +821,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: LUNAR
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -840,7 +840,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -859,7 +859,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -878,7 +878,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -897,7 +897,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -920,7 +920,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: SAA
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -939,7 +939,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -958,7 +958,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -977,7 +977,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -996,7 +996,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1019,7 +1019,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: SOLAR_STORM
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1038,7 +1038,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1057,7 +1057,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1076,7 +1076,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1095,18 +1095,18 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
-  Standard Voting          : 99.9800% [99.9625% - 99.9975%]
-  Bit-Level Voting         : 99.9800% [99.9625% - 99.9975%]
-  Word Error Voting        : 99.9800% [99.9625% - 99.9975%]
-  Burst Error Voting       : 99.9800% [99.9625% - 99.9975%]
-  Adaptive Voting          : 99.9800% [99.9625% - 99.9975%]
+  Standard Voting          : 99.9830% [99.9749% - 99.9911%]
+  Bit-Level Voting         : 99.9830% [99.9749% - 99.9911%]
+  Word Error Voting        : 99.9830% [99.9749% - 99.9911%]
+  Burst Error Voting       : 99.9830% [99.9749% - 99.9911%]
+  Adaptive Voting          : 99.9830% [99.9749% - 99.9911%]
 
 ENHANCED METHODS:
-  Weighted Voting          : 99.9800% [99.9625% - 99.9975%]
-  Fast Bit Correction      : 99.9800% [99.9625% - 99.9975%]
+  Weighted Voting          : 99.9830% [99.9749% - 99.9911%]
+  Fast Bit Correction      : 99.9830% [99.9749% - 99.9911%]
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
@@ -1118,7 +1118,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: JUPITER
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1137,7 +1137,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1156,7 +1156,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1175,7 +1175,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1194,7 +1194,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1221,7 +1221,7 @@ DATA TYPE: int32_t
 ENVIRONMENT: LEO
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1240,7 +1240,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1259,7 +1259,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1278,7 +1278,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1293,11 +1293,11 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.8840% [99.8418% - 99.9262%]
+  Protected Value          : 99.8570% [99.8336% - 99.8804%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1320,7 +1320,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: GEO
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1339,7 +1339,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1358,7 +1358,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1377,7 +1377,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1392,11 +1392,11 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.9240% [99.8898% - 99.9582%]
+  Protected Value          : 99.8780% [99.8564% - 99.8996%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1419,7 +1419,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: LUNAR
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1438,7 +1438,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1457,7 +1457,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1476,7 +1476,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1491,11 +1491,11 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.8800% [99.8371% - 99.9229%]
+  Protected Value          : 99.8860% [99.8651% - 99.9069%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1518,7 +1518,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: SAA
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1537,7 +1537,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1556,7 +1556,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1575,7 +1575,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1590,11 +1590,11 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.8720% [99.8277% - 99.9163%]
+  Protected Value          : 99.8710% [99.8488% - 99.8932%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1617,7 +1617,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: SOLAR_STORM
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1636,7 +1636,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1655,7 +1655,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1674,7 +1674,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1689,26 +1689,26 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.8760% [99.8324% - 99.9196%]
+  Protected Value          : 99.8610% [99.8379% - 99.8841%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
-  Standard Voting          : 99.9760% [99.9568% - 99.9952%]
-  Bit-Level Voting         : 99.9760% [99.9568% - 99.9952%]
-  Word Error Voting        : 99.9760% [99.9568% - 99.9952%]
-  Burst Error Voting       : 99.9760% [99.9568% - 99.9952%]
-  Adaptive Voting          : 99.9760% [99.9568% - 99.9952%]
+  Standard Voting          : 99.9690% [99.9581% - 99.9799%]
+  Bit-Level Voting         : 99.9690% [99.9581% - 99.9799%]
+  Word Error Voting        : 99.9690% [99.9581% - 99.9799%]
+  Burst Error Voting       : 99.9690% [99.9581% - 99.9799%]
+  Adaptive Voting          : 99.9690% [99.9581% - 99.9799%]
 
 ENHANCED METHODS:
-  Weighted Voting          : 99.9760% [99.9568% - 99.9952%]
-  Fast Bit Correction      : 99.9760% [99.9568% - 99.9952%]
+  Weighted Voting          : 99.9690% [99.9581% - 99.9799%]
+  Fast Bit Correction      : 99.9690% [99.9581% - 99.9799%]
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 100.0000% [100.0000% - 100.0000%]
+  Protected Value          : 99.9990% [99.9970% - 100.0000%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 --------------------------------------------------------------------------
@@ -1716,7 +1716,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: JUPITER
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1735,7 +1735,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1754,7 +1754,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1773,7 +1773,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1788,11 +1788,11 @@ ENHANCED METHODS:
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
-  Protected Value          : 99.8680% [99.8230% - 99.9130%]
+  Protected Value          : 99.8860% [99.8651% - 99.9069%]
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1819,7 +1819,7 @@ DATA TYPE: int64_t
 ENVIRONMENT: LEO
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1838,7 +1838,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1857,7 +1857,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1876,7 +1876,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1895,7 +1895,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1918,7 +1918,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: GEO
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1937,7 +1937,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1956,7 +1956,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1975,7 +1975,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -1994,7 +1994,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2017,7 +2017,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: LUNAR
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2036,7 +2036,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2055,7 +2055,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2074,7 +2074,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2093,7 +2093,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2116,7 +2116,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: SAA
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2135,7 +2135,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2154,7 +2154,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2173,7 +2173,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2192,7 +2192,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2215,7 +2215,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: SOLAR_STORM
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2234,7 +2234,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2253,7 +2253,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2272,7 +2272,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2291,18 +2291,18 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
-  Standard Voting          : 99.9760% [99.9568% - 99.9952%]
-  Bit-Level Voting         : 99.9760% [99.9568% - 99.9952%]
-  Word Error Voting        : 99.9760% [99.9568% - 99.9952%]
-  Burst Error Voting       : 99.9760% [99.9568% - 99.9952%]
-  Adaptive Voting          : 99.9760% [99.9568% - 99.9952%]
+  Standard Voting          : 99.9750% [99.9652% - 99.9848%]
+  Bit-Level Voting         : 99.9750% [99.9652% - 99.9848%]
+  Word Error Voting        : 99.9750% [99.9652% - 99.9848%]
+  Burst Error Voting       : 99.9750% [99.9652% - 99.9848%]
+  Adaptive Voting          : 99.9750% [99.9652% - 99.9848%]
 
 ENHANCED METHODS:
-  Weighted Voting          : 99.9760% [99.9568% - 99.9952%]
-  Fast Bit Correction      : 99.9760% [99.9568% - 99.9952%]
+  Weighted Voting          : 99.9750% [99.9652% - 99.9848%]
+  Fast Bit Correction      : 99.9750% [99.9652% - 99.9848%]
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
@@ -2314,7 +2314,7 @@ MEMORY PROTECTION:
 ENVIRONMENT: JUPITER
 --------------------------------------------------------------------------
 Error Type: SINGLE_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2333,7 +2333,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: MULTI_BIT
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2352,7 +2352,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: BURST
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2371,7 +2371,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: WORD
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
@@ -2390,7 +2390,7 @@ MEMORY PROTECTION:
   Aligned Memory           : 100.0000% [100.0000% - 100.0000%]
 
 Error Type: COMBINED
-  Total Trials: 25000
+  Total Trials: 100000
 
 ORIGINAL METHODS:
   Standard Voting          : 100.0000% [100.0000% - 100.0000%]
