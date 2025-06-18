@@ -632,9 +632,9 @@ DefectDistribution applyQuantumFieldCorrections(const DefectDistribution& defect
         types_to_process.insert(particle_types.begin(), particle_types.end());
     }
 
-    // Debug output
-    std::cout << "Applying quantum corrections to " << types_to_process.size()
-              << " particle types..." << std::endl;
+    // Remove verbose debug output to prevent flooding during Monte Carlo tests
+    // std::cout << "Applying quantum corrections to " << types_to_process.size()
+    //           << " particle types..." << std::endl;
 
     // Process each particle type
     for (const auto& particle_type : types_to_process) {
@@ -673,11 +673,11 @@ DefectDistribution applyQuantumFieldCorrections(const DefectDistribution& defect
                                    params.temperature_scaling_factor;
         }
 
-        // Debug output
-        std::cout << "  Particle type " << static_cast<int>(particle_type)
-                  << ": interstitial enhancement = " << interstitial_enhancement
-                  << ", vacancy enhancement = " << vacancy_enhancement
-                  << ", cluster enhancement = " << cluster_enhancement << std::endl;
+        // Remove per-particle debug output to prevent flooding during Monte Carlo tests
+        // std::cout << "  Particle type " << static_cast<int>(particle_type)
+        //           << ": interstitial enhancement = " << interstitial_enhancement
+        //           << ", vacancy enhancement = " << vacancy_enhancement
+        //           << ", cluster enhancement = " << cluster_enhancement << std::endl;
 
         // Apply enhancements to each region for this particle type
         auto it_interstitials = corrected.interstitials.find(particle_type);
