@@ -525,9 +525,28 @@ private:
         double gcr_component = 1.0 - 0.5 * solar_activity_; // 1.0 at min, 0.5 at max
         double spe_component = solar_activity_ * solar_activity_ * 5.0; // 0 at min, 5.0 at max
         
+        // Special case: LEO TID behavior (counter-intuitive)
+        // Higher solar activity REDUCES TID in LEO due to:
+        // - Enhanced atmospheric drag on trapped particles
+        // - Increased scattering losses from geomagnetic activity
+        if (current_environment_ == RadiationEnvironment::LEO) {
+            // TID in LEO is dominated by trapped protons, which decrease during solar max
+            double trapped_proton_reduction = 1.0 + solar_activity_ * 1.5; // Up to 2.5x reduction
+            double atmospheric_enhancement = 1.0 + solar_activity_ * 0.8;   // Enhanced drag
+            
+            // For TID effects, apply the reduction
+            double tid_modifier = 1.0 / (trapped_proton_reduction * atmospheric_enhancement);
+            
+            // For SEE effects, use standard GCR/SPE relationship
+            double see_modifier = 0.7 * gcr_component + 0.3 * spe_component;
+            
+            // Weight based on effect type being simulated
+            // This is a simplified approach - in practice you'd separate TID and SEE calculations
+            return 0.6 * tid_modifier + 0.4 * see_modifier; // Weighted combination
+        }
+        
         // Combined effect depends on environment
-        if (current_environment_ == RadiationEnvironment::LEO ||
-            current_environment_ == RadiationEnvironment::MEO ||
+        if (current_environment_ == RadiationEnvironment::MEO ||
             current_environment_ == RadiationEnvironment::GEO) {
             // Earth environments - more SPE protection
             return 0.7 * gcr_component + 0.3 * spe_component;
