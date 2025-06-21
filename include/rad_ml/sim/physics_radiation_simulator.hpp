@@ -33,6 +33,22 @@ enum class RadiationEnvironment {
 };
 
 /**
+ * @brief Types of radiation sources with different damage mechanisms
+ * 
+ * Based on experimental data showing different charge collection efficiencies
+ * for various radiation sources in semiconductor devices
+ */
+enum class RadiationSourceType {
+    CO60_GAMMA,           // Co-60 gamma rays (high charge collection efficiency)
+    ELECTRONS_12MEV,      // 12-MeV electrons (high efficiency, similar to Co-60)
+    ELECTRONS_5KEV,       // 5-keV electrons (medium efficiency)
+    XRAYS_10KEV,          // 10-keV X-rays (medium efficiency)
+    PROTONS_700KEV,       // 700-keV protons (poor charge collection)
+    ALPHA_2MEV,           // 2-MeV alpha particles (very poor collection)
+    SPACE_MIXED_FIELD     // Mixed space environment (weighted average)
+};
+
+/**
  * @brief Types of radiation effects in space
  */
 enum class RadiationEffectType {
@@ -128,6 +144,80 @@ struct RadiationEffect {
 };
 
 /**
+ * @brief Charge collection parameters for different radiation sources
+ * 
+ * Models the fractional yield (charge collection efficiency) as a function
+ * of electric field strength for different radiation sources, based on
+ * experimental data from semiconductor device testing
+ */
+struct ChargeCollectionParams {
+    RadiationSourceType source_type;
+    double electric_field_mv_per_cm;    // Electric field strength (MV/cm)
+    double fractional_yield;            // Charge collection efficiency (0.0 to 1.0)
+    double let_kev_cm2_per_mg;         // Linear Energy Transfer (keV·cm²/mg)
+    
+    /**
+     * @brief Calculate fractional yield based on electric field and source type
+     * 
+     * Implements curves from experimental data showing how charge collection
+     * efficiency varies with electric field for different radiation sources
+     * 
+     * @param field_mv_per_cm Electric field strength in MV/cm
+     * @return Fractional yield (charge collection efficiency)
+     */
+    double calculate_fractional_yield(double field_mv_per_cm) const {
+        switch (source_type) {
+            case RadiationSourceType::CO60_GAMMA:
+            case RadiationSourceType::ELECTRONS_12MEV:
+                // High-energy sources: efficient charge collection
+                // Saturates near 1.0 at moderate fields
+                return std::min(1.0, 0.3 + 0.7 * (1.0 - std::exp(-field_mv_per_cm / 0.5)));
+                
+            case RadiationSourceType::ELECTRONS_5KEV:
+                // Medium efficiency, more field-dependent
+                return std::min(1.0, 0.1 + 0.8 * (1.0 - std::exp(-field_mv_per_cm / 1.0)));
+                
+            case RadiationSourceType::XRAYS_10KEV:
+                // Similar to 5-keV electrons but slightly better collection
+                return std::min(1.0, 0.15 + 0.75 * (1.0 - std::exp(-field_mv_per_cm / 0.8)));
+                
+            case RadiationSourceType::PROTONS_700KEV:
+                // Poor charge collection, saturates at low efficiency (~0.35)
+                return std::min(0.35, 0.05 + 0.3 * (1.0 - std::exp(-field_mv_per_cm / 2.0)));
+                
+            case RadiationSourceType::ALPHA_2MEV:
+                // Very poor charge collection, saturates at ~0.15
+                return std::min(0.15, 0.02 + 0.13 * (1.0 - std::exp(-field_mv_per_cm / 3.0)));
+                
+            case RadiationSourceType::SPACE_MIXED_FIELD:
+                // Weighted average based on typical space radiation spectrum
+                return std::min(0.8, 0.2 + 0.6 * (1.0 - std::exp(-field_mv_per_cm / 1.2)));
+                
+            default:
+                return 0.5; // Conservative default
+        }
+    }
+    
+    /**
+     * @brief Get typical LET value for the radiation source
+     * 
+     * @return LET in keV·cm²/mg
+     */
+    double get_typical_let() const {
+        switch (source_type) {
+            case RadiationSourceType::CO60_GAMMA:      return 0.2;   // Very low LET
+            case RadiationSourceType::ELECTRONS_12MEV: return 0.25;  // Low LET
+            case RadiationSourceType::ELECTRONS_5KEV:  return 2.0;   // Medium LET
+            case RadiationSourceType::XRAYS_10KEV:     return 1.5;   // Medium LET
+            case RadiationSourceType::PROTONS_700KEV:  return 15.0;  // High LET
+            case RadiationSourceType::ALPHA_2MEV:      return 80.0;  // Very high LET
+            case RadiationSourceType::SPACE_MIXED_FIELD: return 5.0; // Mixed spectrum average
+            default: return 1.0;
+        }
+    }
+};
+
+/**
  * @brief Model of spacecraft orbit or trajectory
  */
 struct SpacecraftTrajectory {
@@ -193,13 +283,22 @@ public:
         trajectory_(trajectory),
         current_environment_(trajectory.environments[0]),
         solar_activity_(0.5),  // Medium solar activity
-        random_engine_(std::chrono::system_clock::now().time_since_epoch().count()) {
+        random_engine_(std::chrono::system_clock::now().time_since_epoch().count()),
+        current_source_type_(RadiationSourceType::SPACE_MIXED_FIELD),
+        device_electric_field_mv_per_cm_(0.0),
+        environment_source_mapping_() {
         
         // Initialize radiation effects
         initialize_radiation_effects();
         
         // Calculate environment rate modifiers
         calculate_environment_modifiers();
+        
+        // Initialize charge collection physics
+        initialize_charge_collection_mapping();
+        
+        // Set reasonable default electric field for typical semiconductor devices
+        device_electric_field_mv_per_cm_ = 1.0; // 1 MV/cm typical for modern devices
     }
     
     /**
@@ -209,6 +308,8 @@ public:
      */
     void set_environment(RadiationEnvironment environment) {
         current_environment_ = environment;
+        // Update current source type based on new environment
+        current_source_type_ = environment_source_mapping_[environment];
     }
     
     /**
@@ -239,6 +340,29 @@ public:
     void set_trajectory(const SpacecraftTrajectory& trajectory) {
         trajectory_ = trajectory;
         current_environment_ = trajectory.environments[0];
+    }
+    
+    /**
+     * @brief Set device electric field strength
+     * 
+     * This affects charge collection efficiency for different radiation sources.
+     * Typical values: 0.5-2.0 MV/cm for modern semiconductor devices
+     * 
+     * @param field_mv_per_cm Electric field strength in MV/cm
+     */
+    void set_device_electric_field(double field_mv_per_cm) {
+        device_electric_field_mv_per_cm_ = std::max(0.0, field_mv_per_cm);
+    }
+    
+    /**
+     * @brief Get current charge collection efficiency
+     * 
+     * @return Fractional yield (0.0 to 1.0) for current conditions
+     */
+    double get_charge_collection_efficiency() const {
+        ChargeCollectionParams charge_params;
+        charge_params.source_type = current_source_type_;
+        return charge_params.calculate_fractional_yield(device_electric_field_mv_per_cm_);
     }
     
     /**
@@ -418,7 +542,7 @@ public:
      */
     std::string get_environment_report() const {
         std::string report = "Space Radiation Environment Report\n";
-        report += "--------------------------------\n";
+        report += "================================\n";
         
         // Environment information
         report += "Current environment: " + get_environment_name(current_environment_) + "\n";
@@ -429,10 +553,21 @@ public:
                          solar_activity_ > 0.7 ? "High" : "Medium") + ")\n";
         report += "Spacecraft shielding: " + std::to_string(shielding_thickness_mm_) + 
                  " mm Al-eq (reduction factor: " + 
-                 std::to_string(calculate_shielding_factor()) + ")\n\n";
+                 std::to_string(calculate_shielding_factor()) + ")\n";
+        
+        // Charge collection physics
+        report += "\nCharge Collection Physics:\n";
+        report += "Device electric field: " + std::to_string(device_electric_field_mv_per_cm_) + " MV/cm\n";
+        report += "Dominant radiation source: " + get_source_name(current_source_type_) + "\n";
+        report += "Charge collection efficiency: " + 
+                 std::to_string(get_charge_collection_efficiency() * 100.0) + "%\n";
+        
+        ChargeCollectionParams charge_params;
+        charge_params.source_type = current_source_type_;
+        report += "Typical LET: " + std::to_string(charge_params.get_typical_let()) + " keV⋅cm²/mg\n";
         
         // Error rates
-        report += "Expected error rates (per Mbit per day):\n";
+        report += "\nExpected error rates (per Mbit per day):\n";
         auto rates = get_error_rates();
         
         for (const auto& [type, rate] : rates) {
@@ -460,6 +595,11 @@ private:
     
     // Random number generation
     std::default_random_engine random_engine_;
+    
+    // Charge collection physics parameters
+    RadiationSourceType current_source_type_;
+    double device_electric_field_mv_per_cm_;
+    std::map<RadiationEnvironment, RadiationSourceType> environment_source_mapping_;
     
     /**
      * @brief Initialize radiation effect models
@@ -538,11 +678,12 @@ private:
     }
     
     /**
-     * @brief Calculate shielding effectiveness
+     * @brief Calculate shielding effectiveness including charge collection physics
      * 
-     * Based on aluminum equivalent shielding models from SPENVIS
+     * Based on aluminum equivalent shielding models from SPENVIS plus
+     * charge collection efficiency for different radiation sources
      * 
-     * @return Shielding attenuation factor
+     * @return Shielding attenuation factor including charge collection effects
      */
     double calculate_shielding_factor() const {
         // Parameters derived from SPENVIS aluminum shielding model
@@ -552,7 +693,7 @@ private:
             return 1.0; // No shielding
         }
         
-        // Model different behaviors for different radiation effects
+        // Traditional shielding model
         double base_reduction = std::exp(-shielding_thickness_mm_ / reference_thickness);
         
         // TID typically follows closer to exponential attenuation
@@ -561,8 +702,54 @@ private:
         // SEE typically requires higher energy particles, less shield-sensitive
         double see_reduction = std::pow(base_reduction, 0.7);
         
-        // Combined effect ranges from about 0.01 to 1.0
-        return std::max(0.01, std::min(1.0, 0.3 * tid_reduction + 0.7 * see_reduction));
+        // Combined traditional shielding effect
+        double traditional_shielding = 0.3 * tid_reduction + 0.7 * see_reduction;
+        
+        // Add charge collection physics
+        ChargeCollectionParams charge_params;
+        charge_params.source_type = current_source_type_;
+        
+        // Calculate charge collection efficiency for current conditions
+        double charge_collection_efficiency = charge_params.calculate_fractional_yield(device_electric_field_mv_per_cm_);
+        
+        // Different radiation sources have different penetration through shielding
+        // AND different charge collection efficiencies
+        double source_specific_factor = 1.0;
+        switch (current_source_type_) {
+            case RadiationSourceType::CO60_GAMMA:
+            case RadiationSourceType::ELECTRONS_12MEV:
+                // High-energy sources: good penetration, high collection efficiency
+                source_specific_factor = 0.9 * traditional_shielding + 0.1 * charge_collection_efficiency;
+                break;
+                
+            case RadiationSourceType::ELECTRONS_5KEV:
+            case RadiationSourceType::XRAYS_10KEV:
+                // Medium-energy sources: moderate penetration and collection
+                source_specific_factor = 0.7 * traditional_shielding + 0.3 * charge_collection_efficiency;
+                break;
+                
+            case RadiationSourceType::PROTONS_700KEV:
+                // Protons: good penetration but poor charge collection
+                source_specific_factor = 0.8 * traditional_shielding + 0.2 * charge_collection_efficiency;
+                break;
+                
+            case RadiationSourceType::ALPHA_2MEV:
+                // Alpha particles: poor penetration and very poor collection
+                source_specific_factor = 0.5 * traditional_shielding + 0.5 * charge_collection_efficiency;
+                break;
+                
+            case RadiationSourceType::SPACE_MIXED_FIELD:
+                // Mixed field: weighted average behavior
+                source_specific_factor = 0.75 * traditional_shielding + 0.25 * charge_collection_efficiency;
+                break;
+                
+            default:
+                source_specific_factor = traditional_shielding;
+                break;
+        }
+        
+        // Final shielding factor ranges from about 0.01 to 1.0
+        return std::max(0.01, std::min(1.0, source_specific_factor));
     }
     
     /**
@@ -606,6 +793,49 @@ private:
             case RadiationEffectType::TID_THRESHOLD_SHIFT: return "TID Threshold Shift";
             default: return "Unknown";
         }
+    }
+    
+    /**
+     * @brief Get string representation of radiation source type
+     * 
+     * @param source Source type
+     * @return String name
+     */
+    std::string get_source_name(RadiationSourceType source) const {
+        switch (source) {
+            case RadiationSourceType::CO60_GAMMA: return "Co-60 Gamma Rays";
+            case RadiationSourceType::ELECTRONS_12MEV: return "12-MeV Electrons";
+            case RadiationSourceType::ELECTRONS_5KEV: return "5-keV Electrons";
+            case RadiationSourceType::XRAYS_10KEV: return "10-keV X-rays";
+            case RadiationSourceType::PROTONS_700KEV: return "700-keV Protons";
+            case RadiationSourceType::ALPHA_2MEV: return "2-MeV Alpha Particles";
+            case RadiationSourceType::SPACE_MIXED_FIELD: return "Mixed Space Radiation";
+            default: return "Unknown Source";
+        }
+    }
+    
+    /**
+     * @brief Initialize charge collection physics
+     */
+    void initialize_charge_collection_mapping() {
+        // Map radiation environments to their dominant source types
+        // Based on typical space radiation spectra for each environment
+        
+        environment_source_mapping_[RadiationEnvironment::LEO] = RadiationSourceType::SPACE_MIXED_FIELD;
+        environment_source_mapping_[RadiationEnvironment::MEO] = RadiationSourceType::PROTONS_700KEV;  // SAA protons
+        environment_source_mapping_[RadiationEnvironment::GEO] = RadiationSourceType::ELECTRONS_12MEV; // Outer belt electrons
+        environment_source_mapping_[RadiationEnvironment::LUNAR] = RadiationSourceType::SPACE_MIXED_FIELD;
+        environment_source_mapping_[RadiationEnvironment::MARS_ORBIT] = RadiationSourceType::SPACE_MIXED_FIELD;
+        environment_source_mapping_[RadiationEnvironment::MARS_SURFACE] = RadiationSourceType::CO60_GAMMA; // Mostly GCR
+        environment_source_mapping_[RadiationEnvironment::JUPITER] = RadiationSourceType::ELECTRONS_12MEV; // High-energy electrons
+        environment_source_mapping_[RadiationEnvironment::EUROPA] = RadiationSourceType::ELECTRONS_12MEV; // Extreme electrons
+        environment_source_mapping_[RadiationEnvironment::INTERPLANETARY] = RadiationSourceType::SPACE_MIXED_FIELD;
+        environment_source_mapping_[RadiationEnvironment::SOLAR_MINIMUM] = RadiationSourceType::CO60_GAMMA; // GCR dominated
+        environment_source_mapping_[RadiationEnvironment::SOLAR_MAXIMUM] = RadiationSourceType::PROTONS_700KEV; // SPE protons
+        environment_source_mapping_[RadiationEnvironment::SOLAR_STORM] = RadiationSourceType::PROTONS_700KEV; // High-energy protons
+        
+        // Set current source type based on current environment
+        current_source_type_ = environment_source_mapping_[current_environment_];
     }
 };
 
