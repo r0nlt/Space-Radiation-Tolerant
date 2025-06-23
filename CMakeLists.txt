@@ -394,6 +394,36 @@ message(STATUS "Testing enabled:            ${BUILD_TESTING}")
 message(STATUS "Visualization:              ${ENABLE_VISUALIZATION}")
 message(STATUS "======================================================")
 
-# C++17 Template Solutions
+# C++17 Template Solutions and AI Database Tests
 add_executable(simple_ai_database_test_minimal test/simple_ai_database_test_minimal.cpp)
 target_link_libraries(simple_ai_database_test_minimal ${LMDB_LIBRARY})
+
+# Add AI Native Database Test
+if(LMDB_FOUND)
+    add_executable(ai_native_database_test
+        test/ai_native_database_test.cpp
+        src/rad_ml/storage/ai_native_database.cpp
+    )
+    target_link_libraries(ai_native_database_test
+        PRIVATE
+        LMDB::LMDB
+    )
+    target_include_directories(ai_native_database_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(ai_native_database_test PRIVATE cxx_std_17)
+    add_test(NAME ai_native_database_test COMMAND ai_native_database_test)
+
+    # Add Simple AI Database Test
+    add_executable(simple_ai_database_test
+        test/simple_ai_database_test.cpp
+        src/rad_ml/storage/simple_ai_native_database.cpp
+    )
+    target_link_libraries(simple_ai_database_test
+        PRIVATE
+        LMDB::LMDB
+    )
+    target_include_directories(simple_ai_database_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(simple_ai_database_test PRIVATE cxx_std_17)
+    add_test(NAME simple_ai_database_test COMMAND simple_ai_database_test)
+
+    message(STATUS "Added AI Database test executables")
+endif()

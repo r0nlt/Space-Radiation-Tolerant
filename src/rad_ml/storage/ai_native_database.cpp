@@ -62,6 +62,8 @@ AINativeDatabase::AINativeDatabase(Config config)
     std::cout << "AI-Native Database created with path: " << config_.db_path.string() << std::endl;
 }
 
+AINativeDatabase::AINativeDatabase() : AINativeDatabase(Config{}) {}
+
 AINativeDatabase::~AINativeDatabase()
 {
     stop_background_optimization();

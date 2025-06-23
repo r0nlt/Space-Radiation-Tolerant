@@ -326,7 +326,7 @@ template <typename T>
 SimpleResult<SimpleAINativeDatabase::CompressionMetrics> SimpleAINativeDatabase::store(
     const Key& key, const std::vector<T>& data)
 {
-    static_assert(is_storable_v<T>, "Type must be arithmetic and trivially copyable");
+    static_assert(is_storable_data_v<T>, "Type must be arithmetic and trivially copyable");
     auto start_time = std::chrono::high_resolution_clock::now();
 
     auto serialized = serialize_data(data);
@@ -355,7 +355,7 @@ template <typename T>
 SimpleResult<std::pair<std::vector<T>, SimpleAINativeDatabase::CompressionMetrics>>
 SimpleAINativeDatabase::retrieve(const Key& key)
 {
-    static_assert(is_storable_v<T>, "Type must be arithmetic and trivially copyable");
+    static_assert(is_storable_data_v<T>, "Type must be arithmetic and trivially copyable");
     auto start_time = std::chrono::high_resolution_clock::now();
 
     auto retrieve_result = retrieve_raw(key);

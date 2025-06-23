@@ -80,9 +80,9 @@ class SimpleAINativeDatabase {
         ReconstructionError average_reconstruction_error = 0.0;
     };
 
-    // Type trait for storable data
+    // Type trait for storable data (consistent with full AI database)
     template <typename T>
-    static constexpr bool is_storable_v =
+    static constexpr bool is_storable_data_v =
         std::is_arithmetic_v<T> && std::is_trivially_copyable_v<T>;
 
     explicit SimpleAINativeDatabase(Config config);
