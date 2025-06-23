@@ -407,6 +407,7 @@ if(LMDB_FOUND)
     target_link_libraries(ai_native_database_test
         PRIVATE
         LMDB::LMDB
+        rad_ml_research
     )
     target_include_directories(ai_native_database_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
     target_compile_features(ai_native_database_test PRIVATE cxx_std_17)

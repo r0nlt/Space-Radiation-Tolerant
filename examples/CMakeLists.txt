@@ -74,6 +74,36 @@ add_executable(vae_comprehensive_test vae_comprehensive_test.cpp)
 target_link_libraries(vae_comprehensive_test rad_ml_research)
 target_include_directories(vae_comprehensive_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# VAE Monte Carlo Tuning Example
+if(LMDB_FOUND)
+    add_executable(vae_monte_carlo_tuning_example
+        vae_monte_carlo_tuning_example.cpp
+        ../src/rad_ml/storage/ai_native_database.cpp
+    )
+    target_link_libraries(vae_monte_carlo_tuning_example
+        rad_ml_research
+        rad_ml_tmr
+        LMDB::LMDB
+    )
+    target_include_directories(vae_monte_carlo_tuning_example PRIVATE ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(vae_monte_carlo_tuning_example PRIVATE cxx_std_17)
+endif()
+
+# VAE Quick Tuning Demo
+if(LMDB_FOUND)
+    add_executable(vae_quick_tuning_demo
+        vae_quick_tuning_demo.cpp
+        ../src/rad_ml/storage/ai_native_database.cpp
+    )
+    target_link_libraries(vae_quick_tuning_demo
+        rad_ml_research
+        rad_ml_tmr
+        LMDB::LMDB
+    )
+    target_include_directories(vae_quick_tuning_demo PRIVATE ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(vae_quick_tuning_demo PRIVATE cxx_std_17)
+endif()
+
 # Add quantum-enhanced radiation test
 add_executable(quantum_enhanced_radiation_test quantum_enhanced_radiation_test.cpp)
 target_link_libraries(quantum_enhanced_radiation_test
@@ -83,6 +113,64 @@ target_link_libraries(quantum_enhanced_radiation_test
     rad_ml_research
 )
 target_include_directories(quantum_enhanced_radiation_test PRIVATE ${CMAKE_SOURCE_DIR})
+
+# VAE Production Database Example
+add_executable(vae_production_database_example
+    vae_production_database_example.cpp
+    ${CMAKE_SOURCE_DIR}/src/rad_ml/storage/ai_native_database.cpp
+)
+target_link_libraries(vae_production_database_example
+    PRIVATE
+    rad_ml_research
+    LMDB::LMDB
+)
+target_compile_features(vae_production_database_example PRIVATE cxx_std_17)
+
+# VAE Database Trained Test
+add_executable(vae_database_trained_test
+    vae_database_trained_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/rad_ml/storage/ai_native_database.cpp
+)
+target_link_libraries(vae_database_trained_test
+    PRIVATE
+    rad_ml_research
+    LMDB::LMDB
+)
+target_compile_features(vae_database_trained_test PRIVATE cxx_std_17)
+
+# VAE Simple Usage Example
+add_executable(vae_simple_usage_example vae_simple_usage_example.cpp)
+target_link_libraries(vae_simple_usage_example PRIVATE rad_ml_research)
+target_compile_features(vae_simple_usage_example PRIVATE cxx_std_17)
+
+# Quick Tuning Test
+add_executable(quick_tuning_test quick_tuning_test.cpp)
+target_link_libraries(quick_tuning_test PRIVATE rad_ml_research)
+target_compile_features(quick_tuning_test PRIVATE cxx_std_17)
+
+# VAE Compression Validation Test
+add_executable(compression_validation_test
+    compression_validation_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/rad_ml/storage/ai_native_database.cpp
+)
+target_link_libraries(compression_validation_test
+    PRIVATE
+    rad_ml_research
+    LMDB::LMDB
+)
+target_compile_features(compression_validation_test PRIVATE cxx_std_17)
+
+# Large Dataset Compression Test
+add_executable(large_dataset_compression_test
+    large_dataset_compression_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/rad_ml/storage/ai_native_database.cpp
+)
+target_link_libraries(large_dataset_compression_test
+    PRIVATE
+    rad_ml_research
+    LMDB::LMDB
+)
+target_compile_features(large_dataset_compression_test PRIVATE cxx_std_17)
 
 # Add tests
 add_test(NAME architecture_test_run COMMAND architecture_test)
@@ -95,10 +183,13 @@ add_test(NAME vae_space_mission_test_run COMMAND vae_space_mission_test)
 add_test(NAME vae_validation_test_run COMMAND vae_validation_test)
 add_test(NAME vae_production_example_run COMMAND vae_production_example)
 add_test(NAME vae_comprehensive_test COMMAND vae_comprehensive_test)
+add_test(NAME vae_monte_carlo_tuning_example_run COMMAND vae_monte_carlo_tuning_example)
 add_test(NAME quantum_enhanced_radiation_test_run COMMAND quantum_enhanced_radiation_test)
+add_test(NAME compression_validation_test_run COMMAND compression_validation_test)
+add_test(NAME large_dataset_compression_test_run COMMAND large_dataset_compression_test)
 
 # Installation
-install(TARGETS architecture_test residual_network_test auto_arch_search_example radiation_aware_training_example multi_particle_simulation_example vae_example vae_space_mission_test vae_validation_test vae_production_example vae_comprehensive_test quantum_enhanced_radiation_test
+install(TARGETS architecture_test residual_network_test auto_arch_search_example radiation_aware_training_example multi_particle_simulation_example vae_example vae_space_mission_test vae_validation_test vae_production_example vae_comprehensive_test vae_monte_carlo_tuning_example quantum_enhanced_radiation_test vae_production_database_example vae_simple_usage_example quick_tuning_test compression_validation_test large_dataset_compression_test
         DESTINATION bin
         COMPONENT examples)
 

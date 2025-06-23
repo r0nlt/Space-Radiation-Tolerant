@@ -6,6 +6,7 @@ set(RAD_ML_RESEARCH_SOURCES
     auto_arch_search.cpp
     radiation_aware_training.cpp
     variational_autoencoder.cpp
+    vae_auto_tuner.cpp
     # Other source files will be added as they are implemented
 )
 
