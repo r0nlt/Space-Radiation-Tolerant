@@ -120,7 +120,8 @@ Result<void> AINativeDatabase::initialize(
             std::vector<size_t> hidden_dims;
 
             if (data_type == "telemetry" || data_type == "default") {
-                // Use BREAKTHROUGH compression config: 4:1 ratio with ~0.96 reconstruction error
+                // Use BREAKTHROUGH compression config: theoretical 4:1 latent, effective 2.5-3.7:1
+                // with metadata
                 vae_config = research::OptimalConfigs::getCompressionConfig();
                 hidden_dims = research::OptimalConfigs::getCompressionArchitecture();
 
@@ -131,8 +132,8 @@ Result<void> AINativeDatabase::initialize(
                 }
 
                 std::cout << "Using BREAKTHROUGH telemetry compression config: " << dimension
-                          << "D→" << vae_config.latent_dim << "D (4:1 ratio, β=" << vae_config.beta
-                          << ")" << std::endl;
+                          << "D→" << vae_config.latent_dim
+                          << "D (effective 2.5-3.7:1, β=" << vae_config.beta << ")" << std::endl;
             }
             else if (data_type == "anomaly_detection" || data_type == "monitoring" ||
                      data_type == "anomaly") {

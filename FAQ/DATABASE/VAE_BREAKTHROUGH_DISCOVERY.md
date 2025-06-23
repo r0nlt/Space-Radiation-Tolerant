@@ -55,7 +55,7 @@ flowchart TD
         subgraph "Performance Comparison"
             G["Without Preprocessing<br/>Reconstruction Error: ~29.1<br/>❌ Poor Quality"]
             H["With Preprocessing<br/>Reconstruction Error: ~0.96<br/>✅ Excellent Quality"]
-            I["Compression Ratio<br/>12D → 3D = 4:1<br/>75% Space Savings"]
+            I["Compression Performance<br/>12D → 3D latent space<br/>Effective ratios: 2.5-3.7:1<br/>Depends on batch size"]
         end
 
         subgraph "Production Integration"

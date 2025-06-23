@@ -238,7 +238,7 @@ void testSatelliteTelemetryProcessing()
 
     // Create VAE optimized for telemetry data
     size_t telemetry_dim = 12;  // SatelliteTelemetry has 12 fields
-    size_t latent_dim = 4;      // Compress to 4D latent space (3:1 compression)
+    size_t latent_dim = 4;      // Compress to 4D latent space (3:1 latent, varies with metadata)
 
     VAEConfig config;
     config.latent_dim = latent_dim;
