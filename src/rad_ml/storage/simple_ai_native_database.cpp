@@ -323,10 +323,10 @@ SimpleResult<std::vector<T>> SimpleAINativeDatabase::deserialize_data(
 }
 
 template <typename T>
-std::enable_if_t<SimpleAINativeDatabase::is_storable_v<T>,
-                 SimpleResult<SimpleAINativeDatabase::CompressionMetrics>>
-SimpleAINativeDatabase::store(const Key& key, const std::vector<T>& data)
+SimpleResult<SimpleAINativeDatabase::CompressionMetrics> SimpleAINativeDatabase::store(
+    const Key& key, const std::vector<T>& data)
 {
+    static_assert(is_storable_v<T>, "Type must be arithmetic and trivially copyable");
     auto start_time = std::chrono::high_resolution_clock::now();
 
     auto serialized = serialize_data(data);
@@ -352,11 +352,10 @@ SimpleAINativeDatabase::store(const Key& key, const std::vector<T>& data)
 }
 
 template <typename T>
-std::enable_if_t<
-    SimpleAINativeDatabase::is_storable_v<T>,
-    SimpleResult<std::pair<std::vector<T>, SimpleAINativeDatabase::CompressionMetrics>>>
+SimpleResult<std::pair<std::vector<T>, SimpleAINativeDatabase::CompressionMetrics>>
 SimpleAINativeDatabase::retrieve(const Key& key)
 {
+    static_assert(is_storable_v<T>, "Type must be arithmetic and trivially copyable");
     auto start_time = std::chrono::high_resolution_clock::now();
 
     auto retrieve_result = retrieve_raw(key);
@@ -375,8 +374,8 @@ SimpleAINativeDatabase::retrieve(const Key& key)
     auto decode_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
     CompressionMetrics metrics;
-    metrics.original_bytes = retrieve_result->size();
-    metrics.compressed_bytes = retrieve_result->size();
+    metrics.original_bytes = (*retrieve_result).size();
+    metrics.compressed_bytes = (*retrieve_result).size();
     metrics.ratio = 1.0;
     metrics.error = 0.0;
     metrics.decode_time = decode_time;
@@ -413,31 +412,22 @@ std::string SimpleAINativeDatabase::lmdb_error_string(int error_code) const
 }
 
 // Template instantiations
-template std::enable_if_t<SimpleAINativeDatabase::is_storable_v<float>,
-                          SimpleResult<SimpleAINativeDatabase::CompressionMetrics>>
+template SimpleResult<SimpleAINativeDatabase::CompressionMetrics>
 SimpleAINativeDatabase::store<float>(const Key&, const std::vector<float>&);
 
-template std::enable_if_t<SimpleAINativeDatabase::is_storable_v<double>,
-                          SimpleResult<SimpleAINativeDatabase::CompressionMetrics>>
+template SimpleResult<SimpleAINativeDatabase::CompressionMetrics>
 SimpleAINativeDatabase::store<double>(const Key&, const std::vector<double>&);
 
-template std::enable_if_t<SimpleAINativeDatabase::is_storable_v<int>,
-                          SimpleResult<SimpleAINativeDatabase::CompressionMetrics>>
+template SimpleResult<SimpleAINativeDatabase::CompressionMetrics>
 SimpleAINativeDatabase::store<int>(const Key&, const std::vector<int>&);
 
-template std::enable_if_t<
-    SimpleAINativeDatabase::is_storable_v<float>,
-    SimpleResult<std::pair<std::vector<float>, SimpleAINativeDatabase::CompressionMetrics>>>
+template SimpleResult<std::pair<std::vector<float>, SimpleAINativeDatabase::CompressionMetrics>>
 SimpleAINativeDatabase::retrieve<float>(const Key&);
 
-template std::enable_if_t<
-    SimpleAINativeDatabase::is_storable_v<double>,
-    SimpleResult<std::pair<std::vector<double>, SimpleAINativeDatabase::CompressionMetrics>>>
+template SimpleResult<std::pair<std::vector<double>, SimpleAINativeDatabase::CompressionMetrics>>
 SimpleAINativeDatabase::retrieve<double>(const Key&);
 
-template std::enable_if_t<
-    SimpleAINativeDatabase::is_storable_v<int>,
-    SimpleResult<std::pair<std::vector<int>, SimpleAINativeDatabase::CompressionMetrics>>>
+template SimpleResult<std::pair<std::vector<int>, SimpleAINativeDatabase::CompressionMetrics>>
 SimpleAINativeDatabase::retrieve<int>(const Key&);
 
 }  // namespace rad_ml::storage

@@ -137,8 +137,8 @@ class AINativeDatabase {
      * @return Future with compression metrics
      */
     template <typename T>
-    std::enable_if_t<is_storable_data_v<T>, std::future<Result<CompressionMetrics>>> store_async(
-        const Key& key, const std::vector<T>& data, const std::string& data_type = "default");
+    std::future<Result<CompressionMetrics>> store_async(const Key& key, const std::vector<T>& data,
+                                                        const std::string& data_type = "default");
 
     /**
      * @brief Retrieve and decompress data (async)
@@ -146,23 +146,21 @@ class AINativeDatabase {
      * @return Future with decompressed data and metrics
      */
     template <typename T>
-    std::enable_if_t<is_storable_data_v<T>,
-                     std::future<Result<std::pair<std::vector<T>, CompressionMetrics>>>>
-    retrieve_async(const Key& key);
+    std::future<Result<std::pair<std::vector<T>, CompressionMetrics>>> retrieve_async(
+        const Key& key);
 
     /**
      * @brief Synchronous store operation
      */
     template <typename T>
-    std::enable_if_t<is_storable_data_v<T>, Result<CompressionMetrics>> store(
-        const Key& key, const std::vector<T>& data, const std::string& data_type = "default");
+    Result<CompressionMetrics> store(const Key& key, const std::vector<T>& data,
+                                     const std::string& data_type = "default");
 
     /**
      * @brief Synchronous retrieve operation
      */
     template <typename T>
-    std::enable_if_t<is_storable_data_v<T>, Result<std::pair<std::vector<T>, CompressionMetrics>>>
-    retrieve(const Key& key);
+    Result<std::pair<std::vector<T>, CompressionMetrics>> retrieve(const Key& key);
 
     /**
      * @brief Check if a key exists
@@ -186,8 +184,8 @@ class AINativeDatabase {
      * @return Training result
      */
     template <typename T>
-    std::enable_if_t<is_storable_data_v<T>, Result<void>> train_vae(
-        const std::vector<std::vector<T>>& training_data, const std::string& data_type = "default");
+    Result<void> train_vae(const std::vector<std::vector<T>>& training_data,
+                           const std::string& data_type = "default");
 
     /**
      * @brief Database statistics

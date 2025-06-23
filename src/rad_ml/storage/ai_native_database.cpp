@@ -385,6 +385,7 @@ template <typename T>
 Result<AINativeDatabase::CompressionMetrics> AINativeDatabase::store(
     const Key& key, const std::vector<T>& data, const std::string& /*data_type*/)
 {
+    static_assert(is_storable_data_v<T>, "Type must be arithmetic and trivially copyable");
     auto start_time = std::chrono::high_resolution_clock::now();
 
     // Serialize data
@@ -417,6 +418,7 @@ template <typename T>
 Result<std::pair<std::vector<T>, AINativeDatabase::CompressionMetrics>> AINativeDatabase::retrieve(
     const Key& key)
 {
+    static_assert(is_storable_data_v<T>, "Type must be arithmetic and trivially copyable");
     auto start_time = std::chrono::high_resolution_clock::now();
 
     // Retrieve raw data
@@ -447,6 +449,31 @@ Result<std::pair<std::vector<T>, AINativeDatabase::CompressionMetrics>> AINative
 
     return Result<std::pair<std::vector<T>, CompressionMetrics>>::success(
         std::make_pair(std::move(*deserialize_result), metrics));
+}
+
+// Async method implementations
+template <typename T>
+std::future<Result<AINativeDatabase::CompressionMetrics>> AINativeDatabase::store_async(
+    const Key& key, const std::vector<T>& data, const std::string& data_type)
+{
+    static_assert(is_storable_data_v<T>, "Type must be arithmetic and trivially copyable");
+
+    return std::async(std::launch::async,
+                      [this, key, data, data_type]() -> Result<CompressionMetrics> {
+                          return store(key, data, data_type);
+                      });
+}
+
+template <typename T>
+std::future<Result<std::pair<std::vector<T>, AINativeDatabase::CompressionMetrics>>>
+AINativeDatabase::retrieve_async(const Key& key)
+{
+    static_assert(is_storable_data_v<T>, "Type must be arithmetic and trivially copyable");
+
+    return std::async(std::launch::async,
+                      [this, key]() -> Result<std::pair<std::vector<T>, CompressionMetrics>> {
+                          return retrieve<T>(key);
+                      });
 }
 
 void AINativeDatabase::update_statistics(const CompressionMetrics& metrics)
@@ -568,5 +595,20 @@ template Result<std::pair<std::vector<int>, AINativeDatabase::CompressionMetrics
 AINativeDatabase::retrieve<int>(const Key&);
 template Result<std::pair<std::vector<int64_t>, AINativeDatabase::CompressionMetrics>>
 AINativeDatabase::retrieve<int64_t>(const Key&);
+
+// Async template instantiations
+template std::future<Result<AINativeDatabase::CompressionMetrics>>
+AINativeDatabase::store_async<float>(const Key&, const std::vector<float>&, const std::string&);
+template std::future<Result<AINativeDatabase::CompressionMetrics>>
+AINativeDatabase::store_async<double>(const Key&, const std::vector<double>&, const std::string&);
+template std::future<Result<AINativeDatabase::CompressionMetrics>>
+AINativeDatabase::store_async<int>(const Key&, const std::vector<int>&, const std::string&);
+
+template std::future<Result<std::pair<std::vector<float>, AINativeDatabase::CompressionMetrics>>>
+AINativeDatabase::retrieve_async<float>(const Key&);
+template std::future<Result<std::pair<std::vector<double>, AINativeDatabase::CompressionMetrics>>>
+AINativeDatabase::retrieve_async<double>(const Key&);
+template std::future<Result<std::pair<std::vector<int>, AINativeDatabase::CompressionMetrics>>>
+AINativeDatabase::retrieve_async<int>(const Key&);
 
 }  // namespace rad_ml::storage

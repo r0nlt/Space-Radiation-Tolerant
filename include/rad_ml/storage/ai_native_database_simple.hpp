@@ -100,12 +100,10 @@ class SimpleAINativeDatabase {
     SimpleResult<void> initialize();
 
     template <typename T>
-    std::enable_if_t<is_storable_v<T>, SimpleResult<CompressionMetrics>> store(
-        const Key& key, const std::vector<T>& data);
+    SimpleResult<CompressionMetrics> store(const Key& key, const std::vector<T>& data);
 
     template <typename T>
-    std::enable_if_t<is_storable_v<T>, SimpleResult<std::pair<std::vector<T>, CompressionMetrics>>>
-    retrieve(const Key& key);
+    SimpleResult<std::pair<std::vector<T>, CompressionMetrics>> retrieve(const Key& key);
 
     bool contains(const Key& key) const noexcept;
     SimpleResult<void> remove(const Key& key);
@@ -117,6 +115,7 @@ class SimpleAINativeDatabase {
         MDB_env* env = nullptr;
         MDB_dbi dbi = 0;
 
+        LMDBEnv() = default;
         ~LMDBEnv();
         LMDBEnv(const LMDBEnv&) = delete;
         LMDBEnv& operator=(const LMDBEnv&) = delete;
