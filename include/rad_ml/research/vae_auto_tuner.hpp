@@ -234,11 +234,13 @@ class VAEAutoTuner {
      * @param beta_values Range of beta values
      * @param learning_rates Range of learning rates
      * @param epoch_options Range of training epochs
+     * @param architecture_options Range of hidden layer architectures
      */
     void setSearchRanges(const std::vector<size_t>& latent_dims,
                          const std::vector<float>& beta_values,
                          const std::vector<float>& learning_rates,
-                         const std::vector<int>& epoch_options);
+                         const std::vector<int>& epoch_options,
+                         const std::vector<std::vector<size_t>>& architecture_options);
 
     /**
      * @brief Export detailed results to CSV file

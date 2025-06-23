@@ -865,4 +865,27 @@ VAETuningConfig VAEAutoTuner::crossoverConfigs(const VAETuningConfig& parent1,
     return offspring;
 }
 
+void VAEAutoTuner::setSearchRanges(const std::vector<size_t>& latent_dims,
+                                   const std::vector<float>& beta_values,
+                                   const std::vector<float>& learning_rates,
+                                   const std::vector<int>& epoch_options,
+                                   const std::vector<std::vector<size_t>>& architecture_options)
+{
+    latent_dim_options_ = latent_dims;
+    beta_options_ = beta_values;
+    learning_rate_options_ = learning_rates;
+    epoch_options_ = epoch_options;
+    architecture_options_ = architecture_options;
+
+    core::Logger::info("Updated VAE search ranges:");
+    core::Logger::info("  Latent dimensions: " + std::to_string(latent_dim_options_.size()) +
+                       " options");
+    core::Logger::info("  Beta values: " + std::to_string(beta_options_.size()) + " options");
+    core::Logger::info("  Learning rates: " + std::to_string(learning_rate_options_.size()) +
+                       " options");
+    core::Logger::info("  Epoch options: " + std::to_string(epoch_options_.size()) + " options");
+    core::Logger::info("  Architecture options: " + std::to_string(architecture_options_.size()) +
+                       " options");
+}
+
 }  // namespace rad_ml::research

@@ -194,7 +194,11 @@ void testWithDatabase()
     std::vector<double> compression_ratios;
     std::vector<double> errors;
 
-    for (size_t i = 0; i < std::min(test_data.size(), size_t(10)); ++i) {
+    // Configuration: Maximum number of samples to test for quick demo
+    constexpr size_t MAX_TEST_SAMPLES = 10;
+    const size_t samples_to_test = std::min(test_data.size(), MAX_TEST_SAMPLES);
+
+    for (size_t i = 0; i < samples_to_test; ++i) {
         std::string key = "sample_" + std::to_string(i);
 
         // Store
@@ -221,7 +225,7 @@ void testWithDatabase()
         avg_error = std::accumulate(errors.begin(), errors.end(), 0.0) / errors.size();
     }
 
-    std::cout << "Database Test Results:" << std::endl;
+    std::cout << "Database Test Results (tested " << samples_to_test << " samples):" << std::endl;
     std::cout << "  Average Compression Ratio: " << std::fixed << std::setprecision(2)
               << avg_compression << ":1" << std::endl;
     std::cout << "  Average Reconstruction Error: " << std::fixed << std::setprecision(4)
