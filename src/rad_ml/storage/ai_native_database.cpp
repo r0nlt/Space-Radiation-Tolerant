@@ -9,9 +9,12 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <limits>
+#include <numeric>
 #include <sstream>
 
 #include "rad_ml/core/logger.hpp"
+#include "rad_ml/research/vae_optimal_configs.hpp"
 
 namespace rad_ml::storage {
 
@@ -108,27 +111,90 @@ Result<void> AINativeDatabase::initialize(
         return Result<void>::failure("Failed to initialize LMDB: " + lmdb_result.error);
     }
 
-    // Initialize VAE models for each data type
+    // Initialize VAE models for each data type using BREAKTHROUGH optimal configurations
     std::lock_guard<std::mutex> vae_lock(vae_mutex_);
     for (const auto& [data_type, dimension] : data_dimensions) {
         try {
-            size_t latent_dim = std::min(config_.default_latent_dim, dimension / 2);
-
-            // Create VAE with optimal configuration
+            // Use the SAME optimal configuration logic as get_or_create_vae
             research::VAEConfig vae_config;
-            vae_config.latent_dim = latent_dim;
-            vae_config.beta = 1.0f;
-            vae_config.learning_rate = 0.001f;
-            vae_config.epochs = 50;
-            vae_config.batch_size = 32;
+            std::vector<size_t> hidden_dims;
 
-            std::vector<size_t> hidden_dims = config_.vae_hidden_dims;
+            if (data_type == "telemetry" || data_type == "default") {
+                // Use BREAKTHROUGH compression config: 4:1 ratio with ~0.96 reconstruction error
+                vae_config = research::OptimalConfigs::getCompressionConfig();
+                hidden_dims = research::OptimalConfigs::getCompressionArchitecture();
+
+                // Scale latent dimension proportionally for non-12D telemetry
+                if (dimension != 12) {
+                    vae_config.latent_dim =
+                        std::max(size_t(2), dimension / 4);  // Maintain 4:1 ratio
+                }
+
+                std::cout << "Using BREAKTHROUGH telemetry compression config: " << dimension
+                          << "D→" << vae_config.latent_dim << "D (4:1 ratio, β=" << vae_config.beta
+                          << ")" << std::endl;
+            }
+            else if (data_type == "anomaly_detection" || data_type == "monitoring" ||
+                     data_type == "anomaly") {
+                // Use VALIDATED anomaly detection config
+                vae_config = research::OptimalConfigs::getAnomalyDetectionConfig();
+                hidden_dims = research::OptimalConfigs::getAnomalyDetectionArchitecture();
+
+                if (dimension != 12) {
+                    vae_config.latent_dim = std::min(dimension / 2, size_t(16));
+                }
+
+                std::cout << "Using VALIDATED anomaly detection config: " << dimension << "D→"
+                          << vae_config.latent_dim << "D (β=" << vae_config.beta << ")"
+                          << std::endl;
+            }
+            else if (data_type == "sensors" || data_type.find("sensor") != std::string::npos) {
+                // Use high-quality compression for sensor data
+                vae_config =
+                    research::OptimalConfigs::ImprovedConfigs::getHighQualityCompressionConfig();
+                hidden_dims = research::OptimalConfigs::ImprovedConfigs::
+                    getHighQualityCompressionArchitecture();
+
+                if (dimension != 12) {
+                    vae_config.latent_dim = std::max(size_t(3), dimension / 3);
+                }
+
+                std::cout << "Using HIGH-QUALITY sensor compression config: " << dimension << "D→"
+                          << vae_config.latent_dim << "D (β=" << vae_config.beta << ")"
+                          << std::endl;
+            }
+            else {
+                // Use balanced configuration for unknown data types
+                vae_config = research::OptimalConfigs::getBalancedConfig();
+                hidden_dims = research::OptimalConfigs::getBalancedArchitecture();
+
+                if (dimension != 12) {
+                    vae_config.latent_dim =
+                        std::max(size_t(2), std::min(dimension / 3, size_t(16)));
+
+                    if (dimension >= 64) {
+                        hidden_dims = {128, 64, 32};
+                    }
+                    else if (dimension >= 32) {
+                        hidden_dims = {64, 32};
+                    }
+                    else {
+                        hidden_dims = {32};
+                    }
+                }
+
+                std::cout << "Using BALANCED config for '" << data_type << "': " << dimension
+                          << "D→" << vae_config.latent_dim << "D (β=" << vae_config.beta << ")"
+                          << std::endl;
+            }
 
             vae_models_[data_type] = std::make_unique<research::VariationalAutoencoder<float>>(
-                dimension, latent_dim, hidden_dims, neural::ProtectionLevel::NONE, vae_config);
+                dimension, vae_config.latent_dim, hidden_dims, neural::ProtectionLevel::NONE,
+                vae_config);
 
-            std::cout << "Initialized VAE for data type '" << data_type << "' with input dimension "
-                      << dimension << " and latent dimension " << latent_dim << std::endl;
+            std::cout << "✅ Initialized OPTIMAL VAE for '" << data_type << "' with " << dimension
+                      << "D→" << vae_config.latent_dim << "D using breakthrough config"
+                      << std::endl;
         }
         catch (const std::exception& e) {
             return Result<void>::failure("Failed to initialize VAE for " + data_type +
@@ -396,38 +462,98 @@ Result<std::vector<T>> AINativeDatabase::deserialize_data(const std::vector<uint
     return Result<std::vector<T>>::success(std::move(result));
 }
 
-// Simplified store/retrieve implementations without VAE compression for now
+// VAE-integrated store implementation with real compression
 template <typename T>
-Result<AINativeDatabase::CompressionMetrics> AINativeDatabase::store(
-    const Key& key, const std::vector<T>& data, const std::string& /*data_type*/)
+Result<AINativeDatabase::CompressionMetrics> AINativeDatabase::store(const Key& key,
+                                                                     const std::vector<T>& data,
+                                                                     const std::string& data_type)
 {
     static_assert(is_storable_data_v<T>, "Type must be arithmetic and trivially copyable");
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    // Serialize data
-    auto serialized = serialize_data(data);
-
-    // Store raw data (without compression for now)
-    auto store_result = store_raw(key, serialized);
-    if (!store_result) {
-        return Result<CompressionMetrics>::failure(store_result.error);
-    }
-
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto encode_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
     CompressionMetrics metrics;
-    metrics.original_bytes = serialized.size();
-    metrics.compressed_bytes = serialized.size();  // No compression for now
-    metrics.ratio = 1.0;                           // No compression
-    metrics.error = 0.0;                           // No loss
-    metrics.encode_time = encode_time;
-    metrics.decode_time = std::chrono::milliseconds(0);
-    metrics.success = true;
+    metrics.original_bytes = data.size() * sizeof(T);
 
-    update_statistics(metrics);
+    try {
+        // Get or create VAE for this data type
+        auto* vae = get_or_create_vae(data.size(), data_type);
+        if (!vae) {
+            // Fallback to raw storage if VAE creation fails
+            core::Logger::warning("VAE creation failed for data_type '" + data_type +
+                                  "', falling back to raw storage");
+            auto serialized = serialize_data(data);
+            auto store_result = store_raw(key, serialized);
+            if (!store_result) {
+                return Result<CompressionMetrics>::failure(store_result.error);
+            }
 
-    return Result<CompressionMetrics>::success(metrics);
+            metrics.compressed_bytes = serialized.size();
+            metrics.ratio = 1.0;
+            metrics.error = 0.0;
+            metrics.success = true;
+        }
+        else {
+            // Convert data to float for VAE processing
+            std::vector<float> float_data;
+            float_data.reserve(data.size());
+            for (const auto& value : data) {
+                float_data.push_back(static_cast<float>(value));
+            }
+
+            // Apply preprocessing (z-score normalization)
+            auto preprocessed_data = preprocess_data(float_data);
+
+            // VAE compression: encode -> sample -> store latent
+            auto [mean, log_var] = vae->encode(preprocessed_data);
+            auto latent = vae->sample(mean, log_var);
+
+            // Create compressed data package with metadata
+            CompressedDataPackage package;
+            package.latent_data = latent;
+            package.original_size = data.size();
+            package.data_type = data_type;
+
+            // Calculate preprocessing statistics for reconstruction
+            calculate_preprocessing_stats(float_data, package.preprocessing_stats);
+
+            // Serialize compressed package
+            auto compressed_serialized = serialize_compressed_package(package);
+            auto store_result = store_raw(key, compressed_serialized);
+            if (!store_result) {
+                return Result<CompressionMetrics>::failure(store_result.error);
+            }
+
+            // Calculate compression metrics
+            metrics.compressed_bytes = compressed_serialized.size();
+            metrics.ratio = static_cast<double>(metrics.original_bytes) / metrics.compressed_bytes;
+
+            // Calculate reconstruction error for quality assessment
+            auto reconstructed = vae->decode(latent);
+            auto denormalized = denormalize_data(reconstructed, package.preprocessing_stats);
+            metrics.error = calculate_reconstruction_error(preprocessed_data, reconstructed);
+            metrics.success = true;
+
+            core::Logger::info("VAE compression successful: " + std::to_string(data.size()) +
+                               "D -> " + std::to_string(latent.size()) +
+                               "D, ratio: " + std::to_string(metrics.ratio) +
+                               ":1, error: " + std::to_string(metrics.error));
+        }
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        metrics.encode_time =
+            std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        metrics.decode_time = std::chrono::milliseconds(0);
+
+        update_statistics(metrics);
+        return Result<CompressionMetrics>::success(metrics);
+    }
+    catch (const std::exception& e) {
+        return Result<CompressionMetrics>::failure("VAE compression failed: " +
+                                                   std::string(e.what()));
+    }
+    catch (...) {
+        return Result<CompressionMetrics>::failure("VAE compression failed: Unknown exception");
+    }
 }
 
 template <typename T>
@@ -437,34 +563,93 @@ Result<std::pair<std::vector<T>, AINativeDatabase::CompressionMetrics>> AINative
     static_assert(is_storable_data_v<T>, "Type must be arithmetic and trivially copyable");
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    // Retrieve raw data
-    auto retrieve_result = retrieve_raw(key);
-    if (!retrieve_result) {
-        return Result<std::pair<std::vector<T>, CompressionMetrics>>::failure(
-            retrieve_result.error);
-    }
-
-    // Deserialize data
-    auto deserialize_result = deserialize_data<T>(*retrieve_result);
-    if (!deserialize_result) {
-        return Result<std::pair<std::vector<T>, CompressionMetrics>>::failure(
-            deserialize_result.error);
-    }
-
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto decode_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
     CompressionMetrics metrics;
-    metrics.original_bytes = retrieve_result->size();
-    metrics.compressed_bytes = retrieve_result->size();
-    metrics.ratio = 1.0;
-    metrics.error = 0.0;
-    metrics.encode_time = std::chrono::milliseconds(0);
-    metrics.decode_time = decode_time;
-    metrics.success = true;
 
-    return Result<std::pair<std::vector<T>, CompressionMetrics>>::success(
-        std::make_pair(std::move(*deserialize_result), metrics));
+    try {
+        // Retrieve raw data
+        auto retrieve_result = retrieve_raw(key);
+        if (!retrieve_result) {
+            return Result<std::pair<std::vector<T>, CompressionMetrics>>::failure(
+                retrieve_result.error);
+        }
+
+        metrics.compressed_bytes = retrieve_result->size();
+
+        // Try to deserialize as compressed package first
+        auto package_result = deserialize_compressed_package(*retrieve_result);
+        if (package_result) {
+            // VAE-compressed data found
+            auto& package = *package_result;
+
+            // Get VAE for decompression
+            auto* vae = get_or_create_vae(package.original_size, package.data_type);
+            if (!vae) {
+                return Result<std::pair<std::vector<T>, CompressionMetrics>>::failure(
+                    "Failed to get VAE for decompression of data_type: " + package.data_type);
+            }
+
+            // VAE decompression: decode latent -> denormalize
+            auto reconstructed_float = vae->decode(package.latent_data);
+            auto denormalized = denormalize_data(reconstructed_float, package.preprocessing_stats);
+
+            // Convert back to original type T
+            std::vector<T> reconstructed_data;
+            reconstructed_data.reserve(denormalized.size());
+            for (const auto& value : denormalized) {
+                reconstructed_data.push_back(static_cast<T>(value));
+            }
+
+            // Calculate metrics
+            metrics.original_bytes = package.original_size * sizeof(T);
+            metrics.ratio = static_cast<double>(metrics.original_bytes) / metrics.compressed_bytes;
+            metrics.error =
+                calculate_reconstruction_error(preprocess_data(denormalized), reconstructed_float);
+            metrics.success = true;
+
+            auto end_time = std::chrono::high_resolution_clock::now();
+            metrics.decode_time =
+                std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            metrics.encode_time = std::chrono::milliseconds(0);
+
+            core::Logger::info(
+                "VAE decompression successful: " + std::to_string(package.latent_data.size()) +
+                "D -> " + std::to_string(reconstructed_data.size()) + "D, ratio: " +
+                std::to_string(metrics.ratio) + ":1, error: " + std::to_string(metrics.error));
+
+            return Result<std::pair<std::vector<T>, CompressionMetrics>>::success(
+                std::make_pair(std::move(reconstructed_data), metrics));
+        }
+        else {
+            // Fallback: try raw data deserialization
+            auto deserialize_result = deserialize_data<T>(*retrieve_result);
+            if (!deserialize_result) {
+                return Result<std::pair<std::vector<T>, CompressionMetrics>>::failure(
+                    "Failed to deserialize both compressed and raw data formats");
+            }
+
+            // Raw data metrics
+            metrics.original_bytes = retrieve_result->size();
+            metrics.ratio = 1.0;
+            metrics.error = 0.0;
+            metrics.success = true;
+
+            auto end_time = std::chrono::high_resolution_clock::now();
+            metrics.decode_time =
+                std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            metrics.encode_time = std::chrono::milliseconds(0);
+
+            return Result<std::pair<std::vector<T>, CompressionMetrics>>::success(
+                std::make_pair(std::move(*deserialize_result), metrics));
+        }
+    }
+    catch (const std::exception& e) {
+        return Result<std::pair<std::vector<T>, CompressionMetrics>>::failure(
+            "VAE decompression failed: " + std::string(e.what()));
+    }
+    catch (...) {
+        return Result<std::pair<std::vector<T>, CompressionMetrics>>::failure(
+            "VAE decompression failed: Unknown exception");
+    }
 }
 
 // Async method implementations
@@ -598,39 +783,93 @@ research::VariationalAutoencoder<float>* AINativeDatabase::get_or_create_vae(
         return it->second.get();
     }
 
-    // Create new VAE with optimal configuration from tuning results
+    // Use BREAKTHROUGH optimal configurations discovered through Monte Carlo tuning
     research::VAEConfig vae_config;
-
-    // Use data-type-specific optimal configurations
-    if (data_type == "telemetry" || data_type == "default") {
-        // Compression-optimized configuration (proven through Monte Carlo tuning)
-        vae_config.latent_dim = 3;  // 4:1 compression ratio for 12D telemetry data
-        vae_config.beta = 0.5f;     // Optimal beta for reconstruction quality
-    }
-    else if (data_type == "anomaly_detection" || data_type == "monitoring") {
-        // Anomaly detection-optimized configuration
-        vae_config.latent_dim = 8;  // Higher dimension for pattern capture
-        vae_config.beta = 2.0f;     // Higher beta for structure learning
-    }
-    else {
-        // Adaptive configuration based on input dimension and config
-        size_t adaptive_latent_dim = std::min(config_.default_latent_dim, input_dim / 2);
-        vae_config.latent_dim = std::max(size_t(3), adaptive_latent_dim);  // Minimum 3D latent
-        vae_config.beta = 1.0f;  // Balanced beta for unknown data types
-    }
-
-    // Common optimal parameters
-    vae_config.learning_rate = 0.001f;
-    vae_config.epochs = 50;
-    vae_config.batch_size = 32;
-
-    // Architecture selection based on latent dimension
     std::vector<size_t> hidden_dims;
-    if (vae_config.latent_dim <= 4) {
-        hidden_dims = {32};  // Simple architecture for compression
+
+    // Data-type-specific configuration using proven breakthrough discoveries
+    if (data_type == "telemetry" || data_type == "default") {
+        // Use BREAKTHROUGH compression config: 4:1 ratio with ~0.96 reconstruction error
+        vae_config = research::OptimalConfigs::getCompressionConfig();
+        hidden_dims = research::OptimalConfigs::getCompressionArchitecture();
+
+        core::Logger::info("DEBUG: Original compression config latent_dim=" +
+                           std::to_string(vae_config.latent_dim));
+        core::Logger::info("DEBUG: Input dimension=" + std::to_string(input_dim));
+
+        // Scale latent dimension proportionally for non-12D telemetry
+        if (input_dim != 12) {
+            vae_config.latent_dim = std::max(size_t(2), input_dim / 4);  // Maintain 4:1 ratio
+            core::Logger::info("DEBUG: Scaled latent_dim=" + std::to_string(vae_config.latent_dim));
+        }
+        else {
+            core::Logger::info("DEBUG: Using original latent_dim=" +
+                               std::to_string(vae_config.latent_dim) + " for 12D input");
+        }
+
+        core::Logger::info(
+            "Using BREAKTHROUGH telemetry compression config: " + std::to_string(input_dim) + "D→" +
+            std::to_string(vae_config.latent_dim) +
+            "D (4:1 ratio, β=" + std::to_string(vae_config.beta) + ")");
+    }
+    else if (data_type == "anomaly_detection" || data_type == "monitoring" ||
+             data_type == "anomaly") {
+        // Use VALIDATED anomaly detection config: 2-3x separation with F1=0.69
+        vae_config = research::OptimalConfigs::getAnomalyDetectionConfig();
+        hidden_dims = research::OptimalConfigs::getAnomalyDetectionArchitecture();
+
+        // Scale latent dimension proportionally for non-12D data
+        if (input_dim != 12) {
+            vae_config.latent_dim =
+                std::min(input_dim / 2, size_t(16));  // Preserve detection capability
+        }
+
+        core::Logger::info(
+            "Using VALIDATED anomaly detection config: " + std::to_string(input_dim) + "D→" +
+            std::to_string(vae_config.latent_dim) + "D (β=" + std::to_string(vae_config.beta) +
+            ", 2-3x separation)");
+    }
+    else if (data_type == "sensors" || data_type.find("sensor") != std::string::npos) {
+        // Use high-quality compression for sensor data (better reconstruction)
+        vae_config = research::OptimalConfigs::ImprovedConfigs::getHighQualityCompressionConfig();
+        hidden_dims =
+            research::OptimalConfigs::ImprovedConfigs::getHighQualityCompressionArchitecture();
+
+        // Scale for different input dimensions
+        if (input_dim != 12) {
+            vae_config.latent_dim = std::max(size_t(3), input_dim / 3);  // ~3:1 ratio for quality
+        }
+
+        core::Logger::info(
+            "Using HIGH-QUALITY sensor compression config: " + std::to_string(input_dim) + "D→" +
+            std::to_string(vae_config.latent_dim) + "D (β=" + std::to_string(vae_config.beta) +
+            ", quality-focused)");
     }
     else {
-        hidden_dims = {64, 32};  // Deeper architecture for complex patterns
+        // Use balanced configuration for unknown data types
+        vae_config = research::OptimalConfigs::getBalancedConfig();
+        hidden_dims = research::OptimalConfigs::getBalancedArchitecture();
+
+        // Adaptive scaling for different input dimensions
+        if (input_dim != 12) {
+            vae_config.latent_dim = std::max(size_t(2), std::min(input_dim / 3, size_t(16)));
+
+            // Adjust architecture complexity based on input size
+            if (input_dim >= 64) {
+                hidden_dims = {128, 64, 32};  // Complex architecture for large inputs
+            }
+            else if (input_dim >= 32) {
+                hidden_dims = {64, 32};  // Moderate architecture
+            }
+            else {
+                hidden_dims = {32};  // Simple architecture for small inputs
+            }
+        }
+
+        core::Logger::info("Using BALANCED config for '" + data_type +
+                           "': " + std::to_string(input_dim) + "D→" +
+                           std::to_string(vae_config.latent_dim) +
+                           "D (β=" + std::to_string(vae_config.beta) + ")");
     }
 
     try {
@@ -638,9 +877,8 @@ research::VariationalAutoencoder<float>* AINativeDatabase::get_or_create_vae(
             input_dim, vae_config.latent_dim, hidden_dims, neural::ProtectionLevel::NONE,
             vae_config);
 
-        core::Logger::info("Created VAE for data type '" + data_type + "' with " +
-                           std::to_string(input_dim) + "D→" +
-                           std::to_string(vae_config.latent_dim) + "D compression");
+        core::Logger::info("✅ Created OPTIMAL VAE for '" + data_type +
+                           "' using breakthrough config");
 
         return vae_models_[data_type].get();
     }
@@ -707,8 +945,18 @@ Result<void> AINativeDatabase::train_vae(const std::vector<std::vector<T>>& trai
             float_data.push_back(float_sample);
         }
 
-        // Train the VAE using configuration-consistent parameters
-        vae->train(float_data, training_config.epochs, training_config.batch_size,
+        // Apply CONSISTENT preprocessing to training data (same as store/retrieve)
+        std::vector<std::vector<float>> preprocessed_training_data;
+        preprocessed_training_data.reserve(float_data.size());
+
+        core::Logger::info("Applying z-score preprocessing to training data for consistency...");
+        for (const auto& sample : float_data) {
+            auto preprocessed_sample = preprocess_data(sample);
+            preprocessed_training_data.push_back(preprocessed_sample);
+        }
+
+        // Train the VAE using PREPROCESSED data (consistent with store/retrieve)
+        vae->train(preprocessed_training_data, training_config.epochs, training_config.batch_size,
                    training_config.learning_rate);
 
         core::Logger::info("VAE training completed for data type '" + data_type + "' with " +
@@ -726,6 +974,225 @@ Result<void> AINativeDatabase::train_vae(const std::vector<std::vector<T>>& trai
             "VAE training failed (unknown exception): Non-standard exception caught during "
             "training for data type '" +
             data_type + "'");
+    }
+}
+
+// VAE integration helper methods implementation
+std::vector<float> AINativeDatabase::preprocess_data(const std::vector<float>& data) const
+{
+    if (data.empty()) return data;
+
+    // Calculate mean
+    float mean = std::accumulate(data.begin(), data.end(), 0.0f) / data.size();
+
+    // Calculate standard deviation
+    float variance = 0.0f;
+    for (float value : data) {
+        variance += (value - mean) * (value - mean);
+    }
+    variance /= data.size();
+    float std_dev = std::sqrt(variance + 1e-8f);  // Add epsilon for numerical stability
+
+    // Z-score normalization: (x - μ) / σ
+    std::vector<float> normalized;
+    normalized.reserve(data.size());
+    for (float value : data) {
+        normalized.push_back((value - mean) / std_dev);
+    }
+
+    return normalized;
+}
+
+std::vector<float> AINativeDatabase::denormalize_data(const std::vector<float>& data,
+                                                      const PreprocessingStats& stats) const
+{
+    if (data.empty() || stats.means.empty() || stats.stds.empty()) return data;
+
+    std::vector<float> denormalized;
+    denormalized.reserve(data.size());
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        // Reverse z-score: x = (normalized * σ) + μ
+        size_t stat_idx = i < stats.means.size() ? i : 0;  // Handle size mismatch gracefully
+        float denorm_value = (data[i] * stats.stds[stat_idx]) + stats.means[stat_idx];
+        denormalized.push_back(denorm_value);
+    }
+
+    return denormalized;
+}
+
+void AINativeDatabase::calculate_preprocessing_stats(const std::vector<float>& data,
+                                                     PreprocessingStats& stats) const
+{
+    if (data.empty()) return;
+
+    // For simplicity, treat as single-channel data
+    // In practice, you might want per-channel statistics for multi-dimensional data
+    stats.means.clear();
+    stats.stds.clear();
+
+    float mean = std::accumulate(data.begin(), data.end(), 0.0f) / data.size();
+    stats.means.push_back(mean);
+
+    float variance = 0.0f;
+    for (float value : data) {
+        variance += (value - mean) * (value - mean);
+    }
+    variance /= data.size();
+    float std_dev = std::sqrt(variance + 1e-8f);
+    stats.stds.push_back(std_dev);
+}
+
+float AINativeDatabase::calculate_reconstruction_error(
+    const std::vector<float>& original, const std::vector<float>& reconstructed) const
+{
+    if (original.size() != reconstructed.size()) {
+        return std::numeric_limits<float>::max();  // Invalid comparison
+    }
+
+    float mse = 0.0f;
+    for (size_t i = 0; i < original.size(); ++i) {
+        float diff = original[i] - reconstructed[i];
+        mse += diff * diff;
+    }
+
+    return mse / original.size();
+}
+
+std::vector<uint8_t> AINativeDatabase::serialize_compressed_package(
+    const CompressedDataPackage& package) const
+{
+    // Simple binary serialization format:
+    // [magic_bytes:4][data_type_len:4][data_type:variable][original_size:8]
+    // [latent_size:4][latent_data:variable][stats_means_size:4][means:variable]
+    // [stats_stds_size:4][stds:variable]
+
+    std::vector<uint8_t> result;
+
+    // Magic bytes to identify VAE-compressed data
+    const uint32_t magic = 0x56414531;  // "VAE1" in hex
+    result.insert(result.end(), reinterpret_cast<const uint8_t*>(&magic),
+                  reinterpret_cast<const uint8_t*>(&magic) + sizeof(magic));
+
+    // Data type
+    uint32_t data_type_len = static_cast<uint32_t>(package.data_type.size());
+    result.insert(result.end(), reinterpret_cast<const uint8_t*>(&data_type_len),
+                  reinterpret_cast<const uint8_t*>(&data_type_len) + sizeof(data_type_len));
+    result.insert(result.end(), package.data_type.begin(), package.data_type.end());
+
+    // Original size
+    uint64_t original_size = static_cast<uint64_t>(package.original_size);
+    result.insert(result.end(), reinterpret_cast<const uint8_t*>(&original_size),
+                  reinterpret_cast<const uint8_t*>(&original_size) + sizeof(original_size));
+
+    // Latent data
+    uint32_t latent_size = static_cast<uint32_t>(package.latent_data.size());
+    result.insert(result.end(), reinterpret_cast<const uint8_t*>(&latent_size),
+                  reinterpret_cast<const uint8_t*>(&latent_size) + sizeof(latent_size));
+    result.insert(result.end(), reinterpret_cast<const uint8_t*>(package.latent_data.data()),
+                  reinterpret_cast<const uint8_t*>(package.latent_data.data()) +
+                      package.latent_data.size() * sizeof(float));
+
+    // Preprocessing stats - means
+    uint32_t means_size = static_cast<uint32_t>(package.preprocessing_stats.means.size());
+    result.insert(result.end(), reinterpret_cast<const uint8_t*>(&means_size),
+                  reinterpret_cast<const uint8_t*>(&means_size) + sizeof(means_size));
+    if (means_size > 0) {
+        result.insert(result.end(),
+                      reinterpret_cast<const uint8_t*>(package.preprocessing_stats.means.data()),
+                      reinterpret_cast<const uint8_t*>(package.preprocessing_stats.means.data()) +
+                          means_size * sizeof(float));
+    }
+
+    // Preprocessing stats - stds
+    uint32_t stds_size = static_cast<uint32_t>(package.preprocessing_stats.stds.size());
+    result.insert(result.end(), reinterpret_cast<const uint8_t*>(&stds_size),
+                  reinterpret_cast<const uint8_t*>(&stds_size) + sizeof(stds_size));
+    if (stds_size > 0) {
+        result.insert(result.end(),
+                      reinterpret_cast<const uint8_t*>(package.preprocessing_stats.stds.data()),
+                      reinterpret_cast<const uint8_t*>(package.preprocessing_stats.stds.data()) +
+                          stds_size * sizeof(float));
+    }
+
+    return result;
+}
+
+Result<AINativeDatabase::CompressedDataPackage> AINativeDatabase::deserialize_compressed_package(
+    const std::vector<uint8_t>& data) const
+{
+    if (data.size() < sizeof(uint32_t)) {
+        return Result<CompressedDataPackage>::failure("Data too small to contain magic bytes");
+    }
+
+    size_t offset = 0;
+
+    // Check magic bytes
+    uint32_t magic;
+    std::memcpy(&magic, data.data() + offset, sizeof(magic));
+    offset += sizeof(magic);
+
+    if (magic != 0x56414531) {
+        return Result<CompressedDataPackage>::failure(
+            "Invalid magic bytes - not VAE compressed data");
+    }
+
+    CompressedDataPackage package;
+
+    try {
+        // Data type
+        uint32_t data_type_len;
+        std::memcpy(&data_type_len, data.data() + offset, sizeof(data_type_len));
+        offset += sizeof(data_type_len);
+
+        package.data_type.resize(data_type_len);
+        std::memcpy(&package.data_type[0], data.data() + offset, data_type_len);
+        offset += data_type_len;
+
+        // Original size
+        uint64_t original_size;
+        std::memcpy(&original_size, data.data() + offset, sizeof(original_size));
+        package.original_size = static_cast<size_t>(original_size);
+        offset += sizeof(original_size);
+
+        // Latent data
+        uint32_t latent_size;
+        std::memcpy(&latent_size, data.data() + offset, sizeof(latent_size));
+        offset += sizeof(latent_size);
+
+        package.latent_data.resize(latent_size);
+        std::memcpy(package.latent_data.data(), data.data() + offset, latent_size * sizeof(float));
+        offset += latent_size * sizeof(float);
+
+        // Preprocessing stats - means
+        uint32_t means_size;
+        std::memcpy(&means_size, data.data() + offset, sizeof(means_size));
+        offset += sizeof(means_size);
+
+        if (means_size > 0) {
+            package.preprocessing_stats.means.resize(means_size);
+            std::memcpy(package.preprocessing_stats.means.data(), data.data() + offset,
+                        means_size * sizeof(float));
+            offset += means_size * sizeof(float);
+        }
+
+        // Preprocessing stats - stds
+        uint32_t stds_size;
+        std::memcpy(&stds_size, data.data() + offset, sizeof(stds_size));
+        offset += sizeof(stds_size);
+
+        if (stds_size > 0) {
+            package.preprocessing_stats.stds.resize(stds_size);
+            std::memcpy(package.preprocessing_stats.stds.data(), data.data() + offset,
+                        stds_size * sizeof(float));
+            offset += stds_size * sizeof(float);
+        }
+
+        return Result<CompressedDataPackage>::success(std::move(package));
+    }
+    catch (const std::exception& e) {
+        return Result<CompressedDataPackage>::failure("Deserialization failed: " +
+                                                      std::string(e.what()));
     }
 }
 

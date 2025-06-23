@@ -126,6 +126,18 @@ target_link_libraries(vae_production_database_example
 )
 target_compile_features(vae_production_database_example PRIVATE cxx_std_17)
 
+# VAE Database Trained Test
+add_executable(vae_database_trained_test
+    vae_database_trained_test.cpp
+    ${CMAKE_SOURCE_DIR}/src/rad_ml/storage/ai_native_database.cpp
+)
+target_link_libraries(vae_database_trained_test
+    PRIVATE
+    rad_ml_research
+    LMDB::LMDB
+)
+target_compile_features(vae_database_trained_test PRIVATE cxx_std_17)
+
 # VAE Simple Usage Example
 add_executable(vae_simple_usage_example vae_simple_usage_example.cpp)
 target_link_libraries(vae_simple_usage_example PRIVATE rad_ml_research)

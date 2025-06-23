@@ -221,6 +221,20 @@ class AINativeDatabase {
     Result<void> optimize_now();
 
    private:
+    // Preprocessing statistics for data normalization
+    struct PreprocessingStats {
+        std::vector<float> means;
+        std::vector<float> stds;
+    };
+
+    // Compressed data package structure
+    struct CompressedDataPackage {
+        std::vector<float> latent_data;
+        size_t original_size;
+        std::string data_type;
+        PreprocessingStats preprocessing_stats;
+    };
+
     // Configuration
     Config config_;
 
@@ -275,6 +289,20 @@ class AINativeDatabase {
                                                                const std::string& data_type);
     void update_statistics(const CompressionMetrics& metrics);
     void background_optimization_loop();
+
+    // VAE integration helper methods
+    std::vector<float> preprocess_data(const std::vector<float>& data) const;
+    std::vector<float> denormalize_data(const std::vector<float>& data,
+                                        const PreprocessingStats& stats) const;
+    void calculate_preprocessing_stats(const std::vector<float>& data,
+                                       PreprocessingStats& stats) const;
+    float calculate_reconstruction_error(const std::vector<float>& original,
+                                         const std::vector<float>& reconstructed) const;
+
+    // Compressed package serialization
+    std::vector<uint8_t> serialize_compressed_package(const CompressedDataPackage& package) const;
+    Result<CompressedDataPackage> deserialize_compressed_package(
+        const std::vector<uint8_t>& data) const;
 
     // Error handling helpers
     std::string lmdb_error_string(int error_code) const;
