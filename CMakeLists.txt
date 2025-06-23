@@ -27,6 +27,43 @@ option(ENABLE_IDE_INTEGRATION "Enable IDE integration features" ON)
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+# Find LMDB
+find_path(LMDB_INCLUDE_DIR
+    NAMES lmdb.h
+    HINTS
+        /usr/local/opt/lmdb/include
+        /usr/local/include
+        /usr/include
+        /opt/local/include
+        /opt/homebrew/include
+)
+
+find_library(LMDB_LIBRARY
+    NAMES lmdb
+    HINTS
+        /usr/local/opt/lmdb/lib
+        /usr/local/lib
+        /usr/lib
+        /opt/local/lib
+        /opt/homebrew/lib
+)
+
+if(LMDB_INCLUDE_DIR AND LMDB_LIBRARY)
+    set(LMDB_FOUND TRUE)
+    message(STATUS "Found LMDB: ${LMDB_LIBRARY}")
+    message(STATUS "LMDB include directory: ${LMDB_INCLUDE_DIR}")
+
+    # Create imported target for LMDB
+    add_library(LMDB::LMDB UNKNOWN IMPORTED)
+    set_target_properties(LMDB::LMDB PROPERTIES
+        IMPORTED_LOCATION "${LMDB_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${LMDB_INCLUDE_DIR}"
+    )
+else()
+    set(LMDB_FOUND FALSE)
+    message(WARNING "LMDB not found. AI-native database features will be disabled.")
+endif()
+
 # Find GoogleTest
 find_package(GTest)
 if(NOT GTEST_FOUND)
@@ -219,6 +256,38 @@ target_link_libraries(quantum_field_example
   rad_ml_qft
 )
 
+# Add LMDB basic test if LMDB is available
+if(LMDB_FOUND)
+    add_executable(lmdb_basic_test
+        test/lmdb_basic_test.cpp
+    )
+    target_link_libraries(lmdb_basic_test
+        PRIVATE
+        LMDB::LMDB
+    )
+
+    # Set C++17 standard for filesystem support
+    target_compile_features(lmdb_basic_test PRIVATE cxx_std_17)
+
+    add_test(NAME lmdb_basic_test COMMAND lmdb_basic_test)
+
+    message(STATUS "Added LMDB basic test executable")
+
+    # Add Datacenter LMDB Demo
+    add_executable(lmdb_datacenter_demo
+        test/lmdb_datacenter_demo.cpp
+    )
+    target_link_libraries(lmdb_datacenter_demo
+        PRIVATE
+        LMDB::LMDB
+    )
+    target_compile_features(lmdb_datacenter_demo PRIVATE cxx_std_17)
+
+    add_test(NAME lmdb_datacenter_demo COMMAND lmdb_datacenter_demo)
+
+    message(STATUS "Added LMDB Datacenter Demo")
+endif()
+
 # Optional: Link OpenCV if visualization is enabled
 if(ENABLE_VISUALIZATION)
   find_package(OpenCV REQUIRED)
@@ -324,3 +393,37 @@ message(STATUS "IDE integration:            ${ENABLE_IDE_INTEGRATION}")
 message(STATUS "Testing enabled:            ${BUILD_TESTING}")
 message(STATUS "Visualization:              ${ENABLE_VISUALIZATION}")
 message(STATUS "======================================================")
+
+# C++17 Template Solutions and AI Database Tests
+add_executable(simple_ai_database_test_minimal test/simple_ai_database_test_minimal.cpp)
+target_link_libraries(simple_ai_database_test_minimal ${LMDB_LIBRARY})
+
+# Add AI Native Database Test
+if(LMDB_FOUND)
+    add_executable(ai_native_database_test
+        test/ai_native_database_test.cpp
+        src/rad_ml/storage/ai_native_database.cpp
+    )
+    target_link_libraries(ai_native_database_test
+        PRIVATE
+        LMDB::LMDB
+    )
+    target_include_directories(ai_native_database_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(ai_native_database_test PRIVATE cxx_std_17)
+    add_test(NAME ai_native_database_test COMMAND ai_native_database_test)
+
+    # Add Simple AI Database Test
+    add_executable(simple_ai_database_test
+        test/simple_ai_database_test.cpp
+        src/rad_ml/storage/simple_ai_native_database.cpp
+    )
+    target_link_libraries(simple_ai_database_test
+        PRIVATE
+        LMDB::LMDB
+    )
+    target_include_directories(simple_ai_database_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(simple_ai_database_test PRIVATE cxx_std_17)
+    add_test(NAME simple_ai_database_test COMMAND simple_ai_database_test)
+
+    message(STATUS "Added AI Database test executables")
+endif()
