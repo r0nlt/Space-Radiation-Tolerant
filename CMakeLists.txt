@@ -393,3 +393,7 @@ message(STATUS "IDE integration:            ${ENABLE_IDE_INTEGRATION}")
 message(STATUS "Testing enabled:            ${BUILD_TESTING}")
 message(STATUS "Visualization:              ${ENABLE_VISUALIZATION}")
 message(STATUS "======================================================")
+
+# C++17 Template Solutions
+add_executable(simple_ai_database_test_minimal test/simple_ai_database_test_minimal.cpp)
+target_link_libraries(simple_ai_database_test_minimal ${LMDB_LIBRARY})

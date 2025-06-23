@@ -102,7 +102,12 @@ class AINativeDatabase {
      * @brief Constructor with configuration
      * @param config Database configuration
      */
-    explicit AINativeDatabase(Config config = {});
+    explicit AINativeDatabase(Config config);
+
+    /**
+     * @brief Default constructor with default configuration
+     */
+    AINativeDatabase();
 
     /**
      * @brief Destructor - RAII cleanup
@@ -245,9 +250,10 @@ class AINativeDatabase {
         vae_models_;
 
     // Thread safety
-    mutable std::mutex data_mutex_;  // For thread-safe access
-    mutable std::mutex stats_mutex_;
-    mutable std::mutex vae_mutex_;
+    mutable std::mutex data_mutex_;          // For thread-safe access
+    mutable std::mutex stats_mutex_;         // For statistics updates
+    mutable std::mutex vae_mutex_;           // For VAE model access
+    mutable std::mutex optimization_mutex_;  // For background optimization control
 
     // Background optimization
     std::atomic<bool> optimization_running_{false};

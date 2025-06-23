@@ -473,21 +473,40 @@ AINativeDatabase::Statistics AINativeDatabase::get_statistics() const
 
 void AINativeDatabase::start_background_optimization()
 {
-    if (config_.enable_background_optimization && !optimization_running_.load()) {
-        optimization_running_ = true;
-        optimization_thread_ =
-            std::make_unique<std::thread>(&AINativeDatabase::background_optimization_loop, this);
-        std::cout << "Background optimization started" << std::endl;
+    if (config_.enable_background_optimization) {
+        // Use atomic compare_exchange to prevent race condition
+        bool expected = false;
+        if (optimization_running_.compare_exchange_strong(expected, true)) {
+            // Successfully changed from false to true - we're the only thread that succeeded
+            optimization_thread_ = std::make_unique<std::thread>(
+                &AINativeDatabase::background_optimization_loop, this);
+            std::cout << "Background optimization started" << std::endl;
+        }
+        else {
+            // Another thread already started optimization
+            std::cout << "Background optimization already running" << std::endl;
+        }
     }
 }
 
 void AINativeDatabase::stop_background_optimization()
 {
-    optimization_running_ = false;
-    if (optimization_thread_ && optimization_thread_->joinable()) {
-        optimization_thread_->join();
-        optimization_thread_.reset();
-        std::cout << "Background optimization stopped" << std::endl;
+    // Ensure only one thread can stop the optimization at a time
+    std::lock_guard<std::mutex> lock(optimization_mutex_);
+
+    // Atomically set optimization_running_ to false only if it was true
+    bool expected = true;
+    if (optimization_running_.compare_exchange_strong(expected, false)) {
+        // Successfully changed from true to false - we're the only thread that succeeded
+        if (optimization_thread_ && optimization_thread_->joinable()) {
+            optimization_thread_->join();
+            optimization_thread_.reset();
+            std::cout << "Background optimization stopped" << std::endl;
+        }
+    }
+    else {
+        // Another thread already stopped optimization or it wasn't running
+        std::cout << "Background optimization already stopped or not running" << std::endl;
     }
 }
 

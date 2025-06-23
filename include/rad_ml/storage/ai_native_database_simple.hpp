@@ -85,7 +85,8 @@ class SimpleAINativeDatabase {
     static constexpr bool is_storable_v =
         std::is_arithmetic_v<T> && std::is_trivially_copyable_v<T>;
 
-    explicit SimpleAINativeDatabase(Config config = {});
+    explicit SimpleAINativeDatabase(Config config);
+    SimpleAINativeDatabase();  // Default constructor
     ~SimpleAINativeDatabase();
 
     // Delete copy operations

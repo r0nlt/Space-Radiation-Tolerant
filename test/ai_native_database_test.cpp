@@ -213,7 +213,8 @@ bool test_async_operations()
             return false;
         }
 
-        // Test async store
+        // Test 1: Successful async operations (happy path)
+        std::cout << "Testing successful async operations..." << std::endl;
         auto test_data = generate_test_data(32);
         auto store_future = db.store_async("async_data_1", test_data, "async_test");
 
@@ -227,7 +228,7 @@ bool test_async_operations()
         }
         std::cout << "✓ Async store completed successfully" << std::endl;
 
-        // Test async retrieve
+        // Test async retrieve (happy path)
         auto retrieve_future = db.retrieve_async<float>("async_data_1");
         auto retrieve_result = retrieve_future.get();
 
@@ -243,11 +244,303 @@ bool test_async_operations()
         }
         std::cout << "✓ Async retrieve completed successfully" << std::endl;
 
+        // Test 2: Async retrieve with invalid key (error handling)
+        std::cout << "Testing async error handling - invalid key..." << std::endl;
+        auto invalid_retrieve_future = db.retrieve_async<float>("nonexistent_key_12345");
+        auto invalid_retrieve_result = invalid_retrieve_future.get();
+
+        if (invalid_retrieve_result) {
+            std::cout << "✗ Expected failure for invalid key, but operation succeeded" << std::endl;
+            return false;
+        }
+        std::cout << "✓ Async retrieve properly failed for invalid key: "
+                  << invalid_retrieve_result.error << std::endl;
+
+        // Test 3: Async store with invalid data type (error handling)
+        std::cout << "Testing async error handling - invalid data type..." << std::endl;
+        auto invalid_data = generate_test_data(16);  // Wrong size for schema
+        auto invalid_store_future =
+            db.store_async("invalid_data", invalid_data, "nonexistent_data_type");
+        auto invalid_store_result = invalid_store_future.get();
+
+        // This should either succeed with default handling or fail gracefully
+        if (!invalid_store_result) {
+            std::cout << "✓ Async store properly handled invalid data type: "
+                      << invalid_store_result.error << std::endl;
+        }
+        else {
+            std::cout << "✓ Async store handled invalid data type with default behavior"
+                      << std::endl;
+        }
+
+        // Test 4: Multiple concurrent async operations (stress test)
+        std::cout << "Testing concurrent async operations..." << std::endl;
+        const size_t concurrent_ops = 5;
+        std::vector<std::future<Result<AINativeDatabase::CompressionMetrics>>> store_futures;
+        std::vector<std::vector<float>> test_datasets;
+
+        // Launch multiple async stores
+        for (size_t i = 0; i < concurrent_ops; ++i) {
+            auto data = generate_test_data(32, 0.1f + i * 0.05f);  // Varying noise levels
+            test_datasets.push_back(data);
+            std::string key = "concurrent_data_" + std::to_string(i);
+            store_futures.push_back(db.store_async(key, data, "async_test"));
+        }
+
+        // Wait for all stores to complete and check results
+        bool all_concurrent_stores_succeeded = true;
+        for (size_t i = 0; i < concurrent_ops; ++i) {
+            auto result = store_futures[i].get();
+            if (!result) {
+                std::cout << "✗ Concurrent store " << i << " failed: " << result.error << std::endl;
+                all_concurrent_stores_succeeded = false;
+            }
+        }
+
+        if (!all_concurrent_stores_succeeded) {
+            return false;
+        }
+        std::cout << "✓ All " << concurrent_ops << " concurrent async stores succeeded"
+                  << std::endl;
+
+        // Test 5: Concurrent async retrieves
+        std::vector<std::future<
+            Result<std::pair<std::vector<float>, AINativeDatabase::CompressionMetrics>>>>
+            retrieve_futures;
+
+        for (size_t i = 0; i < concurrent_ops; ++i) {
+            std::string key = "concurrent_data_" + std::to_string(i);
+            retrieve_futures.push_back(db.retrieve_async<float>(key));
+        }
+
+        // Verify all concurrent retrieves
+        for (size_t i = 0; i < concurrent_ops; ++i) {
+            auto result = retrieve_futures[i].get();
+            if (!result) {
+                std::cout << "✗ Concurrent retrieve " << i << " failed: " << result.error
+                          << std::endl;
+                return false;
+            }
+
+            auto& [data, metrics] = *result;
+            if (data.size() != test_datasets[i].size()) {
+                std::cout << "✗ Concurrent retrieve " << i << " returned wrong size" << std::endl;
+                return false;
+            }
+        }
+        std::cout << "✓ All " << concurrent_ops << " concurrent async retrieves succeeded"
+                  << std::endl;
+
+        // Test 6: Async operations with database cleanup during operation
+        std::cout << "Testing async operations with potential resource contention..." << std::endl;
+        auto cleanup_test_data = generate_test_data(32);
+
+        // Start an async operation
+        auto cleanup_store_future = db.store_async("cleanup_test", cleanup_test_data, "async_test");
+
+        // Immediately try to access statistics (potential resource contention)
+        auto stats = db.get_statistics();
+        std::cout << "✓ Retrieved stats during async operation: " << stats.total_entries
+                  << " entries" << std::endl;
+
+        // Wait for the async operation to complete
+        auto cleanup_result = cleanup_store_future.get();
+        if (!cleanup_result) {
+            std::cout << "✗ Async operation failed during resource contention test: "
+                      << cleanup_result.error << std::endl;
+            return false;
+        }
+        std::cout << "✓ Async operation succeeded despite resource contention" << std::endl;
+
+        // Test 7: Exception safety in async operations
+        std::cout << "Testing async exception safety..." << std::endl;
+        try {
+            // Try to store data that might cause issues (empty vector edge case)
+            std::vector<float> empty_data;
+            auto exception_future = db.store_async("empty_test", empty_data, "async_test");
+            auto exception_result = exception_future.get();
+
+            // This should either succeed (if empty data is handled) or fail gracefully
+            if (!exception_result) {
+                std::cout << "✓ Empty data properly handled with error: " << exception_result.error
+                          << std::endl;
+            }
+            else {
+                std::cout << "✓ Empty data handled successfully" << std::endl;
+            }
+        }
+        catch (const std::exception& e) {
+            std::cout << "✓ Exception properly caught in async operation: " << e.what()
+                      << std::endl;
+        }
+
+        std::cout << "\n✓ All async operations and error handling tests completed successfully!"
+                  << std::endl;
         std::filesystem::remove_all(config.db_path);
         return true;
     }
     catch (const std::exception& e) {
         std::cout << "✗ Async test failed with exception: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+/**
+ * @brief Test error handling and edge cases
+ */
+bool test_error_handling()
+{
+    std::cout << "\n=== Testing Error Handling & Edge Cases ===" << std::endl;
+
+    try {
+        AINativeDatabase::Config config;
+        config.db_path = "./test_error_db";
+        config.enable_background_optimization = false;
+
+        std::filesystem::remove_all(config.db_path);
+
+        AINativeDatabase db(std::move(config));
+
+        std::unordered_map<std::string, size_t> schema = {{"test_data", 32}};
+        auto init_result = db.initialize(schema);
+        if (!init_result) {
+            std::cout << "✗ Failed to initialize error test database" << std::endl;
+            return false;
+        }
+
+        // Test 1: Retrieve from empty database
+        std::cout << "Testing retrieve from empty database..." << std::endl;
+        auto empty_retrieve = db.retrieve<float>("nonexistent_key");
+        if (empty_retrieve) {
+            std::cout << "✗ Expected failure for nonexistent key, but succeeded" << std::endl;
+            return false;
+        }
+        std::cout << "✓ Properly failed to retrieve nonexistent key: " << empty_retrieve.error
+                  << std::endl;
+
+        // Test 2: Contains check on empty database
+        if (db.contains("nonexistent_key")) {
+            std::cout << "✗ Contains() returned true for nonexistent key" << std::endl;
+            return false;
+        }
+        std::cout << "✓ Contains() correctly returned false for nonexistent key" << std::endl;
+
+        // Test 3: Remove nonexistent key
+        auto remove_nonexistent = db.remove("nonexistent_key");
+        if (remove_nonexistent) {
+            std::cout << "✗ Expected failure when removing nonexistent key, but succeeded"
+                      << std::endl;
+            return false;
+        }
+        std::cout << "✓ Properly failed to remove nonexistent key: " << remove_nonexistent.error
+                  << std::endl;
+
+        // Test 4: Edge case - very large data
+        std::cout << "Testing large data handling..." << std::endl;
+        auto large_data = generate_test_data(1000);  // Much larger than schema expects
+        auto large_store = db.store("large_data_test", large_data, "test_data");
+
+        // This might succeed (if size is flexible) or fail (if strict schema)
+        if (!large_store) {
+            std::cout << "✓ Large data properly rejected: " << large_store.error << std::endl;
+        }
+        else {
+            std::cout << "✓ Large data handled with flexibility" << std::endl;
+        }
+
+        // Test 5: Edge case - empty data
+        std::cout << "Testing empty data handling..." << std::endl;
+        std::vector<float> empty_data;
+        auto empty_store = db.store("empty_data_test", empty_data, "test_data");
+
+        if (!empty_store) {
+            std::cout << "✓ Empty data properly rejected: " << empty_store.error << std::endl;
+        }
+        else {
+            std::cout << "✓ Empty data handled gracefully" << std::endl;
+        }
+
+        // Test 6: Extreme values
+        std::cout << "Testing extreme value handling..." << std::endl;
+        std::vector<float> extreme_data = {
+            std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest(),
+            std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::quiet_NaN()};
+        // Pad to expected size
+        while (extreme_data.size() < 32) {
+            extreme_data.push_back(0.0f);
+        }
+
+        auto extreme_store = db.store("extreme_values", extreme_data, "test_data");
+        if (!extreme_store) {
+            std::cout << "✓ Extreme values properly handled with error: " << extreme_store.error
+                      << std::endl;
+        }
+        else {
+            std::cout << "✓ Extreme values stored successfully" << std::endl;
+
+            // Try to retrieve and verify
+            auto extreme_retrieve = db.retrieve<float>("extreme_values");
+            if (extreme_retrieve) {
+                std::cout << "✓ Extreme values retrieved successfully" << std::endl;
+            }
+            else {
+                std::cout << "✓ Extreme values retrieval failed as expected: "
+                          << extreme_retrieve.error << std::endl;
+            }
+        }
+
+        // Test 7: Concurrent access edge cases
+        std::cout << "Testing concurrent access patterns..." << std::endl;
+        auto test_data = generate_test_data(32);
+
+        // Store data first
+        auto store_result = db.store("concurrent_test", test_data, "test_data");
+        if (!store_result) {
+            std::cout << "✗ Failed to store data for concurrent test" << std::endl;
+            return false;
+        }
+
+        // Launch concurrent operations on same key
+        auto future1 = std::async(std::launch::async,
+                                  [&db]() { return db.retrieve<float>("concurrent_test"); });
+
+        auto future2 = std::async(std::launch::async,
+                                  [&db]() { return db.retrieve<float>("concurrent_test"); });
+
+        auto result1 = future1.get();
+        auto result2 = future2.get();
+
+        if (!result1 || !result2) {
+            std::cout << "✗ Concurrent retrieval failed" << std::endl;
+            return false;
+        }
+        std::cout << "✓ Concurrent access handled properly" << std::endl;
+
+        // Test 8: Database statistics consistency
+        std::cout << "Testing database statistics consistency..." << std::endl;
+        auto stats_before = db.get_statistics();
+
+        // Add some data
+        auto consistency_data = generate_test_data(32);
+        auto consistency_store = db.store("stats_test", consistency_data, "test_data");
+
+        if (consistency_store) {
+            auto stats_after = db.get_statistics();
+            if (stats_after.total_entries <= stats_before.total_entries) {
+                std::cout << "✗ Statistics not properly updated after store operation" << std::endl;
+                return false;
+            }
+            std::cout << "✓ Statistics properly updated (entries: " << stats_before.total_entries
+                      << " → " << stats_after.total_entries << ")" << std::endl;
+        }
+
+        std::cout << "\n✓ All error handling and edge case tests completed!" << std::endl;
+        std::filesystem::remove_all(config.db_path);
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cout << "✗ Error handling test failed with exception: " << e.what() << std::endl;
         return false;
     }
 }
@@ -338,6 +631,11 @@ int main()
 
     // Run async operations test
     if (!test_async_operations()) {
+        all_tests_passed = false;
+    }
+
+    // Run error handling test
+    if (!test_error_handling()) {
         all_tests_passed = false;
     }
 

@@ -46,6 +46,10 @@ SimpleAINativeDatabase::LMDBEnv& SimpleAINativeDatabase::LMDBEnv::operator=(
 SimpleAINativeDatabase::SimpleAINativeDatabase(Config config)
     : config_(std::move(config)), lmdb_(std::make_unique<LMDBEnv>())
 {
+}
+
+SimpleAINativeDatabase::SimpleAINativeDatabase() : SimpleAINativeDatabase(Config{})
+{
     std::cout << "Simple AI-Native Database created with path: " << config_.db_path.string()
               << std::endl;
 }
