@@ -27,6 +27,43 @@ option(ENABLE_IDE_INTEGRATION "Enable IDE integration features" ON)
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+# Find LMDB
+find_path(LMDB_INCLUDE_DIR
+    NAMES lmdb.h
+    HINTS
+        /usr/local/opt/lmdb/include
+        /usr/local/include
+        /usr/include
+        /opt/local/include
+        /opt/homebrew/include
+)
+
+find_library(LMDB_LIBRARY
+    NAMES lmdb
+    HINTS
+        /usr/local/opt/lmdb/lib
+        /usr/local/lib
+        /usr/lib
+        /opt/local/lib
+        /opt/homebrew/lib
+)
+
+if(LMDB_INCLUDE_DIR AND LMDB_LIBRARY)
+    set(LMDB_FOUND TRUE)
+    message(STATUS "Found LMDB: ${LMDB_LIBRARY}")
+    message(STATUS "LMDB include directory: ${LMDB_INCLUDE_DIR}")
+
+    # Create imported target for LMDB
+    add_library(LMDB::LMDB UNKNOWN IMPORTED)
+    set_target_properties(LMDB::LMDB PROPERTIES
+        IMPORTED_LOCATION "${LMDB_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${LMDB_INCLUDE_DIR}"
+    )
+else()
+    set(LMDB_FOUND FALSE)
+    message(WARNING "LMDB not found. AI-native database features will be disabled.")
+endif()
+
 # Find GoogleTest
 find_package(GTest)
 if(NOT GTEST_FOUND)
@@ -218,6 +255,38 @@ target_link_libraries(quantum_field_example
   rad_ml_testing
   rad_ml_qft
 )
+
+# Add LMDB basic test if LMDB is available
+if(LMDB_FOUND)
+    add_executable(lmdb_basic_test
+        test/lmdb_basic_test.cpp
+    )
+    target_link_libraries(lmdb_basic_test
+        PRIVATE
+        LMDB::LMDB
+    )
+
+    # Set C++17 standard for filesystem support
+    target_compile_features(lmdb_basic_test PRIVATE cxx_std_17)
+
+    add_test(NAME lmdb_basic_test COMMAND lmdb_basic_test)
+
+    message(STATUS "Added LMDB basic test executable")
+
+    # Add Datacenter LMDB Demo
+    add_executable(lmdb_datacenter_demo
+        test/lmdb_datacenter_demo.cpp
+    )
+    target_link_libraries(lmdb_datacenter_demo
+        PRIVATE
+        LMDB::LMDB
+    )
+    target_compile_features(lmdb_datacenter_demo PRIVATE cxx_std_17)
+
+    add_test(NAME lmdb_datacenter_demo COMMAND lmdb_datacenter_demo)
+
+    message(STATUS "Added LMDB Datacenter Demo")
+endif()
 
 # Optional: Link OpenCV if visualization is enabled
 if(ENABLE_VISUALIZATION)
