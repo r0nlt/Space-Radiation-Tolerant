@@ -574,6 +574,80 @@ Result<void> AINativeDatabase::optimize_now()
     return Result<void>::success();
 }
 
+research::VariationalAutoencoder<float>* AINativeDatabase::get_or_create_vae(
+    size_t input_dim, const std::string& data_type)
+{
+    std::lock_guard<std::mutex> lock(vae_mutex_);
+
+    auto it = vae_models_.find(data_type);
+    if (it != vae_models_.end() && it->second) {
+        return it->second.get();
+    }
+
+    // Create new VAE with optimal configuration
+    size_t latent_dim = std::min(config_.default_latent_dim, input_dim / 2);
+
+    // Use optimal configuration from tuning results
+    research::VAEConfig vae_config;
+    vae_config.latent_dim = 3;  // Optimal for compression
+    vae_config.beta = 0.5f;     // Optimal beta
+    vae_config.learning_rate = 0.001f;
+    vae_config.epochs = 50;
+    vae_config.batch_size = 32;
+
+    std::vector<size_t> hidden_dims = {32};  // Optimal architecture
+
+    try {
+        vae_models_[data_type] = std::make_unique<research::VariationalAutoencoder<float>>(
+            input_dim, vae_config.latent_dim, hidden_dims, neural::ProtectionLevel::NONE,
+            vae_config);
+
+        return vae_models_[data_type].get();
+    }
+    catch (const std::exception& e) {
+        core::Logger::error("Failed to create VAE: " + std::string(e.what()));
+        return nullptr;
+    }
+}
+
+template <typename T>
+Result<void> AINativeDatabase::train_vae(const std::vector<std::vector<T>>& training_data,
+                                         const std::string& data_type)
+{
+    static_assert(is_storable_data_v<T>, "Type must be arithmetic and trivially copyable");
+
+    if (training_data.empty()) {
+        return Result<void>::failure("Training data cannot be empty");
+    }
+
+    size_t input_dim = training_data[0].size();
+    auto* vae = get_or_create_vae(input_dim, data_type);
+    if (!vae) {
+        return Result<void>::failure("Failed to create VAE model");
+    }
+
+    try {
+        // Convert training data to float if necessary
+        std::vector<std::vector<float>> float_data;
+        for (const auto& sample : training_data) {
+            std::vector<float> float_sample;
+            for (const auto& value : sample) {
+                float_sample.push_back(static_cast<float>(value));
+            }
+            float_data.push_back(float_sample);
+        }
+
+        // Train the VAE
+        vae->train(float_data, 50, 32, 0.001f);  // Using optimal parameters
+
+        core::Logger::info("VAE training completed for data type: " + data_type);
+        return Result<void>::success();
+    }
+    catch (const std::exception& e) {
+        return Result<void>::failure("VAE training failed: " + std::string(e.what()));
+    }
+}
+
 std::string AINativeDatabase::lmdb_error_string(int error_code) const
 {
     return std::string(mdb_strerror(error_code));
@@ -612,5 +686,13 @@ template std::future<Result<std::pair<std::vector<double>, AINativeDatabase::Com
 AINativeDatabase::retrieve_async<double>(const Key&);
 template std::future<Result<std::pair<std::vector<int>, AINativeDatabase::CompressionMetrics>>>
 AINativeDatabase::retrieve_async<int>(const Key&);
+
+// Train VAE template instantiations
+template Result<void> AINativeDatabase::train_vae<float>(const std::vector<std::vector<float>>&,
+                                                         const std::string&);
+template Result<void> AINativeDatabase::train_vae<double>(const std::vector<std::vector<double>>&,
+                                                          const std::string&);
+template Result<void> AINativeDatabase::train_vae<int>(const std::vector<std::vector<int>>&,
+                                                       const std::string&);
 
 }  // namespace rad_ml::storage

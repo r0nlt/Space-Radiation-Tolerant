@@ -114,6 +114,28 @@ target_link_libraries(quantum_enhanced_radiation_test
 )
 target_include_directories(quantum_enhanced_radiation_test PRIVATE ${CMAKE_SOURCE_DIR})
 
+# VAE Production Database Example
+add_executable(vae_production_database_example
+    vae_production_database_example.cpp
+    ${CMAKE_SOURCE_DIR}/src/rad_ml/storage/ai_native_database.cpp
+)
+target_link_libraries(vae_production_database_example
+    PRIVATE
+    rad_ml_research
+    LMDB::LMDB
+)
+target_compile_features(vae_production_database_example PRIVATE cxx_std_17)
+
+# VAE Simple Usage Example
+add_executable(vae_simple_usage_example vae_simple_usage_example.cpp)
+target_link_libraries(vae_simple_usage_example PRIVATE rad_ml_research)
+target_compile_features(vae_simple_usage_example PRIVATE cxx_std_17)
+
+# Quick Tuning Test
+add_executable(quick_tuning_test quick_tuning_test.cpp)
+target_link_libraries(quick_tuning_test PRIVATE rad_ml_research)
+target_compile_features(quick_tuning_test PRIVATE cxx_std_17)
+
 # Add tests
 add_test(NAME architecture_test_run COMMAND architecture_test)
 add_test(NAME residual_network_test_run COMMAND residual_network_test)
@@ -129,7 +151,7 @@ add_test(NAME vae_monte_carlo_tuning_example_run COMMAND vae_monte_carlo_tuning_
 add_test(NAME quantum_enhanced_radiation_test_run COMMAND quantum_enhanced_radiation_test)
 
 # Installation
-install(TARGETS architecture_test residual_network_test auto_arch_search_example radiation_aware_training_example multi_particle_simulation_example vae_example vae_space_mission_test vae_validation_test vae_production_example vae_comprehensive_test vae_monte_carlo_tuning_example quantum_enhanced_radiation_test
+install(TARGETS architecture_test residual_network_test auto_arch_search_example radiation_aware_training_example multi_particle_simulation_example vae_example vae_space_mission_test vae_validation_test vae_production_example vae_comprehensive_test vae_monte_carlo_tuning_example quantum_enhanced_radiation_test vae_production_database_example vae_simple_usage_example quick_tuning_test
         DESTINATION bin
         COMPONENT examples)
 
