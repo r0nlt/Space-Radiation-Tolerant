@@ -133,7 +133,7 @@ void demonstrateOptimizers()
          {"RMSprop", {ProtectedNeuralNetwork<float>::OptimizerType::RMSPROP, 0.003f}}};
 
     for (const auto& [name, config] : optimizers) {
-        std::cout << "\n�� Training with " << name << " optimizer:\n";
+        std::cout << "\n⚙️ Training with " << name << " optimizer:\n";
 
         // Create network with radiation protection
         ProtectedNeuralNetwork<float> network(architecture, ProtectionLevel::ADAPTIVE_TMR);

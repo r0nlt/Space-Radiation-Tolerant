@@ -39,12 +39,31 @@ class CPUOptimizedNetwork {
     /**
      * @brief SIMD-optimized matrix multiplication
      * Uses AVX instructions for 4x speedup on Intel processors
+     * Safely handles any result size with bounds checking
      */
     void simdMatrixMultiply(const std::vector<float>& a, const std::vector<std::vector<float>>& b,
                             std::vector<float>& result)
     {
+        // Safety checks for matrix dimensions
+        if (a.empty() || b.empty() || result.empty()) {
+            return;  // Handle empty matrices gracefully
+        }
+
+        // Ensure matrix dimensions are compatible
+        if (b.size() != a.size()) {
+            throw std::invalid_argument("Matrix dimension mismatch: b.size() != a.size()");
+        }
+
+        if (!b.empty() && b[0].size() != result.size()) {
+            throw std::invalid_argument("Matrix dimension mismatch: b[0].size() != result.size()");
+        }
+
+        const size_t result_size = result.size();
+        const size_t simd_size = 8;  // AVX processes 8 floats at once
+        const size_t vectorized_end = (result_size / simd_size) * simd_size;
+
         // Vectorized computation using AVX (8 floats at once)
-        for (size_t i = 0; i < result.size(); i += 8) {
+        for (size_t i = 0; i < vectorized_end; i += simd_size) {
             __m256 sum = _mm256_setzero_ps();
 
             for (size_t j = 0; j < a.size(); j++) {
@@ -54,6 +73,15 @@ class CPUOptimizedNetwork {
             }
 
             _mm256_storeu_ps(&result[i], sum);
+        }
+
+        // Handle remaining elements with scalar computation
+        for (size_t i = vectorized_end; i < result_size; ++i) {
+            float sum = 0.0f;
+            for (size_t j = 0; j < a.size(); j++) {
+                sum += a[j] * b[j][i];
+            }
+            result[i] = sum;
         }
     }
 

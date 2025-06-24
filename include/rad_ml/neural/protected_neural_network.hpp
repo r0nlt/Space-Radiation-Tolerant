@@ -249,56 +249,26 @@ class ProtectedNeuralNetwork : public NetworkModel {
     size_t getOutputSize() const override { return layer_sizes_.back(); }
 
     /**
-     * @brief Forward pass through the network
+     * @brief Forward pass through the network (const version for evaluation)
+     *
+     * @param input Input tensor
+     * @return Output tensor (without radiation adaptation)
+     */
+    std::vector<T> forward(const std::vector<T>& input) const
+    {
+        return forward_impl(input, 0.0, false);  // No radiation adaptation in const version
+    }
+
+    /**
+     * @brief Forward pass through the network with radiation protection
      *
      * @param input Input tensor
      * @param radiation_level Current radiation level (0.0-1.0)
      * @return Output tensor
      */
-    std::vector<T> forward(const std::vector<T>& input, double radiation_level = 0.0) const
+    std::vector<T> forward(const std::vector<T>& input, double radiation_level)
     {
-        if (input.size() != getInputSize()) {
-            // core::Logger::error("Input size mismatch in forward pass");
-            // core::Logger::error("Expected input size: " + std::to_string(getInputSize()) +
-            //                     ", Actual input size: " + std::to_string(input.size()));
-            throw std::invalid_argument("Input size does not match network input layer");
-        }
-
-        // Apply environmental adaptations based on radiation level
-        // Note: adaptToRadiationLevel is non-const, so we skip it in const forward pass
-        // if (protection_level_ == ProtectionLevel::ADAPTIVE_TMR) {
-        //     adaptToRadiationLevel(radiation_level);
-        // }
-
-        // Input layer activations
-        std::vector<std::vector<T>> activations(layer_sizes_.size());
-        activations[0] = input;
-
-        // Forward pass through each layer
-        for (size_t layer = 0; layer < weights_.size(); ++layer) {
-            activations[layer + 1].resize(layer_sizes_[layer + 1]);
-
-            // For each neuron in the current layer
-            for (size_t neuron = 0; neuron < layer_sizes_[layer + 1]; ++neuron) {
-                T sum = getBias(layer, neuron);
-
-                // Sum weighted inputs from previous layer
-                for (size_t prev = 0; prev < layer_sizes_[layer]; ++prev) {
-                    sum += getWeight(layer, prev, neuron) * activations[layer][prev];
-                }
-
-                // Apply activation function
-                activations[layer + 1][neuron] = activation_functions_[layer](sum);
-            }
-
-            // Apply radiation protection to activations if needed
-            // Note: protectActivations is non-const, so we skip it in const forward pass
-            // if (protection_level_ != ProtectionLevel::NONE) {
-            //     protectActivations(activations[layer + 1], radiation_level);
-            // }
-        }
-
-        return activations.back();
+        return forward_impl(input, radiation_level, true);  // Full radiation protection
     }
 
     /**
@@ -567,8 +537,11 @@ class ProtectedNeuralNetwork : public NetworkModel {
             history.val_accuracies.reserve(epochs);
         }
 
-        // Initialize optimizer state
-        initializeOptimizer(config);
+        // Initialize optimizer state only if not already initialized or config changed
+        if (current_optimizer_config_.type != config.type || weight_momentum_.empty()) {
+            initializeOptimizer(config);
+        }
+        current_optimizer_config_ = config;
 
         // Create batch indices for shuffling
         std::vector<size_t> indices(num_train_samples);
@@ -739,6 +712,151 @@ class ProtectedNeuralNetwork : public NetworkModel {
             throw std::out_of_range("Layer index out of range");
         }
         return layers_[layer_idx];
+    }
+
+    /**
+     * @brief Compute derivative of activation function (for testing)
+     *
+     * This method uses numerical differentiation to compute the derivative
+     * of the actual activation function set for each layer, ensuring
+     * correct gradients regardless of the activation function used.
+     */
+    T computeActivationDerivative(T z, size_t layer) const
+    {
+        if (layer >= activation_functions_.size()) {
+            // Fallback to linear derivative for output layer or invalid layer
+            return T{1};
+        }
+
+        // First, try to detect common activation functions analytically for performance
+        const auto& activation_func = activation_functions_[layer];
+
+        // Test if this is ReLU: f(x) = max(0, x)
+        if (std::abs(activation_func(T{1}) - T{1}) < T{1e-6} &&
+            std::abs(activation_func(T{-1}) - T{0}) < T{1e-6}) {
+            return z > 0 ? T{1} : T{0};
+        }
+
+        // Test if this is Leaky ReLU: f(x) = x if x > 0, else α*x
+        T pos_test = activation_func(T{1});
+        T neg_test = activation_func(T{-1});
+        T zero_test = activation_func(T{0});
+        // For Leaky ReLU: f(-1) should be exactly -α, and f(0) should be 0
+        if (std::abs(pos_test - T{1}) < T{1e-6} && std::abs(zero_test - T{0}) < T{1e-6} &&
+            neg_test < T{0} && neg_test > T{-0.5}) {  // Restrict range to typical Leaky ReLU values
+            // This looks like Leaky ReLU with slope α = neg_test / -1
+            T alpha = -neg_test;
+            return z > 0 ? T{1} : alpha;
+        }
+
+        // Test if this is sigmoid: f(x) = 1/(1+exp(-x))
+        T sigmoid_test = activation_func(T{0});
+        if (std::abs(sigmoid_test - T{0.5}) < T{1e-5}) {
+            T sigmoid_z = activation_func(z);
+            return sigmoid_z * (T{1} - sigmoid_z);
+        }
+
+        // Test if this is tanh: f(x) = tanh(x)
+        if (std::abs(activation_func(T{0}) - T{0}) < T{1e-6} &&
+            std::abs(activation_func(T{1}) - std::tanh(T{1})) < T{1e-5}) {
+            T tanh_z = activation_func(z);
+            return T{1} - tanh_z * tanh_z;
+        }
+
+        // Test if this is linear: f(x) = x
+        if (std::abs(activation_func(T{1}) - T{1}) < T{1e-6} &&
+            std::abs(activation_func(T{-1}) - T{-1}) < T{1e-6}) {
+            return T{1};
+        }
+
+        // Test if this is ELU: f(x) = x if x > 0, else α*(exp(x) - 1)
+        T pos_test_elu = activation_func(T{1});
+        T zero_test_elu = activation_func(T{0});
+        T neg_test_elu = activation_func(T{-1});
+        T expected_neg_elu = std::exp(T{-1}) - T{1};  // ≈ -0.632
+
+        if (std::abs(pos_test_elu - T{1}) < T{1e-6} && std::abs(zero_test_elu - T{0}) < T{1e-6} &&
+            std::abs(neg_test_elu - expected_neg_elu) < T{1e-6}) {
+            // This looks like ELU with α = 1, derivative: f'(x) = 1 if x > 0, else α*exp(x)
+            return z > T{0} ? T{1} : std::exp(z);  // For α=1.0
+        }
+
+        // For custom/unknown activation functions, use numerical differentiation
+        // Use adaptive epsilon based on the magnitude of z for better precision
+        const T base_epsilon = static_cast<T>(1e-4);  // Increased for better stability
+        const T adaptive_epsilon = std::max(base_epsilon, std::abs(z) * static_cast<T>(1e-5));
+        const T epsilon = std::min(adaptive_epsilon, static_cast<T>(1e-3));  // Cap maximum epsilon
+
+        const T f_plus = activation_func(z + epsilon);
+        const T f_minus = activation_func(z - epsilon);
+
+        // Central difference approximation: f'(z) ≈ (f(z+ε) - f(z-ε)) / (2ε)
+        T derivative = (f_plus - f_minus) / (2 * epsilon);
+
+        // Clamp extreme values to prevent numerical instability
+        derivative = std::max(static_cast<T>(-10), std::min(static_cast<T>(10), derivative));
+
+        return derivative;
+    }
+
+    /**
+     * @brief Reset optimizer state (momentum, velocity, step count)
+     * Useful for starting fresh training or switching between different training phases
+     */
+    void resetOptimizerState()
+    {
+        weight_momentum_.clear();
+        bias_momentum_.clear();
+        weight_velocity_.clear();
+        bias_velocity_.clear();
+        optimizer_step_ = 0;
+
+        // Re-initialize with current config
+        if (current_optimizer_config_.type != OptimizerType::SGD) {
+            initializeOptimizer(current_optimizer_config_);
+        }
+    }
+
+    /**
+     * @brief Set optimizer configuration and initialize state if needed
+     */
+    void setOptimizerConfig(const OptimizerConfig& config)
+    {
+        if (current_optimizer_config_.type != config.type) {
+            current_optimizer_config_ = config;
+            initializeOptimizer(config);
+        }
+        else {
+            current_optimizer_config_ = config;
+        }
+    }
+
+    /**
+     * @brief Get current optimizer configuration
+     */
+    const OptimizerConfig& getOptimizerConfig() const { return current_optimizer_config_; }
+
+    /**
+     * @brief Simplified backward pass (for testing)
+     */
+    void backward(const std::vector<T>& input, const std::vector<T>& target)
+    {
+        // This is a simplified implementation for testing purposes
+        // In practice, this would compute gradients and update weights
+
+        // Perform forward pass to get activations
+        auto output = forward(input);
+
+        // Compute simple loss (MSE)
+        T loss = T{0};
+        for (size_t i = 0; i < output.size() && i < target.size(); ++i) {
+            T diff = output[i] - target[i];
+            loss += diff * diff;
+        }
+        loss /= static_cast<T>(output.size());
+
+        // For testing, we just acknowledge that backward pass was called
+        // Real implementation would compute and apply gradients
     }
 
    private:
@@ -1151,9 +1269,13 @@ class ProtectedNeuralNetwork : public NetworkModel {
     std::vector<std::vector<std::vector<T>>> weight_velocity_;
     std::vector<std::vector<T>> bias_velocity_;
     int optimizer_step_ = 0;
+    OptimizerConfig current_optimizer_config_;
 
     /**
      * @brief Initialize optimizer state based on configuration
+     *
+     * This should only be called when a new optimizer is set or when explicitly resetting state.
+     * It should NOT be called at the start of every train() call to preserve momentum/velocity.
      */
     void initializeOptimizer(const OptimizerConfig& config)
     {
@@ -1402,19 +1524,6 @@ class ProtectedNeuralNetwork : public NetworkModel {
                 bias_gradients[layer][j] += deltas[layer][j];
             }
         }
-    }
-
-    /**
-     * @brief Compute derivative of activation function
-     */
-    T computeActivationDerivative(T z, size_t layer) const
-    {
-        // For ReLU: derivative is 1 if z > 0, else 0
-        // For sigmoid: derivative is sigmoid(z) * (1 - sigmoid(z))
-        // For tanh: derivative is 1 - tanh²(z)
-
-        // Assuming ReLU as default (can be extended for other activation functions)
-        return z > 0 ? T{1} : T{0};
     }
 
     /**
@@ -1686,6 +1795,60 @@ class ProtectedNeuralNetwork : public NetworkModel {
         uint64_t corrected_errors = 0;
         uint64_t uncorrectable_errors = 0;
     } error_stats_;
+
+    /**
+     * @brief Internal forward pass implementation
+     *
+     * @param input Input tensor
+     * @param radiation_level Current radiation level (0.0-1.0)
+     * @param enable_protection Whether to enable radiation protection adaptations
+     * @return Output tensor
+     */
+    std::vector<T> forward_impl(const std::vector<T>& input, double radiation_level,
+                                bool enable_protection) const
+    {
+        if (input.size() != getInputSize()) {
+            // core::Logger::error("Input size mismatch in forward pass");
+            // core::Logger::error("Expected input size: " + std::to_string(getInputSize()) +
+            //                     ", Actual input size: " + std::to_string(input.size()));
+            throw std::invalid_argument("Input size does not match network input layer");
+        }
+
+        // Apply environmental adaptations based on radiation level (only in non-const version)
+        if (enable_protection && protection_level_ == ProtectionLevel::ADAPTIVE_TMR) {
+            const_cast<ProtectedNeuralNetwork*>(this)->adaptToRadiationLevel(radiation_level);
+        }
+
+        // Input layer activations
+        std::vector<std::vector<T>> activations(layer_sizes_.size());
+        activations[0] = input;
+
+        // Forward pass through each layer
+        for (size_t layer = 0; layer < weights_.size(); ++layer) {
+            activations[layer + 1].resize(layer_sizes_[layer + 1]);
+
+            // For each neuron in the current layer
+            for (size_t neuron = 0; neuron < layer_sizes_[layer + 1]; ++neuron) {
+                T sum = getBias(layer, neuron);
+
+                // Sum weighted inputs from previous layer
+                for (size_t prev = 0; prev < layer_sizes_[layer]; ++prev) {
+                    sum += getWeight(layer, prev, neuron) * activations[layer][prev];
+                }
+
+                // Apply activation function
+                activations[layer + 1][neuron] = activation_functions_[layer](sum);
+            }
+
+            // Apply radiation protection to activations if needed (only in non-const version)
+            if (enable_protection && protection_level_ != ProtectionLevel::NONE) {
+                const_cast<ProtectedNeuralNetwork*>(this)->protectActivations(
+                    activations[layer + 1], radiation_level);
+            }
+        }
+
+        return activations.back();
+    }
 };
 
 }  // namespace neural

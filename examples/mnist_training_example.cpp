@@ -171,6 +171,19 @@ void displayMNISTDigit(const std::vector<float>& flattened_images, int sample_in
 }
 
 /**
+ * @brief Extract the class label from one-hot encoded vector
+ */
+int extractClassFromOneHot(const std::vector<float>& labels, int sample_index, int num_classes)
+{
+    for (int i = 0; i < num_classes; ++i) {
+        if (labels[sample_index * num_classes + i] == 1.0f) {
+            return i;
+        }
+    }
+    return -1;  // Error case
+}
+
+/**
  * @brief Calculate classification accuracy
  */
 float calculateAccuracy(const std::vector<std::vector<float>>& predictions,
@@ -215,16 +228,25 @@ void trainOnMNIST()
         auto test_images = loadMNISTImages("data/MNIST/raw/t10k-images-idx3-ubyte", test_samples);
         auto test_labels = loadMNISTLabels("data/MNIST/raw/t10k-labels-idx1-ubyte", test_samples);
 
-        // Show a sample digit
-        int sample_label = 0;
-        // Find the label from one-hot encoding (first 10 values are first sample's label)
-        for (int i = 0; i < 10; ++i) {
-            if (train_labels[i] == 1.0f) {
-                sample_label = i;
-                break;
-            }
+        // Show a random sample digit each time
+        const int output_size = 10;  // 10 classes for digits 0-9
+
+        // Generate random sample index
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, train_samples - 1);
+
+        int random_sample = dis(gen);
+        int sample_label = extractClassFromOneHot(train_labels, random_sample, output_size);
+
+        if (sample_label >= 0) {
+            std::cout << "🎲 Random sample #" << random_sample << " (digit " << sample_label
+                      << "):\n";
+            displayMNISTDigit(train_images, random_sample, sample_label);
         }
-        displayMNISTDigit(train_images, 0, sample_label);
+        else {
+            std::cout << "⚠️  Warning: Could not extract label for sample " << random_sample << "\n";
+        }
 
         // Create network architecture optimized for MNIST
         // 784 inputs (28x28) -> 128 hidden -> 64 hidden -> 10 outputs (digits 0-9)
