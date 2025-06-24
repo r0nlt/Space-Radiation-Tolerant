@@ -182,14 +182,15 @@ class EnhancedActivationDerivativeTest {
     }
 
     /**
-     * @brief Test gradient checking with actual backpropagation
+     * @brief Test gradient checking with numerical gradient comparison
      */
     bool testGradientChecking()
     {
-        std::cout << "\n🔍 Testing gradient checking with backpropagation:" << std::endl;
+        std::cout << "\n🔍 Testing gradient checking with numerical gradient comparison:"
+                  << std::endl;
 
         // Create small network for gradient checking
-        std::vector<size_t> layer_sizes = {2, 4, 1};
+        std::vector<size_t> layer_sizes = {2, 3, 1};
         rad_ml::neural::ProtectedNeuralNetwork<T> network(layer_sizes);
 
         // Test with different activation functions
@@ -198,32 +199,72 @@ class EnhancedActivationDerivativeTest {
 
         for (const auto& test_case : test_cases) {
             std::cout << "\n  Testing " << test_case.name
-                      << " with gradient checking:" << std::endl;
+                      << " with numerical gradient comparison:" << std::endl;
 
-            // Set activation function
+            // Set activation function for hidden layer
             network.setActivationFunction(0, test_case.function);
 
-            // Generate random input and target
-            std::vector<T> input = {dis_(gen_), dis_(gen_)};
-            std::vector<T> target = {dis_(gen_)};
+            // Generate fixed input and target for reproducible results
+            std::vector<T> input = {T{0.5}, T{-0.3}};
+            std::vector<T> target = {T{0.8}};
 
-            // Perform forward pass
-            std::vector<T> output = network.forward(input);
+            // Test activation derivative accuracy by comparing with numerical derivative
+            std::vector<T> test_values = {T{-2}, T{-0.5}, T{0}, T{0.5}, T{2}};
 
-            // Compute loss (MSE)
-            T loss = T{0.5} * (output[0] - target[0]) * (output[0] - target[0]);
+            bool activation_derivatives_correct = true;
+            for (T z : test_values) {
+                // Get analytical derivative from the network
+                T analytical = network.computeActivationDerivative(z, 0);
 
-            // Perform backward pass to get gradients
+                // Compute numerical derivative
+                T numerical = computeNumericalDerivative(test_case.function, z);
+
+                // Compare with expected analytical derivative
+                T expected = test_case.analytical_derivative(z);
+
+                T analytical_error = std::abs(analytical - expected);
+                T numerical_error = std::abs(analytical - numerical);
+
+                bool analytical_matches = analytical_error < test_case.tolerance;
+                bool numerical_matches =
+                    numerical_error < test_case.tolerance * 10;  // Looser tolerance for numerical
+
+                std::cout << "    z=" << std::setw(6) << std::fixed << std::setprecision(2) << z
+                          << ": analytical=" << std::setprecision(6) << analytical
+                          << ", expected=" << expected << ", numerical=" << numerical
+                          << " (err: " << std::setprecision(2) << std::scientific
+                          << analytical_error << ")" << (analytical_matches ? " ✅" : " ❌")
+                          << std::endl;
+
+                if (!analytical_matches || !numerical_matches) {
+                    activation_derivatives_correct = false;
+                }
+            }
+
+            if (!activation_derivatives_correct) {
+                all_passed = false;
+                std::cout << "    ❌ Activation derivative mismatch for " << test_case.name
+                          << std::endl;
+            }
+            else {
+                std::cout << "    ✅ Activation derivatives correct for " << test_case.name
+                          << std::endl;
+            }
+
+            // Additional test: verify gradient flow through the network
+            std::vector<T> output1 = network.forward(input);
+            T loss1 = T{0.5} * (output1[0] - target[0]) * (output1[0] - target[0]);
+
+            // Perform backward pass
             network.backward(input, target);
 
-            // For gradient checking, we would need access to the gradients
-            // This is a conceptual test - in practice you'd compare analytical
-            // gradients from backprop with numerical gradients
+            // Test numerical gradient for network weights (conceptual - would need weight access)
+            const T weight_epsilon = T{1e-4};
 
-            std::cout << "    Input: [" << input[0] << ", " << input[1] << "]" << std::endl;
-            std::cout << "    Output: " << output[0] << ", Target: " << target[0] << std::endl;
-            std::cout << "    Loss: " << loss << std::endl;
-            std::cout << "    ✅ Backpropagation completed successfully" << std::endl;
+            std::cout << "    Forward pass: input=[" << input[0] << "," << input[1]
+                      << "] → output=" << output1[0] << ", target=" << target[0]
+                      << ", loss=" << std::fixed << std::setprecision(6) << loss1 << std::endl;
+            std::cout << "    ✅ Gradient flow test completed for " << test_case.name << std::endl;
         }
 
         return all_passed;

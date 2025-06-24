@@ -184,27 +184,57 @@ int extractClassFromOneHot(const std::vector<float>& labels, int sample_index, i
 }
 
 /**
- * @brief Calculate classification accuracy
+ * @brief Calculate classification accuracy with error checking
  */
 float calculateAccuracy(const std::vector<std::vector<float>>& predictions,
                         const std::vector<std::vector<float>>& labels)
 {
     int correct = 0;
+    int total = predictions.size();
 
     for (size_t i = 0; i < predictions.size(); ++i) {
         // Find predicted class (highest output)
+        if (predictions[i].empty()) {
+            std::cerr << "Error: Empty prediction vector at sample " << i << std::endl;
+            continue;
+        }
         int pred_class =
             std::max_element(predictions[i].begin(), predictions[i].end()) - predictions[i].begin();
 
         // Find true class (one-hot encoded)
+        if (labels[i].empty()) {
+            std::cerr << "Error: Empty label vector at sample " << i << std::endl;
+            continue;
+        }
         int true_class = std::max_element(labels[i].begin(), labels[i].end()) - labels[i].begin();
 
-        if (pred_class == true_class) {
+        // Additional validation for one-hot encoding
+        int extracted_class = -1;
+        for (size_t j = 0; j < labels[i].size(); ++j) {
+            if (labels[i][j] == 1.0f) {
+                if (extracted_class == -1) {
+                    extracted_class = static_cast<int>(j);
+                }
+                else {
+                    std::cerr << "Error: Multiple 1.0 values in one-hot label at sample " << i
+                              << std::endl;
+                    extracted_class = -1;
+                    break;
+                }
+            }
+        }
+
+        if (extracted_class == -1) {
+            std::cerr << "Error: Invalid one-hot label at sample " << i << std::endl;
+            continue;
+        }
+
+        if (pred_class == extracted_class) {
             correct++;
         }
     }
 
-    return static_cast<float>(correct) / predictions.size();
+    return total > 0 ? static_cast<float>(correct) / total : 0.0f;
 }
 
 /**
@@ -245,7 +275,8 @@ void trainOnMNIST()
             displayMNISTDigit(train_images, random_sample, sample_label);
         }
         else {
-            std::cout << "⚠️  Warning: Could not extract label for sample " << random_sample << "\n";
+            std::cout << "⚠️  Warning: Could not extract label for sample " << random_sample
+                      << " - invalid one-hot encoding\n";
         }
 
         // Create network architecture optimized for MNIST

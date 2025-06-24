@@ -138,11 +138,14 @@ void demonstrateOptimizers()
         // Create network with radiation protection
         ProtectedNeuralNetwork<float> network(architecture, ProtectionLevel::ADAPTIVE_TMR);
 
-        // Configure activation functions (ReLU for hidden, sigmoid for output)
-        network.setActivationFunction(0, [](float x) { return std::max(0.0f, x); });  // ReLU
-        network.setActivationFunction(1, [](float x) { return std::max(0.0f, x); });  // ReLU
-        network.setActivationFunction(
-            2, [](float x) { return 1.0f / (1.0f + std::exp(-x)); });  // Sigmoid
+        // Configure activation functions dynamically: ReLU for hidden, sigmoid for output
+        for (size_t i = 0; i < architecture.size() - 2; ++i) {
+            network.setActivationFunction(i, [](float x) { return std::max(0.0f, x); });  // ReLU
+        }
+        // Output layer activation (last layer)
+        network.setActivationFunction(architecture.size() - 2, [](float x) {
+            return 1.0f / (1.0f + std::exp(-x));
+        });  // Sigmoid
 
         auto start_time = std::chrono::high_resolution_clock::now();
 

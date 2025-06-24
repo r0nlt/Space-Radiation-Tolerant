@@ -59,10 +59,21 @@ class CPUOptimizedNetwork {
         }
 
         const size_t result_size = result.size();
-        const size_t simd_size = 8;  // AVX processes 8 floats at once
+
+// Determine SIMD width based on available hardware
+#if defined(__AVX__)
+        constexpr size_t simd_size = 8;  // AVX: 8 floats
+#elif defined(__SSE__)
+        constexpr size_t simd_size = 4;  // SSE: 4 floats
+#else
+        constexpr size_t simd_size = 1;  // Scalar fallback
+#endif
+
         const size_t vectorized_end = (result_size / simd_size) * simd_size;
 
-        // Vectorized computation using AVX (8 floats at once)
+// Vectorized computation based on available SIMD instructions
+#if defined(__AVX__)
+        // AVX implementation (8 floats at once)
         for (size_t i = 0; i < vectorized_end; i += simd_size) {
             __m256 sum = _mm256_setzero_ps();
 
@@ -74,6 +85,20 @@ class CPUOptimizedNetwork {
 
             _mm256_storeu_ps(&result[i], sum);
         }
+#elif defined(__SSE__)
+        // SSE implementation (4 floats at once)
+        for (size_t i = 0; i < vectorized_end; i += simd_size) {
+            __m128 sum = _mm_setzero_ps();
+
+            for (size_t j = 0; j < a.size(); j++) {
+                __m128 a_vec = _mm_set1_ps(a[j]);
+                __m128 b_vec = _mm_loadu_ps(&b[j][i]);
+                sum = _mm_add_ps(sum, _mm_mul_ps(a_vec, b_vec));
+            }
+
+            _mm_storeu_ps(&result[i], sum);
+        }
+#endif
 
         // Handle remaining elements with scalar computation
         for (size_t i = vectorized_end; i < result_size; ++i) {
@@ -167,13 +192,53 @@ class CPUOptimizedNetwork {
 
     void trainSingleSample(const std::vector<float>& input, const std::vector<float>& target)
     {
-        // Simplified training step for demonstration
-        // In practice, this would do forward pass + backprop
+        // NOTE: This is a demonstration stub - not a complete implementation
+        // In a real implementation, this would perform:
+        // 1. Forward pass through the network
+        // 2. Compute loss against target
+        // 3. Backward pass (backpropagation)
+        // 4. Update weights using computed gradients
+
+        // For demonstration purposes, we just validate input sizes
+        if (input.size() != architecture[0]) {
+            throw std::invalid_argument("Input size mismatch");
+        }
+        if (target.size() != architecture.back()) {
+            throw std::invalid_argument("Target size mismatch");
+        }
+
+        // Placeholder: In practice, implement actual training logic here
     }
 
     void computeChunkGradients(const std::vector<float>& chunk, const std::vector<float>& target)
     {
-        // Chunk-based gradient computation
+        // NOTE: This is a template for chunk-based gradient computation
+        // In a real implementation, this would:
+        // 1. Process multiple samples in the chunk simultaneously
+        // 2. Accumulate gradients across the chunk
+        // 3. Apply SIMD optimizations for gradient computations
+        // 4. Return accumulated gradients for weight updates
+
+        // Validate chunk size is multiple of input size
+        if (chunk.size() % architecture[0] != 0) {
+            throw std::invalid_argument("Chunk size must be multiple of input size");
+        }
+
+        size_t num_samples = chunk.size() / architecture[0];
+        if (target.size() != num_samples * architecture.back()) {
+            throw std::invalid_argument("Target size mismatch for chunk");
+        }
+
+        // Template: Process each sample in the chunk
+        for (size_t i = 0; i < num_samples; ++i) {
+            std::vector<float> sample_input(chunk.begin() + i * architecture[0],
+                                            chunk.begin() + (i + 1) * architecture[0]);
+            std::vector<float> sample_target(target.begin() + i * architecture.back(),
+                                             target.begin() + (i + 1) * architecture.back());
+
+            // Placeholder: Compute gradients for this sample
+            // Real implementation would accumulate gradients here
+        }
     }
 };
 

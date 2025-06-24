@@ -138,6 +138,7 @@ class ProtectedNeuralNetwork : public NetworkModel {
           check_counter_(other.check_counter_),
           error_stats_(other.error_stats_),
           activation_functions_(other.activation_functions_),
+          activation_derivatives_(other.activation_derivatives_),
           layers_(other.layers_)
     {
         // Copy weights and biases with protection
@@ -185,6 +186,7 @@ class ProtectedNeuralNetwork : public NetworkModel {
             check_counter_ = other.check_counter_;
             error_stats_ = other.error_stats_;
             activation_functions_ = other.activation_functions_;
+            activation_derivatives_ = other.activation_derivatives_;
             layers_ = other.layers_;
 
             // Copy weights and biases with protection
@@ -286,15 +288,97 @@ class ProtectedNeuralNetwork : public NetworkModel {
     /**
      * @brief Set a custom activation function for a layer
      *
+     * The activation function should be a continuous, monotonic, and differentiable function
+     * that maps real values to a bounded output range (e.g., [0, 1] for sigmoid, [-1, 1] for tanh).
+     * It should be suitable for neural network training (e.g., non-linear, smooth).
+     *
      * @param layer Layer index (0 for first hidden layer)
-     * @param function Activation function
+     * @param function Activation function. Must accept and return type T.
+     * @param validate If true (default), checks that the function maps a sample of values in [-10,
+     * 10] to a bounded output.
+     * @throws std::invalid_argument if validation fails.
+     * @throws std::out_of_range if layer index is invalid.
      */
-    void setActivationFunction(size_t layer, const std::function<T(T)>& function)
+    void setActivationFunction(size_t layer, const std::function<T(T)>& function,
+                               bool validate = true)
     {
         if (layer >= activation_functions_.size()) {
             throw std::out_of_range("Layer index out of range");
         }
+
+        if (validate) {
+            // Sample input range for typical neural network activations
+            constexpr T min_input = static_cast<T>(-10);
+            constexpr T max_input = static_cast<T>(10);
+            constexpr T step = static_cast<T>(1);
+            T min_output = function(min_input);
+            T max_output = function(min_input);
+
+            for (T x = min_input; x <= max_input; x += step) {
+                T y = function(x);
+                if (std::isnan(y) || std::isinf(y)) {
+                    throw std::invalid_argument("Activation function produces NaN or Inf output.");
+                }
+                if (y < min_output) min_output = y;
+                if (y > max_output) max_output = y;
+            }
+
+            // Check for reasonable output bounds (adjust as needed for your use case)
+            // Note: Some functions like ReLU can have unbounded outputs, so we use more permissive
+            // bounds
+            if (min_output < static_cast<T>(-100) || max_output > static_cast<T>(100)) {
+                throw std::invalid_argument(
+                    "Activation function output is out of reasonable bounds [-100, 100]. "
+                    "Consider using a different activation function or disable validation.");
+            }
+        }
+
         activation_functions_[layer] = function;
+    }
+
+    /**
+     * @brief Set activation function with explicit derivative (recommended for custom functions)
+     *
+     * This overload allows users to provide both the activation function and its derivative,
+     * avoiding the need for runtime inference or numerical differentiation. This is more
+     * reliable for custom activation functions and provides better performance.
+     *
+     * @param layer Layer index (0 for first hidden layer)
+     * @param function Activation function
+     * @param derivative Derivative of the activation function
+     * @param validate If true (default), validates both function and derivative
+     * @throws std::invalid_argument if validation fails
+     * @throws std::out_of_range if layer index is invalid
+     */
+    void setActivationFunction(size_t layer, const std::function<T(T)>& function,
+                               const std::function<T(T)>& derivative, bool validate = true)
+    {
+        if (layer >= activation_functions_.size()) {
+            throw std::out_of_range("Layer index out of range");
+        }
+
+        if (validate) {
+            // Validate the activation function
+            setActivationFunction(layer, function, true);
+
+            // Basic validation of derivative - check it's not constant zero
+            bool non_zero_found = false;
+            for (T x = T{-5}; x <= T{5}; x += T{1}) {
+                if (std::abs(derivative(x)) > T{1e-6}) {
+                    non_zero_found = true;
+                    break;
+                }
+            }
+            if (!non_zero_found) {
+                throw std::invalid_argument("Derivative function appears to be constant zero");
+            }
+        }
+        else {
+            activation_functions_[layer] = function;
+        }
+
+        // Store the derivative for later use (we'll need to extend the class to store derivatives)
+        activation_derivatives_[layer] = derivative;
     }
 
     /**
@@ -350,6 +434,8 @@ class ProtectedNeuralNetwork : public NetworkModel {
      *
      * @param radiation_level Radiation level (0.0-1.0)
      * @param seed Random seed for reproducibility
+     * @note This method is not thread-safe due to shared mutable state in error_stats_.
+     *       Use external synchronization if calling from multiple threads.
      */
     void applyRadiationEffects(double radiation_level, uint64_t seed)
     {
@@ -728,7 +814,12 @@ class ProtectedNeuralNetwork : public NetworkModel {
             return T{1};
         }
 
-        // First, try to detect common activation functions analytically for performance
+        // First, check if we have an explicit derivative function
+        if (layer < activation_derivatives_.size() && activation_derivatives_[layer]) {
+            return activation_derivatives_[layer](z);
+        }
+
+        // Fall back to analytical detection and numerical differentiation
         const auto& activation_func = activation_functions_[layer];
 
         // Test if this is ReLU: f(x) = max(0, x)
@@ -890,6 +981,7 @@ class ProtectedNeuralNetwork : public NetworkModel {
 
         // Initialize activation functions (default to ReLU)
         activation_functions_.resize(num_layers - 1, [](T x) { return x > 0 ? x : 0; });
+        activation_derivatives_.resize(num_layers - 1);
 
         // Initialize weights and biases with random values
         std::random_device rd;
@@ -1785,6 +1877,7 @@ class ProtectedNeuralNetwork : public NetworkModel {
     std::vector<std::vector<std::vector<WeightType>>> weights_;
     std::vector<std::vector<WeightType>> biases_;
     std::vector<std::function<T(T)>> activation_functions_;
+    std::vector<std::function<T(T)>> activation_derivatives_;
 
     // Layers representation for external access
     std::vector<Layer> layers_;
