@@ -28,7 +28,7 @@ Error Correction Codes (ECC) can detect and automatically correct errors without
 // Different error patterns require different correction strategies
 enum class ErrorPattern {
     SINGLE_BIT,      // SEU - correctable with simple parity
-    ADJACENT_BITS,   // MCU - requires multi-bit correction
+    ADJACENT_BITS,   // MBU - requires multi-bit correction
     BYTE_ERROR,      // Full byte corruption - symbol-level correction
     BURST_ERROR,     // Consecutive bits - interleaving + RS codes
     STUCK_BITS       // Permanent errors - detection only

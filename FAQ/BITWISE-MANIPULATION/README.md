@@ -67,4 +67,4 @@ Choose your starting point based on your experience level, or begin with the [Co
 
 ---
 
-*This is a educational library*
+*This is an educational library*

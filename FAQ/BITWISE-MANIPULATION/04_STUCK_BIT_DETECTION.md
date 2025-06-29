@@ -43,7 +43,7 @@ memory[address] = 0x12345660;  // Try to write: ...01100000
 ```
 
 **Impact on radiation-tolerant systems**:
-- ❌ **TMR voting fails**: All three copies may have same stuck bit
+- ❌ **TMR voting fails**: All three copies may have the same stuck bit
 - ❌ **Error correction ineffective**: ECC assumes transient errors
 - ❌ **Data corruption accumulates**: Stuck bits don't self-heal
 - ❌ **System degradation**: Performance decreases over time
