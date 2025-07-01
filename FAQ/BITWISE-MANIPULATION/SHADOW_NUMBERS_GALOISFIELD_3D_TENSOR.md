@@ -168,7 +168,9 @@ graph TD
     B1 --> C1[GF(2^8) Element 1]
     B2 --> C2[GF(2^8) Element 2]
     B3 --> C3[GF(2^8) Element 3]
-    C1 & C2 & C3 --> D[Reed-Solomon Error Correction]
+    C1 --> D[Reed-Solomon Error Correction]
+    C2 --> D
+    C3 --> D
     D --> E[3D Tensor Organization]
     E --> F[Majority Voting & Correction]
 ```
