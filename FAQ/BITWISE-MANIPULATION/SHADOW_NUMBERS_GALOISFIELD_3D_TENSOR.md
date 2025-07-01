@@ -1,5 +1,7 @@
 # Shadow Numbers, Galois Fields, and 3D Tensors in Radiation-Tolerant Memory Protection
 
+> **Note:** Math formulas are shown as code blocks for GitHub compatibility. Mermaid diagrams are in fenced code blocks. GitHub does not natively render LaTeX math, but you can copy formulas into a LaTeX tool for proper rendering.
+
 ## Overview
 
 This document explains how **shadow numbers**, **Galois fields**, and **3D tensors** are integrated to create a robust, radiation-tolerant memory protection system. The approach is based on real code and design patterns from the codebase, combining mathematical error correction, physical memory organization, and advanced redundancy.
@@ -17,25 +19,22 @@ This document explains how **shadow numbers**, **Galois fields**, and **3D tenso
 > By keeping multiple copies (shadows) of the same value, the system can compare them and use majority voting to recover the correct value if one copy is corrupted. This is the basis of Triple Modular Redundancy (TMR).
 
 ### Mathematical Principle: Majority Voting
-If you have three copies \( x_1, x_2, x_3 \), the majority value is:
+If you have three copies x1, x2, x3, the majority value is:
 
-\[
-\text{Majority}(x_1, x_2, x_3) =
-\begin{cases}
-  x_1 & \text{if } x_1 = x_2 \text{ or } x_1 = x_3 \\
-  x_2 & \text{if } x_2 = x_3 \\
-  \text{undefined} & \text{otherwise}
-\end{cases}
-\]
+```text
+Majority(x1, x2, x3) =
+    x1 if x1 == x2 or x1 == x3
+    x2 if x2 == x3
+    undefined otherwise
+```
 
 > **Physical Principle:**
 > The probability that a single event upsets (SEU) all three copies simultaneously is much lower if they are physically separated:
 >
-> \[
-> P_{\text{all
-damaged}} \approx (P_{\text{SEU}})^3
-> \]
-> where \( P_{\text{SEU}} \) is the probability of a bit flip in one location.
+```text
+P_all_damaged ≈ (P_SEU)^3
+```
+> where P_SEU is the probability of a bit flip in one location.
 
 ### Example: Triple Modular Redundancy (TMR)
 ```cpp
@@ -51,6 +50,13 @@ float result = (value1 == value2) ? value1 : (value2 == value3) ? value2 : value
 
 - **Physical separation**: Shadow copies are stored in different memory locations, often with alignment and padding to prevent a single radiation event from corrupting multiple copies.
 
+#### Try It Yourself: Shadow Numbers in Practice
+- **Exercise:**
+  1. Open `test/verification/radiation_stress_test.cpp` and find the `RadiationTestNetwork` class.
+  2. Modify one of the shadow copies (e.g., `weights1_copy2`) to simulate a bit flip.
+  3. Run the forward pass and observe how the majority voting logic recovers the correct value.
+- **Bonus:** Try changing two copies and see what happens—can the system still recover?
+
 ---
 
 ## 2. Galois Fields: Mathematical Error Correction
@@ -61,38 +67,43 @@ float result = (value1 == value2) ? value1 : (value2 == value3) ? value2 : value
 > Galois field arithmetic allows us to encode data with extra "parity" information. If some data is corrupted, the system can mathematically reconstruct the original using the error correction code.
 
 ### Mathematical Principle: Galois Field Operations
-A Galois field GF(\(2^m\)) is a set of \(2^m\) elements with addition and multiplication defined as:
+A Galois field GF(2^m) is a set of 2^m elements with addition and multiplication defined as:
 
 - **Addition:**
-  \[
-  a + b = a \oplus b
-  \]
-  (bitwise XOR)
+```text
+a + b = a XOR b
+```
 - **Multiplication:**
-  \[
-  a \cdot b = \text{GF-mult}(a, b)
-  \]
-  (using a primitive polynomial)
+```text
+a * b = GF-mult(a, b) // using a primitive polynomial
+```
 
 ### Reed-Solomon Encoding/Decoding
-Given a message polynomial \( m(x) \) and generator polynomial \( g(x) \):
+Given a message polynomial m(x) and generator polynomial g(x):
 - **Encoding:**
-  \[
-  c(x) = m(x) \cdot x^{n-k} + r(x)
-  \]
-  where \( r(x) \) is the remainder when dividing \( m(x) \cdot x^{n-k} \) by \( g(x) \).
+```text
+c(x) = m(x) * x^(n-k) + r(x)
+```
+where r(x) is the remainder when dividing m(x) * x^(n-k) by g(x).
 - **Syndrome Calculation:**
-  \[
-  S_i = r(\alpha^i), \quad i = 1, \ldots, 2t
-  \]
-  where \( \alpha \) is a primitive element of the field.
+```text
+S_i = r(alpha^i),  for i = 1, ..., 2t
+```
+where alpha is a primitive element of the field.
 - **Error Correction:**
-  Uses algorithms like Berlekamp-Massey and Forney's to locate and correct errors.
+Uses algorithms like Berlekamp-Massey and Forney's to locate and correct errors.
 
 > **How it works:**
 > Reed-Solomon codes can detect and correct multiple errors in a block of data, not just single-bit errors. This is crucial for space systems where burst errors are common.
 
 - **Shadow numbers as field elements**: Each redundant copy is encoded as a Galois field element, allowing for detection and correction of multiple simultaneous errors.
+
+#### Try It Yourself: Reed-Solomon in Action
+- **Exercise:**
+  1. Open `include/rad_ml/neural/advanced_reed_solomon.hpp` and look for the `encode` and `decode` methods.
+  2. In a test or main function, create a data value, encode it with Reed-Solomon, then manually flip a few bits in the encoded data.
+  3. Use the `decode` method to recover the original value. Observe how many errors can be corrected.
+- **Bonus:** Try increasing the number of errors and see when the code can no longer recover the original data.
 
 ---
 
@@ -104,18 +115,18 @@ Given a message polynomial \( m(x) \) and generator polynomial \( g(x) \):
 > By spreading shadow copies across a 3D grid (in memory or in a simulation), the system reduces the chance that a single radiation event will corrupt all copies at once. This is inspired by how real spacecraft memory is physically organized.
 
 ### Mathematical Principle: 3D Tensor Representation
-A 3D tensor \( T \) can be represented as:
-\[
-T_{i,j,k} \in \mathbb{F}, \quad i = 1..N_x,\ j = 1..N_y,\ k = 1..N_z
-\]
-where \( \mathbb{F} \) is the field (e.g., real numbers or GF(2^m)), and \( N_x, N_y, N_z \) are the grid dimensions.
+A 3D tensor T can be represented as:
+```text
+T[i, j, k] in F,  i = 1..Nx,  j = 1..Ny,  k = 1..Nz
+```
+where F is the field (e.g., real numbers or GF(2^m)), and Nx, Ny, Nz are the grid dimensions.
 
 - **Radiation Damage Probability:**
   If radiation events are spatially localized, the probability that all shadows in a 3D grid are hit is:
-  \[
-  P_{\text{all hit}} \approx P_{\text{local}}^n
-  \]
-  where \( n \) is the number of physically separated shadows.
+```text
+P_all_hit ≈ (P_local)^n
+```
+where n is the number of physically separated shadows.
 
 ### Example: 3D Field for Shadow Copies
 ```cpp
@@ -130,6 +141,13 @@ Field3D<double> shadow_copy3(grid);
 
 - **X, Y, Z axes**: Represent physical memory location, shadow copy index, and (optionally) time.
 - **Radiation-aware placement**: Shadows are distributed to minimize the risk of correlated errors.
+
+#### Try It Yourself: 3D Tensor Simulation
+- **Exercise:**
+  1. Open `include/rad_ml/physics/field_theory.hpp` and review the `Field3D` and `Grid3D` classes.
+  2. In a test or simulation, create a 3D grid and initialize several `Field3D` objects as shadow copies.
+  3. Simulate a localized radiation event by modifying a region in one shadow copy. Check if the other copies remain unaffected.
+- **Bonus:** Try simulating multiple, spatially separated radiation events and observe the system's resilience.
 
 ---
 
@@ -179,6 +197,13 @@ float recovered = majority_vote(decoded);
 > 3. Store in physically separated locations.
 > 4. On retrieval, use both error correction and voting to recover the correct value.
 
+#### Try It Yourself: Full Protection Workflow
+- **Exercise:**
+  1. Combine the previous exercises: create shadow copies, encode with Reed-Solomon, and store in a 3D tensor.
+  2. Simulate both random bit flips and spatially localized errors.
+  3. Use the code's majority voting and error correction logic to recover the original data.
+- **Bonus:** Explore `test/verification/radiation_stress_test.cpp` for a real-world example of this workflow in action.
+
 ---
 
 ## 5. Quantum and Physics-Driven Extensions
@@ -190,11 +215,18 @@ float recovered = majority_vote(decoded);
 > Quantum tunneling and field fluctuations can cause rare, correlated errors. Modeling these effects helps design more robust protection.
 
 ### Example: Quantum Field Equation (simplified)
-The evolution of a quantum field \( \phi(x, t) \) in 3D is governed by:
-\[
-\Box \phi + m^2 \phi = 0
-\]
-where \( \Box \) is the d'Alembertian operator (wave operator), and \( m \) is the mass parameter.
+The evolution of a quantum field phi(x, t) in 3D is governed by:
+```text
+Box(phi) + m^2 * phi = 0
+```
+where Box is the d'Alembertian operator (wave operator), and m is the mass parameter.
+
+#### Try It Yourself: Quantum Effects Simulation
+- **Exercise:**
+  1. Open `include/rad_ml/physics/quantum_field_theory.hpp` and review the `QuantumField` class.
+  2. In a simulation, initialize a quantum field and introduce random phase shifts or amplitude changes.
+  3. Observe how these quantum effects could impact the reliability of shadow numbers and error correction.
+- **Bonus:** Explore how quantum effects might be mitigated by increasing redundancy or using more advanced error correction.
 
 ---
 
