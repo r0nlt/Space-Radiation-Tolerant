@@ -165,9 +165,9 @@ graph TD
     A[Original Data] --> B1[Shadow Copy 1]
     A --> B2[Shadow Copy 2]
     A --> B3[Shadow Copy 3]
-    B1 --> C1[GF(2^8) Element 1]
-    B2 --> C2[GF(2^8) Element 2]
-    B3 --> C3[GF(2^8) Element 3]
+    B1 --> C1[GF2_8_Element_1]
+    B2 --> C2[GF2_8_Element_2]
+    B3 --> C3[GF2_8_Element_3]
     C1 --> D[Reed-Solomon Error Correction]
     C2 --> D
     C3 --> D
