@@ -153,12 +153,20 @@ struct QFTParameters {
         masses[ParticleType::Proton] = 1.6726219e-27;
         masses[ParticleType::Electron] = 9.1093837e-31;
         masses[ParticleType::Neutron] = 1.6749275e-27;
-        masses[ParticleType::Photon] = 1.0e-30;  // Non-zero for numerical stability
+        masses[ParticleType::Photon] = 1.0e-30;          // Non-zero for numerical stability
+        masses[ParticleType::HeavyIon] = 5.0e-27;        // Typical heavy ion mass (e.g., Carbon-12)
+        masses[ParticleType::Positron] = 9.1093837e-31;  // Same as electron
+        masses[ParticleType::Muon] = 1.8835316e-28;      // Muon mass
+        masses[ParticleType::Neutrino] = 1.0e-36;        // Small but non-zero for stability
 
         coupling_constants[ParticleType::Proton] = 0.1;
         coupling_constants[ParticleType::Electron] = 0.1;
         coupling_constants[ParticleType::Neutron] = 0.1;
         coupling_constants[ParticleType::Photon] = 0.1;
+        coupling_constants[ParticleType::HeavyIon] = 0.15;  // Stronger coupling for heavy ions
+        coupling_constants[ParticleType::Positron] = 0.1;   // Same as electron
+        coupling_constants[ParticleType::Muon] = 0.12;      // Slightly different for muon
+        coupling_constants[ParticleType::Neutrino] = 0.01;  // Weak coupling for neutrinos
     }
 
     // For backward compatibility - get mass for a specific particle type
