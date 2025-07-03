@@ -52,3 +52,8 @@ add_test(NAME systematic_fault_test COMMAND systematic_fault_test)
 add_executable(modern_features_test modern_features_test.cpp)
 target_link_libraries(modern_features_test rad_ml_tmr rad_ml_testing)
 add_test(NAME modern_features_test COMMAND modern_features_test)
+
+# Add performance optimization validation test
+add_executable(performance_optimization_test performance_optimization_test.cpp)
+target_link_libraries(performance_optimization_test rad_ml_tmr rad_ml_testing)
+add_test(NAME performance_optimization_test COMMAND performance_optimization_test)
