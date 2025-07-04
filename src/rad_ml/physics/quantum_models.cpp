@@ -111,23 +111,38 @@ double calculateDisplacementEnergy(const CrystalLattice& crystal, const QFTParam
 
     // ==== SAFE LOOKUP WITH ERROR HANDLING ====
     // Guard against missing entries in CrystalLatticeProperties maps
-    auto material_props_it = material_properties.find(crystal_type_str);
-    if (material_props_it == material_properties.end()) {
-        std::cerr << "ERROR: Material properties not found for crystal type: " << crystal_type_str
-                  << ". Using default FCC properties." << std::endl;
-        crystal_type_str = "FCC";
-        material_props_it = material_properties.find("FCC");
-        if (material_props_it == material_properties.end()) {
-            throw std::runtime_error("Critical error: Default FCC properties not available");
-        }
-    }
+    // CRITICAL FIX: Both material properties and displacement thresholds must use the same crystal
+    // type to maintain physics consistency
 
+    auto material_props_it = material_properties.find(crystal_type_str);
     auto displacement_props_it = displacement_thresholds.find(crystal_type_str);
-    if (displacement_props_it == displacement_thresholds.end()) {
-        std::cerr << "ERROR: Displacement thresholds not found for crystal type: "
-                  << crystal_type_str << ". Using default FCC thresholds." << std::endl;
+
+    // Check if either lookup fails
+    bool material_found = (material_props_it != material_properties.end());
+    bool displacement_found = (displacement_props_it != displacement_thresholds.end());
+
+    if (!material_found || !displacement_found) {
+        std::cerr << "ERROR: Missing properties for crystal type: " << crystal_type_str
+                  << std::endl;
+        if (!material_found) {
+            std::cerr << "  - Material properties not found" << std::endl;
+        }
+        if (!displacement_found) {
+            std::cerr << "  - Displacement thresholds not found" << std::endl;
+        }
+
+        // Fall back to FCC for BOTH properties to maintain consistency
+        std::cerr << "  - Falling back to FCC properties for consistency" << std::endl;
         crystal_type_str = "FCC";
+
+        material_props_it = material_properties.find("FCC");
         displacement_props_it = displacement_thresholds.find("FCC");
+
+        // Final safety check
+        if (material_props_it == material_properties.end()) {
+            throw std::runtime_error(
+                "Critical error: Default FCC material properties not available");
+        }
         if (displacement_props_it == displacement_thresholds.end()) {
             throw std::runtime_error(
                 "Critical error: Default FCC displacement thresholds not available");
