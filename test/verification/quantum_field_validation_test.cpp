@@ -60,6 +60,15 @@ bool validateDisplacementEnergy(const std::string& material_name, CrystalLattice
             min_expected = 30.0;  // eV
             max_expected = 40.0;  // eV (for Si, Ge, GaAs)
             break;
+        default:
+            // Handle unhandled crystal types with reasonable fallback ranges
+            min_expected = 20.0;   // eV - Conservative lower bound
+            max_expected = 100.0;  // eV - Conservative upper bound
+            if (verbose) {
+                std::cerr << "WARNING: Unknown crystal type, using fallback validation range ["
+                          << min_expected << "-" << max_expected << " eV]" << std::endl;
+            }
+            break;
     }
 
     bool is_valid = (displacement_energy >= min_expected && displacement_energy <= max_expected);
