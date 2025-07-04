@@ -1,16 +1,22 @@
 Material,Scenario,Classical Defects,Quantum Defects,Percent Difference,Tunneling Contribution (%),Zero-Point Contribution (%),Execution Time (ms)
-Silicon,Standard,135,136.396,1.03408,6.35269e-66,-0.413502,0
-Silicon,High Energy,1350,1363.96,1.03408,6.35269e-66,-0.413502,0
-Silicon,Quantum Dominant,135,136.441,1.06777,2.35919e-06,-12.5,0
-Germanium,Standard,135,136.396,1.03408,6.35269e-66,-0.413502,0
-Germanium,High Energy,1350,1363.96,1.03408,6.35269e-66,-0.413502,0
-Germanium,Quantum Dominant,135,136.441,1.06777,2.35919e-06,-12.5,0
-GaAs,Standard,135,136.396,1.03408,6.35269e-66,-0.413502,0
-GaAs,High Energy,1350,1363.96,1.03408,6.35269e-66,-0.413502,0
-GaAs,Quantum Dominant,135,136.441,1.06777,2.35919e-06,-12.5,0
-Silicon (Low Temp),Standard,135,234.17,73.4592,5.34113e-75,-1.61105,0
-Silicon (Low Temp),High Energy,1350,2341.7,73.4592,5.34113e-75,-1.61105,0
-Silicon (Low Temp),Quantum Dominant,135,234.249,73.5174,2.35919e-06,-12.5,0
-Silicon (High Temp),Standard,135,137.013,1.49108,4.8059e-39,-0.248101,0
-Silicon (High Temp),High Energy,1350,1370.13,1.49108,4.8059e-39,-0.248101,0
-Silicon (High Temp),Quantum Dominant,135,137.372,1.75716,2.35919e-06,-12.5,0
+Silicon,Standard,29,29.075,0.25852,6.35269e-66,-0.413502,0
+Silicon,High Energy,303.032,303.815,0.25852,6.35269e-66,-0.413502,0
+Silicon,Quantum Dominant,29,29.0897,0.309207,2.35919e-06,-12.5,0
+Germanium,Standard,29,29.075,0.25852,6.35269e-66,-0.413502,0
+Germanium,High Energy,303.032,303.815,0.25852,6.35269e-66,-0.413502,0
+Germanium,Quantum Dominant,29,29.0897,0.309207,2.35919e-06,-12.5,0
+GaAs,Standard,29,29.075,0.25852,6.35269e-66,-0.413502,0
+GaAs,High Energy,303.032,303.815,0.25852,6.35269e-66,-0.413502,0
+GaAs,Quantum Dominant,29,29.0897,0.309207,2.35919e-06,-12.5,0
+Silicon (Low Temp),Standard,29,50.2033,73.1148,5.34113e-75,-1.61105,0
+Silicon (Low Temp),High Energy,303.032,524.593,73.1148,5.34113e-75,-1.61105,0
+Silicon (Low Temp),Quantum Dominant,29,50.2287,73.2025,2.35919e-06,-12.5,0
+Silicon (High Temp),Standard,29,29.0576,0.198481,4.8059e-39,-0.248101,0
+Silicon (High Temp),High Energy,303.032,303.633,0.198481,4.8059e-39,-0.248101,0
+Silicon (High Temp),Quantum Dominant,29,29.1397,0.481554,2.35919e-06,-12.5,0
+Aluminum (FCC),Standard,34.7828,34.8727,0.25852,6.35269e-66,-0.413502,0
+Aluminum (FCC),High Energy,347.828,348.727,0.25852,6.35269e-66,-0.413502,0
+Aluminum (FCC),Quantum Dominant,34.7887,34.8962,0.309207,2.35919e-06,-12.5,0
+Iron (BCC),Standard,20.0001,20.0518,0.25852,6.35269e-66,-0.413502,0
+Iron (BCC),High Energy,200.001,200.518,0.25852,6.35269e-66,-0.413502,0
+Iron (BCC),Quantum Dominant,20.002,20.0638,0.309207,2.35919e-06,-12.5,0

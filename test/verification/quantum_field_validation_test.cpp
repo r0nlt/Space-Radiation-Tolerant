@@ -1,3 +1,4 @@
+#include <Eigen/Dense>
 #include <chrono>
 #include <cmath>
 #include <fstream>
@@ -7,6 +8,7 @@
 // Include our headers
 #include <rad_ml/physics/field_theory.hpp>
 #include <rad_ml/physics/quantum_field_theory.hpp>
+#include <rad_ml/physics/quantum_models.hpp>
 
 using namespace rad_ml::physics;
 
@@ -35,191 +37,90 @@ struct PerformanceMetrics {
     double execution_time_ms;
 };
 
-// Utility functions implemented for testing
-double calculateDisplacementEnergy(const CrystalLattice& lattice, const QFTParameters& params)
+// Note: Using validated simulateDisplacementCascade() function from quantum_models.hpp
+// This replaces the old local implementation with proper physics-based calculation
+
+// Validate displacement energy against expected ranges
+bool validateDisplacementEnergy(const std::string& material_name, CrystalLattice::Type crystal_type,
+                                double displacement_energy, bool verbose = false)
 {
-    // ==== UPDATED: USE VALIDATED KONOBEYEV MODEL ====
-    // Replace old invalid base_energy * arbitrary factors with physics-based calculation
+    // Expected ranges based on validated crystal lattice properties
+    double min_expected = 0.0, max_expected = 0.0;
 
-    // Material-specific parameters based on crystal structure
-    double density = 0.0;          // g/cm³
-    double melting_temp = 0.0;     // K
-    double cohesive_energy = 0.0;  // eV
-    double base_threshold = 0.0;   // eV
-
-    switch (lattice.type) {
+    switch (crystal_type) {
         case CrystalLattice::Type::FCC:
-            // Typical FCC metals (Al, Cu, Ni, Au)
-            density = 8.96;          // Cu-like density
-            melting_temp = 1358.0;   // K
-            cohesive_energy = 3.49;  // eV
-            base_threshold = 25.0;   // eV (experimental range 25-40)
+            min_expected = 25.0;  // eV
+            max_expected = 40.0;  // eV
             break;
-
         case CrystalLattice::Type::BCC:
-            // Typical BCC metals (Fe, Cr, W, Mo)
-            density = 7.87;          // Fe-like density
-            melting_temp = 1811.0;   // K
-            cohesive_energy = 4.28;  // eV
-            base_threshold = 40.0;   // eV (experimental range 40-90)
+            min_expected = 40.0;  // eV
+            max_expected = 90.0;  // eV
             break;
-
         case CrystalLattice::Type::DIAMOND:
-            // Typical diamond structure (Si, Ge, C)
-            density = 2.33;          // Si-like density
-            melting_temp = 1687.0;   // K
-            cohesive_energy = 4.63;  // eV
-            base_threshold = 35.0;   // eV (experimental ~35 for Si)
+            min_expected = 30.0;  // eV
+            max_expected = 40.0;  // eV (for Si, Ge, GaAs)
             break;
-
         default:
-            // Conservative default values
-            density = 5.0;
-            melting_temp = 1500.0;
-            cohesive_energy = 4.0;
-            base_threshold = 30.0;
-    }
-
-    // ==== KONOBEYEV MODEL CALCULATION ====
-    // Ed = α(ρTmelt)^1/2 + β
-    double alpha = 0.0352;  // Fitted parameter from Konobeyev analysis
-    double beta = 8.74;     // Fitted parameter from Konobeyev analysis
-
-    double konobeyev_energy = alpha * std::sqrt(density * melting_temp) + beta;
-
-    // ==== COHESIVE ENERGY SCALING ====
-    // Ed ≈ α × Ecohesive + β alternative model
-    double alpha_coh = 8.2;  // Fitted parameter
-    double beta_coh = 2.1;   // Fitted parameter
-
-    double cohesive_scaled_energy = alpha_coh * cohesive_energy + beta_coh;
-
-    // ==== WEIGHTED AVERAGE OF MODELS ====
-    // Combine both validated approaches with empirical weighting
-    double displacement_energy = 0.6 * konobeyev_energy + 0.4 * cohesive_scaled_energy;
-
-    // Ensure result is within experimental bounds
-    displacement_energy = std::max(displacement_energy, base_threshold * 0.8);
-    displacement_energy = std::min(displacement_energy, base_threshold * 1.5);
-
-    return displacement_energy;
-}
-
-DefectDistribution simulateDisplacementCascade(const CrystalLattice& lattice, double pka_energy,
-                                               const QFTParameters& params,
-                                               double displacement_energy)
-{
-    // ==== UPDATED: USE MODERN RADIATION DAMAGE MODEL ====
-    // Implements arc-DPA corrections and cascade efficiency effects
-
-    // Initialize defect distribution
-    DefectDistribution defects;
-
-    if (pka_energy > displacement_energy) {
-        // ==== ARC-DPA MODEL CORRECTIONS ====
-        // Modern understanding shows 2-3x higher damage production than basic NRT predictions
-        double arc_dpa_factor = 1.0;
-        switch (lattice.type) {
-            case CrystalLattice::Type::FCC:
-                arc_dpa_factor = 2.1;  // FCC metals show ~2.1x enhancement
-                break;
-            case CrystalLattice::Type::BCC:
-                arc_dpa_factor = 2.5;  // BCC metals show higher enhancement
-                break;
-            case CrystalLattice::Type::DIAMOND:
-                arc_dpa_factor = 1.8;  // Covalent materials show moderate enhancement
-                break;
-        }
-
-        // ==== CASCADE EFFICIENCY EFFECTS ====
-        // Defect production efficiency increases with PKA energy due to better cascade development
-        double cascade_efficiency = 0.5;  // Base efficiency
-
-        // Energy-dependent efficiency - higher energy = higher efficiency
-        if (pka_energy < 1000.0) {
-            cascade_efficiency = 0.4;  // Low energy: lower efficiency
-        }
-        else if (pka_energy < 10000.0) {
-            cascade_efficiency = 0.6;  // Medium energy: moderate efficiency
-        }
-        else if (pka_energy < 100000.0) {
-            cascade_efficiency = 0.8;  // High energy: higher efficiency
-        }
-        else {
-            cascade_efficiency = 0.7;  // Very high energy: limited by subcascade formation
-        }
-
-        // Material-dependent efficiency
-        switch (lattice.type) {
-            case CrystalLattice::Type::FCC:
-                cascade_efficiency *= 1.1;  // FCC slightly more efficient
-                break;
-            case CrystalLattice::Type::BCC:
-                cascade_efficiency *= 1.0;  // BCC baseline
-                break;
-            case CrystalLattice::Type::DIAMOND:
-                cascade_efficiency *= 0.9;  // Diamond less efficient due to strong bonds
-                break;
-        }
-
-        // ==== CORRECT PHYSICS: APPLY CASCADE EFFICIENCY FIRST ====
-        // Cascade efficiency determines how much of PKA energy goes into defects (≤ 1.0)
-        double available_energy = pka_energy * cascade_efficiency;
-
-        // Basic defect count from available energy (energy conservation)
-        double base_defect_count = available_energy / displacement_energy;
-
-        // ==== THEN APPLY ARC-DPA ENHANCEMENT ====
-        // Arc-DPA factor enhances defect production beyond NRT predictions
-        double defect_count = std::floor(base_defect_count * arc_dpa_factor);
-
-        // Final energy conservation check
-        double max_possible_defects = pka_energy / displacement_energy;
-        defect_count = std::min(defect_count, max_possible_defects);
-
-        // ==== REALISTIC DEFECT FRACTIONS ====
-        double vacancy_fraction = 0.6;
-        double interstitial_fraction = 0.3;
-        double cluster_fraction = 0.1;
-
-        // Convert indices to particle types and fill with realistic scaling
-        std::vector<ParticleType> particleTypes = {ParticleType::Proton, ParticleType::Electron,
-                                                   ParticleType::Neutron};
-
-        for (size_t i = 0; i < particleTypes.size(); i++) {
-            ParticleType type = particleTypes[i];
-            // Initialize vectors for this particle type
-            defects.interstitials[type] = std::vector<double>(3, 0.0);
-            defects.vacancies[type] = std::vector<double>(3, 0.0);
-            defects.clusters[type] = std::vector<double>(3, 0.0);
-
-            // Set values for all spatial regions (3 regions)
-            for (size_t j = 0; j < 3; j++) {
-                defects.interstitials[type][j] =
-                    defect_count * interstitial_fraction * (0.5 - j * 0.2);
-                defects.vacancies[type][j] = defect_count * vacancy_fraction * (0.5 - j * 0.2);
-                defects.clusters[type][j] = defect_count * cluster_fraction * (0.5 - j * 0.2);
+            // Handle unhandled crystal types with reasonable fallback ranges
+            min_expected = 20.0;   // eV - Conservative lower bound
+            max_expected = 100.0;  // eV - Conservative upper bound
+            if (verbose) {
+                std::cerr << "WARNING: Unknown crystal type, using fallback validation range ["
+                          << min_expected << "-" << max_expected << " eV]" << std::endl;
             }
-        }
+            break;
     }
 
-    return defects;
+    bool is_valid = (displacement_energy >= min_expected && displacement_energy <= max_expected);
+
+    // Only output detailed validation info if verbose mode is enabled
+    if (verbose) {
+        std::cout << "    Displacement energy: " << displacement_energy << " eV ";
+        std::cout << "(expected: " << min_expected << "-" << max_expected << " eV) ";
+        std::cout << (is_valid ? "✓ VALID" : "✗ INVALID") << std::endl;
+    }
+
+    // Assert for test validation - this will help catch physics errors
+    if (!is_valid) {
+        std::cerr << "VALIDATION ERROR: " << material_name << " displacement energy "
+                  << displacement_energy << " eV outside expected range [" << min_expected << "-"
+                  << max_expected << " eV]" << std::endl;
+    }
+
+    return is_valid;
 }
 
 // Run test for a single material and scenario
-PerformanceMetrics runTest(const MaterialTestCase& material, const TestScenario& scenario)
+PerformanceMetrics runTest(const MaterialTestCase& material, const TestScenario& scenario,
+                           ParticleType particle_type = ParticleType::Proton)
 {
     PerformanceMetrics metrics;
 
     // Record start time
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    // Calculate displacement energy
-    double displacement_energy = calculateDisplacementEnergy(material.lattice, scenario.qft_params);
+    // Calculate displacement energy using validated physics function
+    // Now parameterized instead of hardcoded Proton
+    double displacement_energy =
+        calculateDisplacementEnergy(material.lattice, scenario.qft_params, particle_type);
+
+    // Validate displacement energy against expected ranges (verbose mode for detailed output)
+    bool is_valid =
+        validateDisplacementEnergy(material.name, material.lattice.type, displacement_energy, true);
+
+    // Assert validation for test integrity
+    if (!is_valid) {
+        std::cerr << "Test failed: Invalid displacement energy for " << material.name << std::endl;
+        // Continue test but mark as failed
+        metrics.classical_total_defects = -1.0;  // Error indicator
+        return metrics;
+    }
 
     // Simulate displacement cascade using classical model
-    DefectDistribution classical_defects = simulateDisplacementCascade(
-        material.lattice, scenario.pka_energy, scenario.qft_params, displacement_energy);
+    // Now parameterized instead of hardcoded Proton
+    DefectDistribution classical_defects =
+        simulateDisplacementCascade(material.lattice, scenario.pka_energy, scenario.qft_params,
+                                    displacement_energy, particle_type);
 
     // Count total classical defects
     metrics.classical_total_defects = 0.0;
@@ -306,13 +207,20 @@ int main()
     std::cout << "Quantum Field Theory Framework Enhancement Validation Test" << std::endl;
     std::cout << "=======================================================" << std::endl;
 
-    // Define materials to test
+    // Define materials to test with CORRECT crystal structures
     std::vector<MaterialTestCase> materials = {
-        {"Silicon", CrystalLattice(CrystalLattice::Type::FCC, 5.431), 300.0, 1e3},
-        {"Germanium", CrystalLattice(CrystalLattice::Type::FCC, 5.658), 300.0, 1e3},
-        {"GaAs", CrystalLattice(CrystalLattice::Type::FCC, 5.653), 300.0, 1e3},
-        {"Silicon (Low Temp)", CrystalLattice(CrystalLattice::Type::FCC, 5.431), 77.0, 1e3},
-        {"Silicon (High Temp)", CrystalLattice(CrystalLattice::Type::FCC, 5.431), 500.0, 1e3}};
+        {"Silicon", CrystalLattice(CrystalLattice::Type::DIAMOND, 5.431), 300.0,
+         1e3},  // Silicon is Diamond structure
+        {"Germanium", CrystalLattice(CrystalLattice::Type::DIAMOND, 5.658), 300.0,
+         1e3},  // Germanium is Diamond structure
+        {"GaAs", CrystalLattice(CrystalLattice::Type::DIAMOND, 5.653), 300.0,
+         1e3},  // GaAs is zinc blende (Diamond-like)
+        {"Silicon (Low Temp)", CrystalLattice(CrystalLattice::Type::DIAMOND, 5.431), 77.0, 1e3},
+        {"Silicon (High Temp)", CrystalLattice(CrystalLattice::Type::DIAMOND, 5.431), 500.0, 1e3},
+        {"Aluminum (FCC)", CrystalLattice(CrystalLattice::Type::FCC, 4.05), 300.0,
+         1e3},  // Test actual FCC material
+        {"Iron (BCC)", CrystalLattice(CrystalLattice::Type::BCC, 2.867), 300.0,
+         1e3}};  // Test actual BCC material
 
     // Define test scenarios
     std::vector<TestScenario> scenarios;
@@ -365,7 +273,14 @@ int main()
         for (const auto& scenario : scenarios) {
             std::cout << "  Scenario: " << scenario.name << "... ";
 
-            PerformanceMetrics metrics = runTest(material, scenario);
+            // Test with default Proton particle type
+            PerformanceMetrics metrics = runTest(material, scenario, ParticleType::Proton);
+
+            // Check for validation errors
+            if (metrics.classical_total_defects < 0) {
+                std::cout << "FAILED - Invalid displacement energy" << std::endl;
+                continue;
+            }
 
             // Write results to file
             results_file << material.name << "," << scenario.name << ","
@@ -377,6 +292,34 @@ int main()
             // Print summary
             std::cout << "Complete. Defect difference: " << std::fixed << std::setprecision(2)
                       << metrics.percent_difference << "%" << std::endl;
+        }
+    }
+
+    // ==== ADDITIONAL PARTICLE TYPE VALIDATION ====
+    // Test different particle types with Silicon to demonstrate parameterization
+    std::cout << "\n=== Particle Type Validation Tests ===" << std::endl;
+
+    // Select Silicon for particle type testing
+    auto silicon_material = materials[0];   // Silicon is first in the list
+    auto standard_scenario = scenarios[0];  // Standard scenario
+
+    std::vector<ParticleType> test_particles = {ParticleType::Proton, ParticleType::Electron,
+                                                ParticleType::Neutron};
+
+    std::vector<std::string> particle_names = {"Proton", "Electron", "Neutron"};
+
+    for (size_t i = 0; i < test_particles.size(); ++i) {
+        std::cout << "\nTesting " << particle_names[i]
+                  << " interactions with Silicon:" << std::endl;
+
+        PerformanceMetrics particle_metrics =
+            runTest(silicon_material, standard_scenario, test_particles[i]);
+
+        if (particle_metrics.classical_total_defects >= 0) {
+            std::cout << "  Particle: " << particle_names[i]
+                      << ", Defects: " << particle_metrics.classical_total_defects
+                      << ", Quantum correction: " << particle_metrics.percent_difference << "%"
+                      << std::endl;
         }
     }
 
