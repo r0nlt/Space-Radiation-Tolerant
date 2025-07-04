@@ -42,7 +42,7 @@ struct PerformanceMetrics {
 
 // Validate displacement energy against expected ranges
 bool validateDisplacementEnergy(const std::string& material_name, CrystalLattice::Type crystal_type,
-                                double displacement_energy)
+                                double displacement_energy, bool verbose = false)
 {
     // Expected ranges based on validated crystal lattice properties
     double min_expected = 0.0, max_expected = 0.0;
@@ -64,15 +64,26 @@ bool validateDisplacementEnergy(const std::string& material_name, CrystalLattice
 
     bool is_valid = (displacement_energy >= min_expected && displacement_energy <= max_expected);
 
-    std::cout << "    Displacement energy: " << displacement_energy << " eV ";
-    std::cout << "(expected: " << min_expected << "-" << max_expected << " eV) ";
-    std::cout << (is_valid ? "✓ VALID" : "✗ INVALID") << std::endl;
+    // Only output detailed validation info if verbose mode is enabled
+    if (verbose) {
+        std::cout << "    Displacement energy: " << displacement_energy << " eV ";
+        std::cout << "(expected: " << min_expected << "-" << max_expected << " eV) ";
+        std::cout << (is_valid ? "✓ VALID" : "✗ INVALID") << std::endl;
+    }
+
+    // Assert for test validation - this will help catch physics errors
+    if (!is_valid) {
+        std::cerr << "VALIDATION ERROR: " << material_name << " displacement energy "
+                  << displacement_energy << " eV outside expected range [" << min_expected << "-"
+                  << max_expected << " eV]" << std::endl;
+    }
 
     return is_valid;
 }
 
 // Run test for a single material and scenario
-PerformanceMetrics runTest(const MaterialTestCase& material, const TestScenario& scenario)
+PerformanceMetrics runTest(const MaterialTestCase& material, const TestScenario& scenario,
+                           ParticleType particle_type = ParticleType::Proton)
 {
     PerformanceMetrics metrics;
 
@@ -80,17 +91,27 @@ PerformanceMetrics runTest(const MaterialTestCase& material, const TestScenario&
     auto start_time = std::chrono::high_resolution_clock::now();
 
     // Calculate displacement energy using validated physics function
-    // Default to Proton for backward compatibility, but should be parameterized in real usage
+    // Now parameterized instead of hardcoded Proton
     double displacement_energy =
-        calculateDisplacementEnergy(material.lattice, scenario.qft_params, ParticleType::Proton);
+        calculateDisplacementEnergy(material.lattice, scenario.qft_params, particle_type);
 
-    // Validate displacement energy against expected ranges
-    validateDisplacementEnergy(material.name, material.lattice.type, displacement_energy);
+    // Validate displacement energy against expected ranges (verbose mode for detailed output)
+    bool is_valid =
+        validateDisplacementEnergy(material.name, material.lattice.type, displacement_energy, true);
+
+    // Assert validation for test integrity
+    if (!is_valid) {
+        std::cerr << "Test failed: Invalid displacement energy for " << material.name << std::endl;
+        // Continue test but mark as failed
+        metrics.classical_total_defects = -1.0;  // Error indicator
+        return metrics;
+    }
 
     // Simulate displacement cascade using classical model
+    // Now parameterized instead of hardcoded Proton
     DefectDistribution classical_defects =
         simulateDisplacementCascade(material.lattice, scenario.pka_energy, scenario.qft_params,
-                                    displacement_energy, ParticleType::Proton);
+                                    displacement_energy, particle_type);
 
     // Count total classical defects
     metrics.classical_total_defects = 0.0;
@@ -243,7 +264,14 @@ int main()
         for (const auto& scenario : scenarios) {
             std::cout << "  Scenario: " << scenario.name << "... ";
 
-            PerformanceMetrics metrics = runTest(material, scenario);
+            // Test with default Proton particle type
+            PerformanceMetrics metrics = runTest(material, scenario, ParticleType::Proton);
+
+            // Check for validation errors
+            if (metrics.classical_total_defects < 0) {
+                std::cout << "FAILED - Invalid displacement energy" << std::endl;
+                continue;
+            }
 
             // Write results to file
             results_file << material.name << "," << scenario.name << ","
@@ -255,6 +283,34 @@ int main()
             // Print summary
             std::cout << "Complete. Defect difference: " << std::fixed << std::setprecision(2)
                       << metrics.percent_difference << "%" << std::endl;
+        }
+    }
+
+    // ==== ADDITIONAL PARTICLE TYPE VALIDATION ====
+    // Test different particle types with Silicon to demonstrate parameterization
+    std::cout << "\n=== Particle Type Validation Tests ===" << std::endl;
+
+    // Select Silicon for particle type testing
+    auto silicon_material = materials[0];   // Silicon is first in the list
+    auto standard_scenario = scenarios[0];  // Standard scenario
+
+    std::vector<ParticleType> test_particles = {ParticleType::Proton, ParticleType::Electron,
+                                                ParticleType::Neutron};
+
+    std::vector<std::string> particle_names = {"Proton", "Electron", "Neutron"};
+
+    for (size_t i = 0; i < test_particles.size(); ++i) {
+        std::cout << "\nTesting " << particle_names[i]
+                  << " interactions with Silicon:" << std::endl;
+
+        PerformanceMetrics particle_metrics =
+            runTest(silicon_material, standard_scenario, test_particles[i]);
+
+        if (particle_metrics.classical_total_defects >= 0) {
+            std::cout << "  Particle: " << particle_names[i]
+                      << ", Defects: " << particle_metrics.classical_total_defects
+                      << ", Quantum correction: " << particle_metrics.percent_difference << "%"
+                      << std::endl;
         }
     }
 

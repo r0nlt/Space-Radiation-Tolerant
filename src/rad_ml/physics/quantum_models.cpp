@@ -12,6 +12,7 @@
 #include <rad_ml/physics/quantum_field_theory.hpp>
 #include <rad_ml/physics/quantum_models.hpp>
 #include <random>
+#include <stdexcept>
 
 namespace rad_ml {
 namespace physics {
@@ -108,9 +109,34 @@ double calculateDisplacementEnergy(const CrystalLattice& crystal, const QFTParam
             break;
     }
 
-    // Get validated material properties
-    auto material_props = material_properties.at(crystal_type_str);
-    auto displacement_props = displacement_thresholds.at(crystal_type_str);
+    // ==== SAFE LOOKUP WITH ERROR HANDLING ====
+    // Guard against missing entries in CrystalLatticeProperties maps
+    auto material_props_it = material_properties.find(crystal_type_str);
+    if (material_props_it == material_properties.end()) {
+        std::cerr << "ERROR: Material properties not found for crystal type: " << crystal_type_str
+                  << ". Using default FCC properties." << std::endl;
+        crystal_type_str = "FCC";
+        material_props_it = material_properties.find("FCC");
+        if (material_props_it == material_properties.end()) {
+            throw std::runtime_error("Critical error: Default FCC properties not available");
+        }
+    }
+
+    auto displacement_props_it = displacement_thresholds.find(crystal_type_str);
+    if (displacement_props_it == displacement_thresholds.end()) {
+        std::cerr << "ERROR: Displacement thresholds not found for crystal type: "
+                  << crystal_type_str << ". Using default FCC thresholds." << std::endl;
+        crystal_type_str = "FCC";
+        displacement_props_it = displacement_thresholds.find("FCC");
+        if (displacement_props_it == displacement_thresholds.end()) {
+            throw std::runtime_error(
+                "Critical error: Default FCC displacement thresholds not available");
+        }
+    }
+
+    // Get validated material properties with safe access
+    const auto& material_props = material_props_it->second;
+    const auto& displacement_props = displacement_props_it->second;
 
     double density = material_props.density;                       // g/cm³ - validated
     double melting_temp = material_props.melting_temperature;      // K - validated
