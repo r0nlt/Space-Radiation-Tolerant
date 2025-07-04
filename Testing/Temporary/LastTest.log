@@ -1,10 +1,10 @@
-Start testing: Jul 04 06:52 PDT
+Start testing: Jul 04 09:00 PDT
 ----------------------------------------------------------
 10/32 Testing: orbit_transition_test
 10/32 Test: orbit_transition_test
 Command: "/Users/rishabnuguru/space/orbit_transition_test"
 Directory: /Users/rishabnuguru/space
-"orbit_transition_test" start time: Jul 04 06:52 PDT
+"orbit_transition_test" start time: Jul 04 09:00 PDT
 Output:
 ----------------------------------------------------------
 Running main() from /private/tmp/googletest-20250430-4945-4e8m2m/googletest-1.17.0/googletest/src/gtest_main.cc
@@ -12,19 +12,27 @@ Running main() from /private/tmp/googletest-20250430-4945-4e8m2m/googletest-1.17
 [----------] Global test environment set-up.
 [----------] 1 test from OrbitTransitionTest
 [ RUN      ] OrbitTransitionTest.FourYearMissionSimulation
-Errors summary - injected:344880 corrected:344880 uncorrectable:0 eff:100% bitFlips:275932 multiUpsets:51662 latchups:10431 transients:6855 levelChanges:2 maxLevel:3
-[       OK ] OrbitTransitionTest.FourYearMissionSimulation (13833 ms)
-[----------] 1 test from OrbitTransitionTest (13833 ms total)
+/Users/rishabnuguru/space/test/verification/orbit_transition_test.cpp:187: Failure
+Expected: (efficiency) > (0.90), actual: 0.8997419702353544 vs 0.9
+
+Errors summary - injected:345309 corrected:310689 uncorrectable:34620 eff:89.9742% bitFlips:276368 multiUpsets:51542 latchups:10445 transients:6954 levelChanges:2 maxLevel:3
+Data integrity: 514 mismatches due to 34620 uncorrectable errors
+[  FAILED  ] OrbitTransitionTest.FourYearMissionSimulation (11694 ms)
+[----------] 1 test from OrbitTransitionTest (11694 ms total)
 
 [----------] Global test environment tear-down
-[==========] 1 test from 1 test suite ran. (13833 ms total)
-[  PASSED  ] 1 test.
+[==========] 1 test from 1 test suite ran. (11694 ms total)
+[  PASSED  ] 0 tests.
+[  FAILED  ] 1 test, listed below:
+[  FAILED  ] OrbitTransitionTest.FourYearMissionSimulation
+
+ 1 FAILED TEST
 <end of output>
-Test time =  13.85 sec
+Test time =  12.18 sec
 ----------------------------------------------------------
-Test Passed.
-"orbit_transition_test" end time: Jul 04 06:52 PDT
-"orbit_transition_test" time elapsed: 00:00:13
+Test Failed.
+"orbit_transition_test" end time: Jul 04 09:00 PDT
+"orbit_transition_test" time elapsed: 00:00:12
 ----------------------------------------------------------
 
-End testing: Jul 04 06:52 PDT
+End testing: Jul 04 09:00 PDT
