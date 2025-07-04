@@ -201,6 +201,19 @@ add_executable(modern_features_test test/verification/modern_features_test.cpp)
 target_link_libraries(modern_features_test rad_ml_tmr rad_ml_testing)
 add_test(NAME modern_features_test COMMAND modern_features_test)
 
+# Add orbit transition test
+add_executable(orbit_transition_test test/verification/orbit_transition_test.cpp)
+target_link_libraries(orbit_transition_test
+    rad_ml_tmr
+    rad_ml_testing
+    rad_ml_qft
+    rad_ml_research
+    GTest::gtest
+    GTest::gtest_main
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+add_test(NAME orbit_transition_test COMMAND orbit_transition_test)
+
 # Add the IEEE-754 aware TMR voting test
 add_executable(ieee754_tmr_test test/verification/ieee754_tmr_test.cpp)
 target_link_libraries(ieee754_tmr_test rad_ml_tmr rad_ml_testing)
