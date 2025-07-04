@@ -8,6 +8,7 @@
 #include <cmath>
 #include <iostream>
 #include <numeric>
+#include <rad_ml/physics/crystal_lattice_properties.hpp>
 #include <rad_ml/physics/quantum_field_theory.hpp>
 #include <rad_ml/physics/quantum_models.hpp>
 #include <random>
@@ -86,44 +87,35 @@ double calculateDisplacementEnergy(const CrystalLattice& crystal, const QFTParam
     // Based on Ed ≈ α(ρTmelt)^1/2 + β systematic approach
     // Reference: Konobeyev et al. systematic analysis of 70+ materials
 
-    // Material-specific parameters based on crystal structure
-    double density = 0.0;          // g/cm³
-    double melting_temp = 0.0;     // K
-    double cohesive_energy = 0.0;  // eV
-    double base_threshold = 0.0;   // eV
+    // ==== USE VALIDATED CRYSTAL LATTICE PROPERTIES ====
+    auto material_properties = CrystalLatticeProperties::getMaterialProperties();
+    auto displacement_thresholds = CrystalLatticeProperties::getDisplacementThresholds();
 
+    // Get material-specific parameters from validated properties
+    std::string crystal_type_str;
     switch (crystal.type) {
         case CrystalLattice::Type::FCC:
-            // Typical FCC metals (Al, Cu, Ni, Au)
-            density = 8.96;          // Cu-like density
-            melting_temp = 1358.0;   // K
-            cohesive_energy = 3.49;  // eV
-            base_threshold = 25.0;   // eV (experimental range 25-40)
+            crystal_type_str = "FCC";
             break;
-
         case CrystalLattice::Type::BCC:
-            // Typical BCC metals (Fe, Cr, W, Mo)
-            density = 7.87;          // Fe-like density
-            melting_temp = 1811.0;   // K
-            cohesive_energy = 4.28;  // eV
-            base_threshold = 40.0;   // eV (experimental range 40-90)
+            crystal_type_str = "BCC";
             break;
-
         case CrystalLattice::Type::DIAMOND:
-            // Typical diamond structure (Si, Ge, C)
-            density = 2.33;          // Si-like density
-            melting_temp = 1687.0;   // K
-            cohesive_energy = 4.63;  // eV
-            base_threshold = 35.0;   // eV (experimental ~35 for Si)
+            crystal_type_str = "DIAMOND";
             break;
-
         default:
-            // Conservative default values
-            density = 5.0;
-            melting_temp = 1500.0;
-            cohesive_energy = 4.0;
-            base_threshold = 30.0;
+            crystal_type_str = "FCC";  // Default fallback
+            break;
     }
+
+    // Get validated material properties
+    auto material_props = material_properties.at(crystal_type_str);
+    auto displacement_props = displacement_thresholds.at(crystal_type_str);
+
+    double density = material_props.density;                       // g/cm³ - validated
+    double melting_temp = material_props.melting_temperature;      // K - validated
+    double cohesive_energy = material_props.cohesive_energy;       // eV - validated
+    double base_threshold = displacement_props.average_threshold;  // eV - validated experimental
 
     // ==== KONOBEYEV MODEL CALCULATION ====
     // Ed = α(ρTmelt)^1/2 + β
@@ -143,9 +135,10 @@ double calculateDisplacementEnergy(const CrystalLattice& crystal, const QFTParam
     // Combine both validated approaches with empirical weighting
     double displacement_energy = 0.6 * konobeyev_energy + 0.4 * cohesive_scaled_energy;
 
-    // Ensure result is within experimental bounds
-    displacement_energy = std::max(displacement_energy, base_threshold * 0.8);
-    displacement_energy = std::min(displacement_energy, base_threshold * 1.5);
+    // ==== USE VALIDATED EXPERIMENTAL BOUNDS ====
+    // Ensure result is within validated experimental bounds
+    displacement_energy = std::max(displacement_energy, displacement_props.min_threshold);
+    displacement_energy = std::min(displacement_energy, displacement_props.max_threshold);
 
     // ==== DIRECTION-DEPENDENT CORRECTIONS ====
     // Real displacement energies are highly anisotropic
@@ -200,9 +193,10 @@ double calculateDisplacementEnergy(const CrystalLattice& crystal, const QFTParam
     // Reduce the correction factor to prevent overwhelming the main calculation
     displacement_energy -= quantum_correction * 0.01;  // Very small correction ~0.1%
 
-    // Final bounds check
-    displacement_energy = std::max(displacement_energy, 10.0);   // Minimum physical threshold
-    displacement_energy = std::min(displacement_energy, 200.0);  // Maximum reasonable value
+    // ==== FINAL VALIDATED BOUNDS CHECK ====
+    // Use validated experimental ranges for final bounds
+    displacement_energy = std::max(displacement_energy, displacement_props.min_threshold * 0.9);
+    displacement_energy = std::min(displacement_energy, displacement_props.max_threshold * 1.1);
 
     return displacement_energy;
 }
