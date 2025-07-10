@@ -465,11 +465,18 @@ float ResidualNeuralNetwork<T>::train(const std::vector<T>& data, const std::vec
                     try {
                         auto& layer = this->getLayerMutable(layer_idx);
 
-                        // Get layer dimensions from the layer structure
-                        size_t layer_input_size =
-                            (layer_idx == 0) ? input_size : layer.weights.size();
-                        size_t layer_output_size =
-                            layer.weights.empty() ? output_size : layer.weights[0].size();
+                        // Validate layer bounds to prevent out-of-bounds access
+                        auto layer_sizes = this->getLayerSizes();
+                        if (layer_idx >= layer_sizes.size() ||
+                            layer_idx + 1 >= layer_sizes.size()) {
+                            continue;  // Skip invalid layer index
+                        }
+
+                        // Get layer dimensions from the network architecture
+                        // Use the actual layer sizes instead of inferring from
+                        // potentially uninitialized weight matrices
+                        size_t layer_input_size = layer_sizes[layer_idx];
+                        size_t layer_output_size = layer_sizes[layer_idx + 1];
 
                         // Simple weight perturbation based on error
                         for (size_t from = 0; from < layer_input_size; ++from) {
