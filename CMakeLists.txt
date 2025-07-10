@@ -256,6 +256,139 @@ target_link_libraries(quantum_field_example
   rad_ml_qft
 )
 
+# Add the ML Radiation Training test
+add_executable(ml_radiation_training_test
+  test/ml_radiation_training_test.cpp
+)
+target_link_libraries(ml_radiation_training_test
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+  rad_ml_research
+  rad_ml_qft
+  gtest
+  gtest_main
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+target_include_directories(ml_radiation_training_test PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+)
+add_test(NAME ml_radiation_training_test COMMAND ml_radiation_training_test)
+
+# Add the Cross Validation test
+add_executable(cross_validation_test
+  test/cross_validation_test.cpp
+)
+target_link_libraries(cross_validation_test
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+  rad_ml_research
+  rad_ml_qft
+  gtest
+  gtest_main
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+target_include_directories(cross_validation_test PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+)
+add_test(NAME cross_validation_test COMMAND cross_validation_test)
+
+# Add the Training Loop Diagnostic test
+add_executable(training_loop_diagnostic
+  training_loop_diagnostic.cpp
+)
+target_link_libraries(training_loop_diagnostic
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+  rad_ml_research
+  rad_ml_qft
+  gtest
+  gtest_main
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+target_include_directories(training_loop_diagnostic PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+)
+add_test(NAME training_loop_diagnostic COMMAND training_loop_diagnostic)
+
+# Add the Simple Radiation test
+add_executable(simple_radiation_test
+  test/simple_radiation_test.cpp
+)
+target_link_libraries(simple_radiation_test
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+  rad_ml_research
+  rad_ml_qft
+  gtest
+  gtest_main
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+target_include_directories(simple_radiation_test PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+)
+add_test(NAME simple_radiation_test COMMAND simple_radiation_test)
+
+# Add the Weight Diagnostic test
+add_executable(weight_diagnostic_test
+  weight_diagnostic_test.cpp
+)
+target_link_libraries(weight_diagnostic_test
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+  rad_ml_research
+  rad_ml_qft
+  gtest
+  gtest_main
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+target_include_directories(weight_diagnostic_test PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+)
+add_test(NAME weight_diagnostic_test COMMAND weight_diagnostic_test)
+
+# Add the Trained Network Radiation test
+add_executable(trained_network_radiation_test
+  trained_network_radiation_test.cpp
+)
+target_link_libraries(trained_network_radiation_test
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+  rad_ml_research
+  rad_ml_qft
+  gtest
+  gtest_main
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+target_include_directories(trained_network_radiation_test PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+)
+add_test(NAME trained_network_radiation_test COMMAND trained_network_radiation_test)
+
+# Add the Trivial Radiation test
+add_executable(trivial_radiation_test
+  trivial_radiation_test.cpp
+)
+target_link_libraries(trivial_radiation_test
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+  rad_ml_research
+  rad_ml_qft
+  gtest
+  gtest_main
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+target_include_directories(trivial_radiation_test PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+)
+add_test(NAME trivial_radiation_test COMMAND trivial_radiation_test)
+
 # Add LMDB basic test if LMDB is available
 if(LMDB_FOUND)
     add_executable(lmdb_basic_test
