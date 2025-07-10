@@ -513,7 +513,7 @@ for (double rad_level : radiation_levels) {
 
 ### Multibit Protection
 ```cpp
-#include "../neural/multibit_protection.hpp"
+#include "../neural/multi_bit_protection.hpp"
 ```
 - **Data Integrity**: Protects critical VAE parameters
 - **Error Detection**: Real-time corruption monitoring

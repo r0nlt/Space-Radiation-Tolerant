@@ -26,7 +26,7 @@
 
 #include "../core/logger.hpp"
 #include "../neural/activation.hpp"
-#include "../neural/multibit_protection.hpp"
+#include "../neural/multi_bit_protection.hpp"
 #include "../neural/protected_neural_network.hpp"
 
 namespace rad_ml {
