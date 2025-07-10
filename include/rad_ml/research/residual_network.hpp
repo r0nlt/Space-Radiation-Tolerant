@@ -8,7 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <rad_ml/neural/activation.hpp>
-#include <rad_ml/neural/multibit_protection.hpp>
+#include <rad_ml/neural/multi_bit_protection.hpp>
 #include <rad_ml/neural/protected_neural_network.hpp>
 #include <random>
 #include <string>
