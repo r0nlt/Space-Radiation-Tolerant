@@ -950,95 +950,7 @@ class ProtectedNeuralNetwork : public NetworkModel {
         // Real implementation would compute and apply gradients
     }
 
-   private:
-    // Define the weight protection type based on protection level
-    using WeightType = std::conditional_t<std::is_floating_point_v<T>, MultibitProtection<T>, T>;
-
-    /**
-     * @brief Initialize the network structure
-     */
-    void initializeNetwork()
-    {
-        size_t num_layers = layer_sizes_.size();
-
-        // Initialize weights for each layer
-        weights_.resize(num_layers - 1);
-        biases_.resize(num_layers - 1);
-        layers_.resize(num_layers - 1);
-
-        for (size_t i = 0; i < num_layers - 1; ++i) {
-            weights_[i].resize(layer_sizes_[i]);
-            for (size_t j = 0; j < layer_sizes_[i]; ++j) {
-                weights_[i][j].resize(layer_sizes_[i + 1]);
-            }
-
-            biases_[i].resize(layer_sizes_[i + 1]);
-
-            // Initialize the Layer structure
-            layers_[i].weights.resize(layer_sizes_[i], std::vector<T>(layer_sizes_[i + 1]));
-            layers_[i].biases.resize(layer_sizes_[i + 1]);
-        }
-
-        // Initialize activation functions (default to ReLU)
-        activation_functions_.resize(num_layers - 1, [](T x) { return x > 0 ? x : 0; });
-        activation_derivatives_.resize(num_layers - 1);
-
-        // Initialize weights and biases with random values
-        std::random_device rd;
-        std::mt19937 gen(rd());
-
-        for (size_t layer = 0; layer < num_layers - 1; ++layer) {
-            // Xavier/Glorot initialization
-            T scale = std::sqrt(6.0 / (layer_sizes_[layer] + layer_sizes_[layer + 1]));
-            std::uniform_real_distribution<T> dist(-scale, scale);
-
-            // Initialize weights
-            for (size_t i = 0; i < layer_sizes_[layer]; ++i) {
-                for (size_t j = 0; j < layer_sizes_[layer + 1]; ++j) {
-                    T value = dist(gen);
-                    setWeight(layer, i, j, value);
-                    layers_[layer].weights[i][j] = value;
-                }
-            }
-
-            // Initialize biases
-            for (size_t j = 0; j < layer_sizes_[layer + 1]; ++j) {
-                setBias(layer, j, T{0});
-                layers_[layer].biases[j] = T{0};
-            }
-        }
-    }
-
-    /**
-     * @brief Create a protected value based on the protection level
-     *
-     * @param value Raw value
-     * @return Protected value
-     */
-    auto createProtectedValue(const T& value) const
-    {
-        switch (protection_level_) {
-            case ProtectionLevel::NONE:
-                return value;
-
-            case ProtectionLevel::CHECKSUM_ONLY:
-                return MultibitProtection<T>(value, ECCCodingScheme::HAMMING);
-
-            case ProtectionLevel::SELECTIVE_TMR:
-            case ProtectionLevel::FULL_TMR:
-                return MultibitProtection<T>(value, ECCCodingScheme::SECDED);
-
-            case ProtectionLevel::ADAPTIVE_TMR:
-                return MultibitProtection<T>(value, ECCCodingScheme::REED_SOLOMON);
-
-            case ProtectionLevel::SPACE_OPTIMIZED:
-                return MultibitProtection<T>(value, ECCCodingScheme::HAMMING);
-
-            default:
-                return value;
-        }
-    }
-
+   protected:
     /**
      * @brief Get a weight value from a specific layer
      *
@@ -1151,6 +1063,95 @@ class ProtectedNeuralNetwork : public NetworkModel {
 
         // Update the layer representation
         layers_[layer].biases[output] = value;
+    }
+
+   private:
+    // Define the weight protection type based on protection level
+    using WeightType = std::conditional_t<std::is_floating_point_v<T>, MultibitProtection<T>, T>;
+
+    /**
+     * @brief Initialize the network structure
+     */
+    void initializeNetwork()
+    {
+        size_t num_layers = layer_sizes_.size();
+
+        // Initialize weights for each layer
+        weights_.resize(num_layers - 1);
+        biases_.resize(num_layers - 1);
+        layers_.resize(num_layers - 1);
+
+        for (size_t i = 0; i < num_layers - 1; ++i) {
+            weights_[i].resize(layer_sizes_[i]);
+            for (size_t j = 0; j < layer_sizes_[i]; ++j) {
+                weights_[i][j].resize(layer_sizes_[i + 1]);
+            }
+
+            biases_[i].resize(layer_sizes_[i + 1]);
+
+            // Initialize the Layer structure
+            layers_[i].weights.resize(layer_sizes_[i], std::vector<T>(layer_sizes_[i + 1]));
+            layers_[i].biases.resize(layer_sizes_[i + 1]);
+        }
+
+        // Initialize activation functions (default to ReLU)
+        activation_functions_.resize(num_layers - 1, [](T x) { return x > 0 ? x : 0; });
+        activation_derivatives_.resize(num_layers - 1);
+
+        // Initialize weights and biases with random values
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        for (size_t layer = 0; layer < num_layers - 1; ++layer) {
+            // Xavier/Glorot initialization
+            T scale = std::sqrt(6.0 / (layer_sizes_[layer] + layer_sizes_[layer + 1]));
+            std::uniform_real_distribution<T> dist(-scale, scale);
+
+            // Initialize weights
+            for (size_t i = 0; i < layer_sizes_[layer]; ++i) {
+                for (size_t j = 0; j < layer_sizes_[layer + 1]; ++j) {
+                    T value = dist(gen);
+                    setWeight(layer, i, j, value);
+                    layers_[layer].weights[i][j] = value;
+                }
+            }
+
+            // Initialize biases
+            for (size_t j = 0; j < layer_sizes_[layer + 1]; ++j) {
+                setBias(layer, j, T{0});
+                layers_[layer].biases[j] = T{0};
+            }
+        }
+    }
+
+    /**
+     * @brief Create a protected value based on the protection level
+     *
+     * @param value Raw value
+     * @return Protected value
+     */
+    auto createProtectedValue(const T& value) const
+    {
+        switch (protection_level_) {
+            case ProtectionLevel::NONE:
+                return value;
+
+            case ProtectionLevel::CHECKSUM_ONLY:
+                return MultibitProtection<T>(value, ECCCodingScheme::HAMMING);
+
+            case ProtectionLevel::SELECTIVE_TMR:
+            case ProtectionLevel::FULL_TMR:
+                return MultibitProtection<T>(value, ECCCodingScheme::SECDED);
+
+            case ProtectionLevel::ADAPTIVE_TMR:
+                return MultibitProtection<T>(value, ECCCodingScheme::REED_SOLOMON);
+
+            case ProtectionLevel::SPACE_OPTIMIZED:
+                return MultibitProtection<T>(value, ECCCodingScheme::HAMMING);
+
+            default:
+                return value;
+        }
     }
 
     /**
@@ -1912,6 +1913,15 @@ class ProtectedNeuralNetwork : public NetworkModel {
             const_cast<ProtectedNeuralNetwork*>(this)->adaptToRadiationLevel(radiation_level);
         }
 
+        // Apply temporary radiation effects during forward pass (non-destructive)
+        std::mt19937_64 temp_rng;
+        std::uniform_real_distribution<double> temp_dist(0.0, 1.0);
+        if (enable_protection && radiation_level > 0.0) {
+            uint64_t seed = static_cast<uint64_t>(
+                std::chrono::high_resolution_clock::now().time_since_epoch().count());
+            temp_rng.seed(seed);
+        }
+
         // Input layer activations
         std::vector<std::vector<T>> activations(layer_sizes_.size());
         activations[0] = input;
@@ -1922,11 +1932,27 @@ class ProtectedNeuralNetwork : public NetworkModel {
 
             // For each neuron in the current layer
             for (size_t neuron = 0; neuron < layer_sizes_[layer + 1]; ++neuron) {
-                T sum = getBias(layer, neuron);
+                T bias = getBias(layer, neuron);
+
+                // Apply temporary radiation effects to bias if needed
+                if (enable_protection && radiation_level > 0.0 &&
+                    temp_dist(temp_rng) < radiation_level * 2.0) {
+                    bias = applyBitFlip(bias, temp_rng);
+                }
+
+                T sum = bias;
 
                 // Sum weighted inputs from previous layer
                 for (size_t prev = 0; prev < layer_sizes_[layer]; ++prev) {
-                    sum += getWeight(layer, prev, neuron) * activations[layer][prev];
+                    T weight = getWeight(layer, prev, neuron);
+
+                    // Apply temporary radiation effects to weight if needed
+                    if (enable_protection && radiation_level > 0.0 &&
+                        temp_dist(temp_rng) < radiation_level * 2.0) {
+                        weight = applyBitFlip(weight, temp_rng);
+                    }
+
+                    sum += weight * activations[layer][prev];
                 }
 
                 // Apply activation function

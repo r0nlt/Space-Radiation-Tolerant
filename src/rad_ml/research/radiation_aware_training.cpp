@@ -115,12 +115,13 @@ RadiationAwareTraining::TrainingResult RadiationAwareTraining::train(
         // Calculate injection frequency
         int injection_frequency = std::max(1, static_cast<int>(1.0f / bit_flip_probability_));
 
-        // Initial baseline accuracy - measure on all samples
+        // Initial baseline accuracy - measure on all samples (clean network)
         float baseline_accuracy = 0.0f;
         size_t correct_predictions = 0;
 
         for (size_t i = 0; i < samples.size(); i++) {
-            std::vector<float> prediction = network.forward(samples[i]);
+            std::vector<float> prediction =
+                network.forward(samples[i]);  // ← Use clean network state
             // Find highest probability in prediction and label
             size_t pred_idx = std::distance(prediction.begin(),
                                             std::max_element(prediction.begin(), prediction.end()));
@@ -173,12 +174,13 @@ RadiationAwareTraining::TrainingResult RadiationAwareTraining::train(
                     auto state = network.saveState();
                 }
 
-                // Measure accuracy before injection
+                // Measure accuracy before injection (clean network state)
                 float pre_injection_accuracy = 0.0f;
                 correct_predictions = 0;
 
                 for (size_t i = 0; i < samples.size(); i++) {
-                    std::vector<float> prediction = network.forward(samples[i]);
+                    std::vector<float> prediction =
+                        network.forward(samples[i]);  // ← Use clean network state
                     size_t pred_idx = std::distance(
                         prediction.begin(), std::max_element(prediction.begin(), prediction.end()));
                     size_t label_idx = std::distance(
@@ -199,12 +201,13 @@ RadiationAwareTraining::TrainingResult RadiationAwareTraining::train(
                 std::chrono::duration<double, std::milli> elapsed = end - start;
                 double injection_time = elapsed.count();
 
-                // Measure accuracy after injection
+                // Measure accuracy after injection (using permanently corrupted network)
                 float post_injection_accuracy = 0.0f;
                 correct_predictions = 0;
 
                 for (size_t i = 0; i < samples.size(); i++) {
-                    std::vector<float> prediction = network.forward(samples[i]);
+                    std::vector<float> prediction =
+                        network.forward(samples[i]);  // ← Use corrupted network state
                     size_t pred_idx = std::distance(
                         prediction.begin(), std::max_element(prediction.begin(), prediction.end()));
                     size_t label_idx = std::distance(
@@ -234,12 +237,13 @@ RadiationAwareTraining::TrainingResult RadiationAwareTraining::train(
                     }
                 }
 
-                // Measure recovery
+                // Measure recovery (after additional training on corrupted network)
                 float recovery_accuracy = 0.0f;
                 correct_predictions = 0;
 
                 for (size_t i = 0; i < samples.size(); i++) {
-                    std::vector<float> prediction = network.forward(samples[i]);
+                    std::vector<float> prediction =
+                        network.forward(samples[i]);  // ← Use current network state
                     size_t pred_idx = std::distance(
                         prediction.begin(), std::max_element(prediction.begin(), prediction.end()));
                     size_t label_idx = std::distance(
