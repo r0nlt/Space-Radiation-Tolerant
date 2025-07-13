@@ -10,23 +10,28 @@
 
 **Repository:** https://github.com/r0nlt/Space-Radiation-Tolerant
 
-**Company Page:** https://www.linkedin.com/company/space-radiation-tolerant
+**Author Page:** https://www.linkedin.com/rishabnuguru
 
 **Version:** v1.0.1
 
-A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework implements radiation tolerance techniques inspired by industry practices and research in space radiation effects.
+A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom librairy focused to engineer systems resilient to radiation effects in Space Environments.
 
 ## About Space-Radiation-Tolerant
 
-Space-Radiation-Tolerant is an open-source software company focused on developing radiation-tolerant computing solutions for space applications.
+Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help democratize space and make fault tolerant computing accessible.
 
-### Our Approach
+Status:
+July 12 2025
+- RadML will be presented at QRS 2025.
 
-- **Open Source First**: All our software is released under the AGPL v3 license
-- **Research-Driven**: Our solutions are based on current research in radiation effects and mitigation
-- **Community Focused**: We welcome contributions and collaboration from the open-source community
-- **Quality Assurance**: Rigorous testing and continuous improvement of our software
-- **Documentation**: Comprehensive documentation and examples for all our tools
+
+### Approach
+
+- **Open Source First**: Software is released under the AGPL v3 license
+- **Research-Driven**: Solutions are inspired by physics, sustainability, mathematics, and Tour of C++ standards
+- **Community Focused**: I welcome anyone to peer review!
+- **Quality Assurance**: Many tests and edge cases and continous testing as RadML approaches publication
+- **Documentation**: Comprehensive documentation and on going updates
 
 ## Important Note for Students
 
@@ -86,24 +91,19 @@ The Student Guide provides easy-to-follow steps for:
 
 ## How Radiation Affects Computing
 
-High-energy particles from space radiation strike semiconductor materials in computing hardware, they can cause several types of errors:
-
-- **Single Event Upset (SEU)**: A change in state caused by one ionizing particle striking a sensitive node in a microelectronic device
-- **Multiple Bit Upset (MBU)**: Multiple bits flipped from a single particle strike
-- **Single Event Functional Interrupt (SEFI)**: A disruption of normal operations (typically requiring a reset)
-- **Single Event Latch-up (SEL)**: A potentially destructive condition involving parasitic circuit elements creating a low-resistance path
-
-These effects can corrupt data in memory, alter computational results, or even permanently damage hardware. In space environments where maintenance is impossible, radiation tolerance becomes critical for mission success.
-
-Space-Radiation-Tolerant addresses these challenges through software-based protection mechanisms that detect and correct radiation-induced errors, allowing ML systems to operate reliably even in harsh radiation environments. The software framework is intended to work alongside hardware protection strategies to achieve enhanced protection through hybrid protection methods.
+For a detailed guide on radiation effects, see [Radiation Effects Guide](./rootMarkdown/radiationEffects/radiation_effects_guide.md).
 
 ## How to Build
 
-### 1. Create a Build Directory
-It's best practice to build out-of-source:
+### 1. Build from Root Directory
+Build directly from the root directory:
 ```bash
-mkdir build
-cd build
+make
+```
+## 1.1 Clean in Root Directory
+Clean root directory
+```bash
+make clean
 ```
 
 ### 2. Configure CMake (with Custom Paths if Needed)
@@ -154,91 +154,15 @@ cmake -LH ..
 
 ## Quick Start Guide
 
-Here's how to use the framework to protect a simple ML inference operation:
-
-```cpp
-#include "rad_ml/api/protection.hpp"
-#include "rad_ml/sim/mission_environment.hpp"
-
-using namespace rad_ml;
-
-int main() {
-    // 1. Initialize protection with material properties
-    core::MaterialProperties aluminum;
-    aluminum.radiation_tolerance = 50.0; // Standard aluminum
-    tmr::PhysicsDrivenProtection protection(aluminum);
-
-    // 2. Configure for your target environment
-    sim::RadiationEnvironment env = sim::createEnvironment(sim::Environment::LEO);
-    protection.updateEnvironment(env);
-
-    // 3. Define your ML inference operation
-    auto my_ml_operation = []() {
-        // Your ML model inference code here
-        float result = 0.0f; // Replace with actual inference
-        return result;
-    };
-
-    // 4. Execute with radiation protection
-    auto result = protection.executeProtected<float>(my_ml_operation);
-
-    // 5. Check for detected errors
-    if (result.error_detected) {
-        std::cout << "Error detected and "
-                  << (result.error_corrected ? "corrected!" : "not corrected")
-                  << std::endl;
-    }
-
-    return 0;
-}
-```
+For a complete quick start example with code, see [Quick Start Guide](./rootMarkdown/quickStartGuide/quick_start_guide.md).
 
 ### Using Advanced Reed-Solomon Error Correction
 
-```cpp
-#include "rad_ml/neural/advanced_reed_solomon.hpp"
-
-// Create Reed-Solomon codec with 8-bit symbols, 12 total symbols, 8 data symbols
-neural::AdvancedReedSolomon<uint8_t, 8> rs_codec(12, 8);
-
-// Encode a vector of data
-std::vector<uint8_t> data = {1, 2, 3, 4, 5, 6, 7, 8};
-auto encoded = rs_codec.encode(data);
-
-// Simulate error (corrupt some data)
-encoded[2] = 255;  // Corrupt a symbol
-
-// Decode with error correction
-auto decoded = rs_codec.decode(encoded);
-if (decoded) {
-    std::cout << "Successfully recovered data" << std::endl;
-}
-```
+For the full code example, see [Advanced Reed-Solomon Error Correction Guide](./rootMarkdown/advancedReedSolomonErrorCorrection/using_advanced_reedsoloman.md).
 
 ### Using Adaptive Protection Strategy
 
-```cpp
-#include "rad_ml/neural/adaptive_protection.hpp"
-
-// Create adaptive protection with default settings
-neural::AdaptiveProtection protection;
-
-// Configure for current environment
-protection.setRadiationEnvironment(sim::createEnvironment(sim::Environment::MARS));
-protection.setBaseProtectionLevel(neural::ProtectionLevel::MODERATE);
-
-// Protect a neural network weight matrix
-std::vector<float> weights = /* your neural network weights */;
-auto protected_weights = protection.protectValue(weights);
-
-// Later, recover the weights (with automatic error correction)
-auto recovered_weights = protection.recoverValue(protected_weights);
-
-// Check protection statistics
-auto stats = protection.getProtectionStats();
-std::cout << "Errors detected: " << stats.errors_detected << std::endl;
-std::cout << "Errors corrected: " << stats.errors_corrected << std::endl;
-```
+For the full code example, see [Adaptive Protection Strategy Guide](./rootMarkdown/adaptiveProtection/using_adaptive_protection.md).
 
 ## Common API Usage Examples
 
