@@ -10,23 +10,28 @@
 
 **Repository:** https://github.com/r0nlt/Space-Radiation-Tolerant
 
-**Company Page:** https://www.linkedin.com/company/space-radiation-tolerant
+**Author Page:** https://www.linkedin.com/rishabnuguru
 
 **Version:** v1.0.1
 
-A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework implements radiation tolerance techniques inspired by industry practices and research in space radiation effects.
+A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom librairy focused to engineer systems resilient to radiation effects in Space Environments.
 
 ## About Space-Radiation-Tolerant
 
-Space-Radiation-Tolerant is an open-source software company focused on developing radiation-tolerant computing solutions for space applications.
+Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help democratize space and make fault tolerant computing accessible.
 
-### Our Approach
+Status:
+July 12 2025
+- RadML will be presented at QRS 2025.
 
-- **Open Source First**: All our software is released under the AGPL v3 license
-- **Research-Driven**: Our solutions are based on current research in radiation effects and mitigation
-- **Community Focused**: We welcome contributions and collaboration from the open-source community
-- **Quality Assurance**: Rigorous testing and continuous improvement of our software
-- **Documentation**: Comprehensive documentation and examples for all our tools
+
+### Approach
+
+- **Open Source First**: Software is released under the AGPL v3 license
+- **Research-Driven**: Solutions are inspired by physics, sustainability, mathematics, and Tour of C++ standards
+- **Community Focused**: I welcome anyone to peer review!
+- **Quality Assurance**: Many tests and edge cases and continous testing as RadML approaches publication
+- **Documentation**: Comprehensive documentation and on going updates
 
 ## Important Note for Students
 
