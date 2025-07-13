@@ -59,6 +59,8 @@ This updated test expands the network compared to the old simple one.
 - **Advanced Test Scenarios**: Multi-copy corruption, edge cases, correlated errors, recovery testing, neural network protection, mission-adaptive protection, and temperature effects
 
 **Test Output:**
+
+```
 === Summary Results ===
 Average Success Rates Across All Tests:
 ---------------------------------------------------------
@@ -88,6 +90,7 @@ Most Effective Method: Aligned Memory (100.0000%)
 
 Enhanced Methods Improvement: 0.0003% over traditional methods
 NASA-style verification report generated: nasa_verification_report.txt
+```
 
 **Expected Runtime:** ~10-60 minutes depending on number of trials and system being used.
 
