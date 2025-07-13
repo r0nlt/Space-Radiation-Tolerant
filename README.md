@@ -12,18 +12,22 @@
 
 **Author Page:** https://www.linkedin.com/rishabnuguru
 
+**Email:** spacelabsai@gmail.com
+
 **Version:** v1.0.1
 
-A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom librairy focused to engineer systems resilient to radiation effects in Space Environments.
+A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom library focused to engineer systems resilient to radiation effects in Space Environments.
 
 ## About Space-Radiation-Tolerant
 
-Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help democratize space and make fault tolerant computing accessible.
+Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help democratize space.
 
 Status:
 July 12 2025
 - RadML will be presented at QRS 2025.
-
+- Training on GPU starting soon
+- cleaning up codebase
+- increase in better documentation
 
 ### Approach
 
@@ -32,6 +36,61 @@ July 12 2025
 - **Community Focused**: I welcome anyone to peer review!
 - **Quality Assurance**: Many tests and edge cases and continous testing as RadML approaches publication
 - **Documentation**: Comprehensive documentation and on going updates
+
+### RadML Monte Carlo Validation
+
+The Monte Carlo validation test provides comprehensive statistical validation of the radiation-tolerant framework using NASA-aligned methodologies. This test validates the effectiveness of enhanced voting mechanisms and protection methods across multiple space radiation environments.
+
+This updated test expands the network compared to the old simple one.
+
+**To run the Monte Carlo validation:**
+```bash
+./monte_carlo_validation
+```
+
+**Source:** [`test/verification/monte_carlo_validation.cpp`](test/verification/monte_carlo_validation.cpp)
+
+**What This Test Validates:**
+
+- **28.8 Million Total Trials**: 100,000 trials per test case across 4 data types, 8 environments, and 9 test scenarios
+- **Real Space Environments**: LEO, GEO, LUNAR, SAA, SOLAR_STORM, JUPITER, MARS, EUROPA with physics-based radiation modeling
+- **Comprehensive Error Injection**: Single-bit upsets (SEUs), multi-bit upsets (MCUs), burst errors, word errors, and physics-based quantum simulation
+- **13 Protection Methods**: Standard voting, bit-level voting, adaptive voting, weighted voting, pattern detection, protected values, aligned memory, and more
+- **Advanced Test Scenarios**: Multi-copy corruption, edge cases, correlated errors, recovery testing, neural network protection, mission-adaptive protection, and temperature effects
+
+**Test Output:**
+=== Summary Results ===
+Average Success Rates Across All Tests:
+---------------------------------------------------------
+ORIGINAL METHODS:
+  Standard Voting:    99.9994%
+  Bit-Level Voting:   99.9994%
+  Word-Error Voting:  99.9994%
+  Burst-Error Voting: 99.9994%
+  Adaptive Voting:    99.9994%
+
+ENHANCED METHODS:
+  Weighted Voting:     99.9994%
+  Fast Bit Correction: 99.9994%
+  Pattern Detection:   100.0000%
+
+MEMORY PROTECTION:
+  Protected Value:     100.0000%
+  Aligned Memory:      100.0000%
+
+ENHANCED TEST SCENARIOS (Success Rates):
+  Multi-Copy Corruption:  100.0000%
+  Edge Cases:            100.0000%
+  Correlated Errors:     100.0000%
+  Recovery Testing:      94.1551%
+
+Most Effective Method: Aligned Memory (100.0000%)
+
+Enhanced Methods Improvement: 0.0003% over traditional methods
+NASA-style verification report generated: nasa_verification_report.txt
+
+**Expected Runtime:** ~10-60 minutes depending on number of trials and system being used.
+
 
 ## Important Note for Students
 
@@ -265,129 +324,7 @@ int main() {
 
 ## Python Bindings Usage (v0.9.5)
 
-As of v0.9.5, the framework now provides Python bindings for key radiation protection features, making the technology more accessible to data scientists and machine learning practitioners. Python bindings will soon be expanded upon for tensor flow and pytorch integration in the near future.
-
-### Basic Usage with TMR Protection
-
-```python
-import rad_ml_minimal as rad_ml
-from rad_ml_minimal.rad_ml.tmr import StandardTMR
-
-# Initialize the framework
-rad_ml.initialize()
-
-# Create a TMR-protected integer
-protected_value = StandardTMR(42)
-
-# Use the protected value
-print(f"Protected value: {protected_value.value}")
-
-# Check integrity
-if protected_value.check_integrity():
-    print("Value integrity verified")
-
-# Simulate a radiation effect
-# In production code, this would happen naturally in radiation environments
-# This is just for demonstration purposes
-protected_value._v1 = 43  # Corrupt one copy
-
-# Check integrity again
-if not protected_value.check_integrity():
-    print("Corruption detected!")
-
-    # Attempt to correct the error
-    if protected_value.correct():
-        print(f"Error corrected, value restored to {protected_value.value}")
-
-# Shutdown the framework
-rad_ml.shutdown()
-```
-
-### Advanced TMR Demonstration
-
-For a comprehensive demonstration of TMR protection against radiation effects:
-
-```python
-import rad_ml_minimal
-from rad_ml_minimal.rad_ml.tmr import EnhancedTMR
-import random
-
-# Initialize
-rad_ml_minimal.initialize()
-
-# Create TMR-protected values of different types
-protected_int = EnhancedTMR(100)
-protected_float = EnhancedTMR(3.14159)
-
-# Simulate radiation-induced bit flips on these values
-def simulate_bit_flip(value, bit_position):
-    """Flip a specific bit in the binary representation of a value"""
-    if isinstance(value, int):
-        return value ^ (1 << bit_position)
-    elif isinstance(value, float):
-        import struct
-        ieee = struct.pack('>f', value)
-        i = struct.unpack('>I', ieee)[0]
-        i ^= (1 << bit_position)
-        return struct.unpack('>f', struct.pack('>I', i))[0]
-
-# Test error correction capabilities
-print("Testing TMR protection...")
-
-# Protect data operations in radiation environments
-for _ in range(10):
-    # Your data operations here
-    result = protected_int.value * 2
-
-    # Simulate random radiation effects
-    if random.random() < 0.3:  # 30% chance of radiation effect
-        bit = random.randint(0, 31)
-        corrupted_value = simulate_bit_flip(protected_int.value, bit)
-        # In a real scenario, radiation would directly affect memory
-        # This is just for demonstration
-        protected_int._v2 = corrupted_value
-
-        print(f"Radiation effect simulated, bit {bit} flipped")
-
-        # Verify integrity and correct if needed
-        if not protected_int.check_integrity():
-            print("Corruption detected!")
-            if protected_int.correct():
-                print("Error successfully corrected")
-            else:
-                print("Error correction failed")
-
-# Shutdown
-rad_ml_minimal.shutdown()
-```
-
-### Using Python with C++ Integration Points
-
-For projects using both Python and C++:
-
-```python
-import rad_ml_minimal as rad_ml
-
-# Initialize with specific environment settings
-rad_ml.initialize(radiation_environment=rad_ml.RadiationEnvironment.MARS)
-
-# Create protected data structures
-# ... your code here ...
-
-# At the language boundary (Python to C++), use the serialization utilities
-# to maintain protection across the boundary
-serialized_data = rad_ml.serialize_protected_data(your_protected_data)
-
-# Pass serialized_data to C++ components
-# ...
-
-# Then in C++:
-// auto protected_data = rad_ml::deserialize_protected_data(serialized_data);
-// Use protected data in C++ with full radiation protection...
-
-# Finally, shutdown properly
-rad_ml.shutdown()
-```
+For comprehensive Python bindings documentation and usage examples, see [Python Bindings Usage Guide](./rootMarkdown/pythonBindings/python_bindings_usage.md).
 
 ## Performance and Resource Utilization
 
@@ -428,11 +365,12 @@ Extensive Monte Carlo simulations (3240 configurations) revealed that:
 
 ### Implications
 
-There is hope for AI in space, these findings can help people develop an AI that can reliably communicate with people in real time when needed to without having to worry about memory loss issues due to radiation effects. AI can not autonomously operate in LEO observing out earth as well as climate change. The cost now to make and design hardware like this will have to change:
+A network can be trained and use software mitigation strategies to adapt radiation environment. Networks can be trained for various tasks.
 
-1. **Natural Tolerance**: Some neural network architectures appear to possess inherent radiation tolerance without requiring explicit protection mechanisms.
 
-2. **Performance Enhancement**: In certain configurations, radiation effects may actually *enhance* classification performance, suggesting new approaches to network design.
+1. **Natural Tolerance**: Some neural network architectures appear to possess inherent radiation tolerance without requiring explicit protection mechanisms. This Natural Tolerance was noticed in wide networks.
+
+2. **Performance Enhancement**: In certain configurations, radiation effects may actually *enhance* classification performance, suggesting new approaches to network design. These enhancements were seen only in martian radiation. Seems like the stochastic nature of martian nature may increase network performance.
 
 3. **Resource Efficiency**: Zero-overhead protection strategies through architecture and training optimization can replace computationally expensive protection mechanisms.
 

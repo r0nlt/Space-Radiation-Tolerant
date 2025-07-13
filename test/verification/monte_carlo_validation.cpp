@@ -314,7 +314,7 @@ void runMonteCarloValidation(std::mt19937& gen,
     QuantumEnhancedRadiation quantum_sim(silicon_props);
 
     // Initialize protected neural network for testing
-    std::vector<size_t> nn_architecture = {4, 8, 4};  // Simple 4-8-4 network
+    std::vector<size_t> nn_architecture = {4, 32, 4};  // 4-32-4 network
     ProtectedNeuralNetwork<float> protected_nn(nn_architecture, ProtectionLevel::ADAPTIVE_TMR);
 
     // For each environment
