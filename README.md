@@ -15,6 +15,7 @@
 **Email:** spacelabsai@gmail.com
 
 **Version:** v1.0.1
+**Coming Soon** v1.0.2 Radiation Tolerant AI Native Embedded Database
 
 A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom library focused to engineer systems resilient to radiation effects in Space Environments.
 
@@ -28,6 +29,7 @@ July 12 2025
 - Training on GPU starting soon
 - cleaning up codebase
 - increase in better documentation
+- Radiation Tolerant AI Native Embedded Database
 
 ### Approach
 
@@ -59,6 +61,8 @@ This updated test expands the network compared to the old simple one.
 - **Advanced Test Scenarios**: Multi-copy corruption, edge cases, correlated errors, recovery testing, neural network protection, mission-adaptive protection, and temperature effects
 
 **Test Output:**
+
+```
 === Summary Results ===
 Average Success Rates Across All Tests:
 ---------------------------------------------------------
@@ -88,6 +92,7 @@ Most Effective Method: Aligned Memory (100.0000%)
 
 Enhanced Methods Improvement: 0.0003% over traditional methods
 NASA-style verification report generated: nasa_verification_report.txt
+```
 
 **Expected Runtime:** ~10-60 minutes depending on number of trials and system being used.
 
@@ -157,13 +162,27 @@ For a detailed guide on radiation effects, see [Radiation Effects Guide](./rootM
 ### 1. Build from Root Directory
 Build directly from the root directory:
 ```bash
+cmake .
 make
 ```
-## 1.1 Clean in Root Directory
+
+## 1.1 Building custom targets
+```bash
+make monte_carlo_validation
+```
+
+## 1.2 Clean in Root Directory
 Clean root directory
 ```bash
 make clean
 ```
+## 1.3 Testing
+Running a executable test after compiling build
+./example_test_executable
+```bash
+./monte_carlo_validation
+```
+
 
 ### 2. Configure CMake (with Custom Paths if Needed)
 
