@@ -168,123 +168,30 @@ For the full code example, see [Adaptive Protection Strategy Guide](./rootMarkdo
 
 ### Protecting a Simple Calculation
 
-```cpp
-// Define a simple function to protect
-auto calculation = [](float x, float y) -> float {
-    return x * y + std::sqrt(x) / y;  // Could have radiation-induced errors
-};
+For the full code example, see [Protecting Simple Calculations](./rootMarkdown/commonAPIUsage/protecting_simple_calculation.md).
 
-// Protect it against radiation effects
-float result = protection.executeProtected<float>([&]() {
-    return calculation(3.14f, 2.71f);
-}).value;
-```
+Coming Soon!:
+More formal documentation on API.
 
 ### Protecting Neural Network Inference
 
-```cpp
-// Protect a neural network forward pass
-auto protected_inference = [&](const std::vector<float>& input) -> std::vector<float> {
-    // Create a wrapper for your neural network inference
-    return protection.executeProtected<std::vector<float>>([&]() {
-        return neural_network.forward(input);
-    }).value;
-};
+For the full code example, see [Protecting Neural Network Inference](./rootMarkdown/protectingNetworks/protecting_neural_network_inference.md).
 
-// Use the protected inference function
-std::vector<float> output = protected_inference(input_data);
-```
+More in depth examples coming soon!
 
 ### Configuring Environment-Specific Protection
 
-```cpp
-// Configure for LEO (Low Earth Orbit) environment
-sim::RadiationEnvironment leo = sim::createEnvironment(sim::Environment::LEO);
-protection.updateEnvironment(leo);
+For the full code example, see [Configuring Environment-Specific Protection](./rootMarkdown/configureEnvironmentProtection/configuring_environment_specific_protection.md).
 
-// Perform protected operations in LEO environment
-// ...
-
-// Configure for SAA crossing (South Atlantic Anomaly)
-sim::RadiationEnvironment saa = sim::createEnvironment(sim::Environment::SAA);
-protection.updateEnvironment(saa);
-protection.enterMissionPhase(MissionPhase::SAA_CROSSING);
-
-// Perform protected operations with enhanced protection for SAA
-// ...
-```
+More in depth examples coming soon!
 
 ### Handling Detected Errors
 
-```cpp
-// Execute with error detection
-auto result = protection.executeProtected<float>([&]() {
-    return performComputation();
-});
-
-// Check if errors were detected and corrected
-if (result.error_detected) {
-    if (result.error_corrected) {
-        logger.info("Error detected and corrected");
-    } else {
-        logger.warning("Error detected but could not be corrected");
-        fallbackStrategy();
-    }
-}
-```
+For the full code example, see [Handling Detected Errors](./rootMarkdown/errorHandling/handling_detected_errors.md).
 
 ### Using the Enhanced Mission Simulator (v0.9.6)
 
-```cpp
-#include "rad_ml/testing/mission_simulator.hpp"
-#include "rad_ml/tmr/enhanced_tmr.hpp"
-
-using namespace rad_ml::testing;
-using namespace rad_ml::tmr;
-
-int main() {
-    // Create a mission profile for Low Earth Orbit
-    MissionProfile profile = MissionProfile::createStandard("LEO");
-
-    // Configure adaptive protection
-    AdaptiveProtectionConfig protection_config;
-    protection_config.enable_tmr_medium = true;
-    protection_config.memory_scrubbing_interval_ms = 5000;
-
-    // Create mission simulator
-    MissionSimulator simulator(profile, protection_config);
-
-    // Create your neural network
-    YourNeuralNetwork network;
-
-    // Register important memory regions for radiation simulation
-    simulator.registerMemoryRegion(network.getWeightsPtr(),
-                                 network.getWeightsSize(),
-                                 true);  // Enable protection
-
-    // Run the simulation for 30 mission seconds
-    auto stats = simulator.runSimulation(
-        std::chrono::seconds(30),
-        std::chrono::seconds(3),
-        [&network](const RadiationEnvironment& env) {
-            // Adapt protection based on environment
-            if (env.inside_saa || env.solar_activity > 5.0) {
-                network.increaseProtectionLevel();
-            } else {
-                network.useStandardProtection();
-            }
-        }
-    );
-
-    // Print mission statistics
-    std::cout << stats.getReport() << std::endl;
-
-    // Test neural network after the mission
-    network.runInference(test_data);
-
-    return 0;
-}
-```
+For the full code example, see [Enhanced Mission Simulator Guide](./rootMarkdown/enhancedMissionSimulator/using_enhanced_mission_simulator.md).
 
 ### Using Space-Radiation-Tolerant VAE (NEW in v1.0.1)
 
@@ -358,7 +265,7 @@ int main() {
 
 ## Python Bindings Usage (v0.9.5)
 
-As of v0.9.5, the framework now provides Python bindings for key radiation protection features, making the technology more accessible to data scientists and machine learning practitioners.
+As of v0.9.5, the framework now provides Python bindings for key radiation protection features, making the technology more accessible to data scientists and machine learning practitioners. Python bindings will soon be expanded upon for tensor flow and pytorch integration in the near future.
 
 ### Basic Usage with TMR Protection
 
