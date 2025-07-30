@@ -30,8 +30,8 @@ namespace memory {
 namespace tmr {
     class TMRBase;
     class ApproximateTMR;
-    class HealthWeightedTMR;
-    class EnhancedTMR;
+    template<typename T> class HealthWeightedTMR;
+    template<typename T> class EnhancedTMR;
 }
 
 namespace neural {
