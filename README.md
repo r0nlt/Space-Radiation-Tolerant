@@ -24,12 +24,12 @@ A C++ software framework for implementing machine learning models that can opera
 Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help democratize space.
 
 Status:
-July 12 2025
-- RadML will be presented at QRS 2025.
-- Training on GPU starting soon
+July 30 2025
+- Paper has been presented at QRS 2025, awaiting peer review and publication
+- PyTorch Integration
 - cleaning up codebase
 - increase in better documentation
-- Radiation Tolerant AI Native Embedded Database
+- Radiation Tolerant AI Native Embedded Database (in development)
 
 ### Approach
 
@@ -270,6 +270,137 @@ For the full code example, see [Handling Detected Errors](./rootMarkdown/errorHa
 ### Using the Enhanced Mission Simulator (v0.9.6)
 
 For the full code example, see [Enhanced Mission Simulator Guide](./rootMarkdown/enhancedMissionSimulator/using_enhanced_mission_simulator.md).
+
+## AI Native Database + PyTorch Integration (in development v1.0.2)
+
+**Status:** 🔧 In Development
+**Version:** v1.0.2
+**Target Release:** Coming Soon
+
+The AI-NATIVE-DATABASE library represents a significant advancement in radiation-tolerant machine learning, utilizing open source project LMDB and VAE networks. Adding PyTorch to the build will enhance machine learning capabilities for GPU and developers who use CUDA.
+
+### 🗄️ AI-NATIVE-DATABASE Library
+
+The AI-NATIVE-DATABASE contains comprehensive documentation and implementation guides for the radiation-tolerant machine learning framework:
+
+#### **📚 Documentation Library**
+
+- **[Comprehensive Adaptive Protection Fixes](./FAQ/AI-NATIVE-DATABASE/COMPREHENSIVE_ADAPTIVE_PROTECTION_FIXES.md)**
+  - Complete implementation guide for adaptive protection mechanisms
+  - Thread safety improvements and real error correction
+  - Multi-bit protection and Reed-Solomon implementation
+  - 28.8 million Monte Carlo validation trials
+
+- **[Adaptive Protection Improvements](./FAQ/AI-NATIVE-DATABASE/ADAPTIVE_PROTECTION_IMPROVEMENTS.md)**
+  - Initial improvements summary and implementation details
+  - Hamming code and TMR checksum enhancements
+  - Test results and performance characteristics
+
+- **[PyTorch Integration Guide](./FAQ/AI-NATIVE-DATABASE/PYTORCH_INTEGRATION.md)**
+  - Complete CMake build system integration
+  - PyTorch tensor and model protection
+  - Thread-safe operations and multi-bit protection support
+  - Performance optimization strategies
+
+#### **🔧 Key Features**
+
+- **Real Error Correction**: Functional Hamming, Reed-Solomon, and parity protection
+- **Thread Safety**: Eliminated race conditions with thread-local storage
+- **Multi-Bit Protection**: Real multi-bit upset simulation and correction
+- **Neural Network Interface**: Protected network implementation
+- **Build System Integration**: Clean PyTorch integration with CMake
+- **Comprehensive Testing**: 28.8 million validation trials completed
+
+#### **📊 Performance Characteristics**
+
+| Protection Level | Method | Overhead | Error Correction | Use Case |
+|------------------|--------|----------|------------------|----------|
+| NONE | No protection | 0% | None | Baseline testing |
+| MINIMAL | Parity | 0% | Detection only | Basic protection |
+| MODERATE | Hamming | 75% | Single-bit correction | Moderate protection |
+| HIGH | TMR | 200% | Majority voting | High protection |
+| VERY_HIGH | Reed-Solomon | 200-400% | Multi-bit correction | Very high protection |
+| ADAPTIVE | Dynamic selection | Variable | Based on criticality | Mission-adaptive |
+
+#### **🚀 Space Mission Readiness**
+
+- **8 Space Environments**: LEO, GEO, LUNAR, SAA, SOLAR_STORM, JUPITER, MARS, EUROPA
+- **13 Protection Methods**: All validated and functional
+- **Radiation Hardening**: SEU, MCU, burst error, and temperature protection
+- **Thread Safety**: No race conditions during 297-second validation tests
+
+#### **🔬 Integration Points**
+
+- **PyTorch Integration**: Full tensor and model protection
+- **Monte Carlo Validation**: Comprehensive statistical validation
+- **Build System**: CMake integration with optional PyTorch support
+- **Testing Framework**: PyTorch-aware test system
+
+#### **📈 Development Status**
+
+- **✅ Core Protection**: Implemented and tested
+- **✅ Thread Safety**: Implemented and validated
+- **✅ Multi-Bit Handling**: Implemented and functional
+- **✅ Neural Network Interface**: Implemented and tested
+- **✅ Build Integration**: Implemented and working
+- **✅ Comprehensive Testing**: 28.8 million trials completed
+
+#### **🎯 Next Steps**
+
+1. **Framework Enhancement**: Continue improving protection mechanisms
+2. **Performance Optimization**: Optimize error correction algorithms
+3. **Additional Testing**: Expand test coverage and scenarios
+4. **Documentation**: Maintain comprehensive documentation
+
+#### **🔮 Future Enhancements**
+
+- **GPU Acceleration**: CUDA-enabled protection mechanisms
+- **Dynamic Protection**: Runtime protection level adjustment
+- **Memory Pooling**: Optimized memory management for protected tensors
+- **Distributed Protection**: Multi-GPU protection coordination
+- **Training VAE**: Using PyTorch and NVIDIA GPU to get better compression & decompression ratio
+
+### 🛰️ Mission Applications
+
+The AI-NATIVE-DATABASE library enables:
+
+- **Satellite AI Systems**: Protected neural networks for autonomous decision-making
+- **Deep Space Missions**: Radiation-hardened machine learning for long-duration missions
+- **Mars Rovers**: AI systems that can operate reliably in high-radiation environments
+- **Space Stations**: Protected AI for life support and navigation systems
+- **Interplanetary Probes**: Autonomous AI systems for scientific data processing
+- **Foundation for Datacenters**: Expanding protection strategies to larger data can enable functional cost effective data centers with machine learning capabilities.
+
+### 📖 Getting Started
+
+To explore the AI-NATIVE-DATABASE library:
+
+```bash
+# Navigate to the documentation
+cd FAQ/AI-NATIVE-DATABASE/
+
+# View comprehensive protection fixes
+cat COMPREHENSIVE_ADAPTIVE_PROTECTION_FIXES.md
+
+# View PyTorch integration guide
+cat PYTORCH_INTEGRATION.md
+
+# View adaptive protection improvements
+cat ADAPTIVE_PROTECTION_IMPROVEMENTS.md
+```
+
+For development and testing:
+
+```bash
+# Build with PyTorch integration
+./tools/build_with_pytorch.sh -d
+
+# Run comprehensive tests
+./test_comprehensive_adaptive_protection
+
+# Run basic protection tests
+./test_adaptive_protection
+```
 
 ### Using Space-Radiation-Tolerant VAE (NEW in v1.0.1)
 

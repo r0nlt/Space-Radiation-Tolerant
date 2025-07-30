@@ -22,10 +22,28 @@ option(ENABLE_VISUALIZATION "Enable visualization with OpenCV" OFF)
 option(BUILD_TESTING "Build with testing enabled" ON)
 option(USE_MINIMAL_PYTHON_BINDINGS "Use minimal Python bindings to avoid compilation errors" ON)
 option(ENABLE_IDE_INTEGRATION "Enable IDE integration features" ON)
+option(ENABLE_PYTORCH "Enable PyTorch integration" OFF)
 
 # Find required packages
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
+
+# Find PyTorch if enabled
+if(ENABLE_PYTORCH)
+  # Add cmake modules path
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
+
+  # Find PyTorch
+  find_package(PyTorch)
+
+  if(PyTorch_FOUND)
+    message(STATUS "PyTorch found: ${PyTorch_LIBRARY}")
+    message(STATUS "PyTorch include directory: ${PyTorch_INCLUDE_DIR}")
+  else()
+    message(WARNING "PyTorch not found. Set PyTorch_ROOT or PYTORCH_ROOT environment variable.")
+    message(WARNING "You can download LibTorch from: https://pytorch.org/get-started/locally/")
+  endif()
+endif()
 
 # Find LMDB
 find_path(LMDB_INCLUDE_DIR
@@ -143,12 +161,20 @@ add_subdirectory(src/tmr)
 # Add research components
 add_subdirectory(src/rad_ml/research)
 
+# Add PyTorch integration if enabled
+if(ENABLE_PYTORCH)
+  add_subdirectory(src/rad_ml/pytorch)
+endif()
+
 # Add examples
 add_subdirectory(examples)
 
 # Add executable for Monte Carlo validation test
 add_executable(monte_carlo_validation test/verification/monte_carlo_validation.cpp)
 target_link_libraries(monte_carlo_validation rad_ml_tmr rad_ml_testing rad_ml_qft)
+if(ENABLE_PYTORCH AND PyTorch_FOUND)
+  target_link_libraries(monte_carlo_validation rad_ml_pytorch)
+endif()
 add_test(NAME monte_carlo_validation COMMAND monte_carlo_validation)
 
 # Add executable for space-optimized Monte Carlo validation
@@ -389,6 +415,27 @@ target_include_directories(trivial_radiation_test PRIVATE
 )
 add_test(NAME trivial_radiation_test COMMAND trivial_radiation_test)
 
+# Add PyTorch integration test if enabled
+if(ENABLE_PYTORCH AND PyTorch_FOUND)
+  add_executable(pytorch_integration_test
+    test/pytorch_integration_test.cpp
+  )
+  target_link_libraries(pytorch_integration_test
+    PRIVATE
+    rad_ml_tmr
+    rad_ml_testing
+    rad_ml_research
+    rad_ml_pytorch
+    ${CMAKE_THREAD_LIBS_INIT}
+  )
+  target_include_directories(pytorch_integration_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+  )
+  add_test(NAME pytorch_integration_test COMMAND pytorch_integration_test)
+
+  message(STATUS "Added PyTorch integration test")
+endif()
+
 # Add LMDB basic test if LMDB is available
 if(LMDB_FOUND)
     add_executable(lmdb_basic_test
@@ -434,8 +481,17 @@ endif()
 if(BUILD_PYTHON_BINDINGS)
   message(STATUS "Building Python bindings")
 
-  # Include pybind11
-  add_subdirectory(third_party/pybind11)
+  # Include pybind11 - try to find it first
+  if(EXISTS "${CMAKE_SOURCE_DIR}/third_party/pybind11")
+    add_subdirectory(third_party/pybind11)
+  else()
+    # Try to find pybind11 via find_package
+    find_package(pybind11 QUIET)
+    if(NOT pybind11_FOUND)
+      message(WARNING "pybind11 not found. Python bindings will be disabled.")
+      set(BUILD_PYTHON_BINDINGS OFF)
+    endif()
+  endif()
 
   # Find Python
   find_package(Python COMPONENTS Interpreter Development REQUIRED)
@@ -522,6 +578,10 @@ message(STATUS "==== Radiation Tolerant ML Framework Configuration ====")
 message(STATUS "Build type:                 ${BUILD_TYPE}")
 message(STATUS "C++ Standard:               C++17")
 message(STATUS "Python bindings:            ${BUILD_PYTHON_BINDINGS}")
+message(STATUS "PyTorch integration:        ${ENABLE_PYTORCH}")
+if(ENABLE_PYTORCH)
+  message(STATUS "PyTorch found:              ${PyTorch_FOUND}")
+endif()
 message(STATUS "IDE integration:            ${ENABLE_IDE_INTEGRATION}")
 message(STATUS "Testing enabled:            ${BUILD_TESTING}")
 message(STATUS "Visualization:              ${ENABLE_VISUALIZATION}")
