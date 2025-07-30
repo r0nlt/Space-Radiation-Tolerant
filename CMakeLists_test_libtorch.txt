@@ -1,0 +1,46 @@
+cmake_minimum_required(VERSION 3.16)
+project(libtorch_standalone_test)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Find PyTorch
+find_package(Torch REQUIRED)
+
+# Create the test executable
+add_executable(test_libtorch_standalone test_libtorch_standalone.cpp)
+
+# Link against PyTorch
+target_link_libraries(test_libtorch_standalone ${TORCH_LIBRARIES})
+
+# Set the torch library directory
+set_property(TARGET test_libtorch_standalone PROPERTY CXX_STANDARD 17)
+
+# Print some info
+message(STATUS "PyTorch found: ${TORCH_FOUND}")
+message(STATUS "PyTorch version: ${TORCH_VERSION}")
+message(STATUS "PyTorch libraries: ${TORCH_LIBRARIES}")
+message(STATUS "PyTorch include dirs: ${TORCH_INCLUDE_DIRS}")
+
+# Set RPATH for macOS
+if(APPLE)
+    set_target_properties(test_libtorch_standalone PROPERTIES
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "@executable_path;@executable_path/../lib;${CMAKE_PREFIX_PATH}/lib"
+    )
+endif()
+
+# Set RPATH for Linux
+if(UNIX AND NOT APPLE)
+    set_target_properties(test_libtorch_standalone PROPERTIES
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "$ORIGIN:$ORIGIN/../lib:${CMAKE_PREFIX_PATH}/lib"
+    )
+endif()
+
+# Set the library path for runtime
+if(APPLE)
+    set_target_properties(test_libtorch_standalone PROPERTIES
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+    )
+endif()

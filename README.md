@@ -302,6 +302,12 @@ The AI-NATIVE-DATABASE contains comprehensive documentation and implementation g
   - Thread-safe operations and multi-bit protection support
   - Performance optimization strategies
 
+- **[LibTorch Standalone Testing Guide](./FAQ/LibTorchTesting/TESTING_LIBTORCH.md)**
+  - Comprehensive LibTorch functionality verification
+  - C++ and Python testing methodologies
+  - Automated build and test scripts
+  - Troubleshooting and validation procedures
+
 #### **🔧 Key Features**
 
 - **Real Error Correction**: Functional Hamming, Reed-Solomon, and parity protection
@@ -310,6 +316,7 @@ The AI-NATIVE-DATABASE contains comprehensive documentation and implementation g
 - **Neural Network Interface**: Protected network implementation
 - **Build System Integration**: Clean PyTorch integration with CMake
 - **Comprehensive Testing**: 28.8 million validation trials completed
+- **LibTorch Validation Tools**: Standalone testing framework for PyTorch verification
 
 #### **📊 Performance Characteristics**
 
@@ -335,6 +342,7 @@ The AI-NATIVE-DATABASE contains comprehensive documentation and implementation g
 - **Monte Carlo Validation**: Comprehensive statistical validation
 - **Build System**: CMake integration with optional PyTorch support
 - **Testing Framework**: PyTorch-aware test system
+- **Validation Tools**: Standalone LibTorch testing and verification
 
 #### **📈 Development Status**
 
@@ -344,6 +352,7 @@ The AI-NATIVE-DATABASE contains comprehensive documentation and implementation g
 - **✅ Neural Network Interface**: Implemented and tested
 - **✅ Build Integration**: Implemented and working
 - **✅ Comprehensive Testing**: 28.8 million trials completed
+- **✅ LibTorch Testing Framework**: Implemented and tested
 
 #### **🎯 Next Steps**
 
@@ -387,11 +396,20 @@ cat PYTORCH_INTEGRATION.md
 
 # View adaptive protection improvements
 cat ADAPTIVE_PROTECTION_IMPROVEMENTS.md
+
+# View LibTorch testing guide
+cat LibTorchTesting/TESTING_LIBTORCH.md
 ```
 
 For development and testing:
 
 ```bash
+# Test LibTorch installation (recommended first step)
+./test_libtorch.sh
+
+# Test PyTorch from Python
+python3 test_libtorch_python.py
+
 # Build with PyTorch integration
 ./tools/build_with_pytorch.sh -d
 
