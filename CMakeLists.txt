@@ -434,6 +434,74 @@ if(ENABLE_PYTORCH AND PyTorch_FOUND)
   add_test(NAME pytorch_integration_test COMMAND pytorch_integration_test)
 
   message(STATUS "Added PyTorch integration test")
+
+  # Add LibTorch resilience test
+  add_executable(libtorch_resilience_test
+    test/libtorch_resilience_test.cpp
+  )
+  target_link_libraries(libtorch_resilience_test
+    PRIVATE
+    rad_ml_tmr
+    rad_ml_testing
+    rad_ml_research
+    rad_ml_pytorch
+    ${CMAKE_THREAD_LIBS_INIT}
+  )
+  target_include_directories(libtorch_resilience_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${PyTorch_INCLUDE_DIR}
+    ${PyTorch_INCLUDE_DIR}/torch/csrc/api/include
+  )
+  target_compile_definitions(libtorch_resilience_test PRIVATE
+    RAD_ML_PYTORCH_ENABLED=1
+  )
+  add_test(NAME libtorch_resilience_test COMMAND libtorch_resilience_test)
+
+  # Add LibTorch radiation integration test
+  add_executable(libtorch_radiation_integration_test
+    test/libtorch_radiation_integration_test.cpp
+  )
+  target_link_libraries(libtorch_radiation_integration_test
+    PRIVATE
+    rad_ml_tmr
+    rad_ml_testing
+    rad_ml_research
+    rad_ml_pytorch
+    ${CMAKE_THREAD_LIBS_INIT}
+  )
+  target_include_directories(libtorch_radiation_integration_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${PyTorch_INCLUDE_DIR}
+    ${PyTorch_INCLUDE_DIR}/torch/csrc/api/include
+  )
+  target_compile_definitions(libtorch_radiation_integration_test PRIVATE
+    RAD_ML_PYTORCH_ENABLED=1
+  )
+  add_test(NAME libtorch_radiation_integration_test COMMAND libtorch_radiation_integration_test)
+
+  # Add LibTorch macOS compatibility test
+  add_executable(libtorch_macos_compatibility_test
+    test/libtorch_macos_compatibility_test.cpp
+  )
+  target_link_libraries(libtorch_macos_compatibility_test
+    PRIVATE
+    rad_ml_tmr
+    rad_ml_testing
+    rad_ml_research
+    rad_ml_pytorch
+    ${CMAKE_THREAD_LIBS_INIT}
+  )
+  target_include_directories(libtorch_macos_compatibility_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${PyTorch_INCLUDE_DIR}
+    ${PyTorch_INCLUDE_DIR}/torch/csrc/api/include
+  )
+  target_compile_definitions(libtorch_macos_compatibility_test PRIVATE
+    RAD_ML_PYTORCH_ENABLED=1
+  )
+  add_test(NAME libtorch_macos_compatibility_test COMMAND libtorch_macos_compatibility_test)
+
+  message(STATUS "Added LibTorch test suite (resilience, radiation integration, macOS compatibility)")
 endif()
 
 # Add LMDB basic test if LMDB is available
