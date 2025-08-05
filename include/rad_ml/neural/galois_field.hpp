@@ -39,9 +39,9 @@ class GaloisField {
    public:
     using element_t = std::conditional_t<(m <= 8), uint8_t, uint16_t>;
 
-    static constexpr element_t field_size = (1 << m);
-    static constexpr element_t field_mask = field_size - 1;
-    static constexpr element_t primitive_poly = Poly;
+    static constexpr uint32_t field_size = (1ULL << m);
+    static constexpr element_t field_mask = static_cast<element_t>(field_size - 1);
+    static constexpr uint16_t primitive_poly = Poly;
 
     /**
      * @brief Constructor initializes lookup tables
@@ -402,8 +402,8 @@ class GaloisField {
     }
 
    private:
-    std::array<element_t, field_size> exp_table;  // α^i lookup
-    std::array<element_t, field_size> log_table;  // log_α(i) lookup
+    std::array<element_t, static_cast<size_t>(field_size)> exp_table;  // α^i lookup
+    std::array<element_t, static_cast<size_t>(field_size)> log_table;  // log_α(i) lookup
 
     /**
      * @brief Initialize lookup tables for multiplication and division
@@ -414,18 +414,18 @@ class GaloisField {
         element_t x = 1;
 
         // Clear tables first
-        for (element_t i = 0; i < field_size; ++i) {
+        for (uint32_t i = 0; i < field_size; ++i) {
             exp_table[i] = 0;
             log_table[i] = 0;
         }
 
-        for (element_t i = 0; i < field_size - 1; ++i) {
+        for (uint32_t i = 0; i < field_size - 1; ++i) {
             exp_table[i] = x;
 
             // Multiply by α in GF(2^m)
             x = multiply_no_lut(x, 2);
             if (x >= field_size) {
-                x ^= primitive_poly;
+                x ^= (primitive_poly & field_mask);
             }
         }
 
@@ -435,8 +435,8 @@ class GaloisField {
         // Generate log table
         log_table[0] = 0;  // log(0) is undefined, set to 0 for convenience
 
-        for (element_t i = 0; i < field_size - 1; ++i) {
-            log_table[exp_table[i]] = i;
+        for (uint32_t i = 0; i < field_size - 1; ++i) {
+            log_table[exp_table[i]] = static_cast<element_t>(i);
         }
     }
 

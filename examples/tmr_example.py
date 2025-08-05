@@ -3,7 +3,6 @@
 
 import random
 
-
 def simulate_radiation_effect(value, bit_pos):
     """Simulate a radiation-induced bit flip"""
     # Convert to binary
@@ -11,10 +10,10 @@ def simulate_radiation_effect(value, bit_pos):
     binary_list = list(binary)
 
     # Flip the bit
-    binary_list[bit_pos] = "1" if binary_list[bit_pos] == "0" else "0"
+    binary_list[bit_pos] = '1' if binary_list[bit_pos] == '0' else '0'
 
     # Convert back to integer
-    return int("".join(binary_list), 2)
+    return int(''.join(binary_list), 2)
 
 
 def main():
@@ -46,16 +45,12 @@ def main():
         # Get the raw C++ TMR object and modify the internal state to simulate corruption
         try:
             # This might not work if using the minimal bindings
-            counter._tmr.set_value(
-                simulate_radiation_effect(counter.value, random.randint(0, 31))
-            )
+            counter._tmr.set_value(simulate_radiation_effect(counter.value, random.randint(0, 31)))
         except Exception:
             # Fallback approach if we're using the fallback implementation
             print("Using fallback radiation simulation approach")
             # Instead, just modify the value directly (in a real app, this would be done by the C++ code)
-            counter.value = simulate_radiation_effect(
-                counter.value, random.randint(0, 31)
-            )
+            counter.value = simulate_radiation_effect(counter.value, random.randint(0, 31))
 
         # Check integrity and correct if needed
         if not counter.check_integrity():
@@ -72,12 +67,11 @@ def main():
             # Try to use the radiation simulator
             # Create a radiation simulator
             sim = rad_ml.PhysicsRadiationSimulator(
-                environment=rad_ml.RadiationEnvironment.MARS, intensity=0.75
+                environment=rad_ml.RadiationEnvironment.MARS,
+                intensity=0.75
             )
 
-            print(
-                f"\nCreated radiation simulator for environment: {sim.get_environment()}"
-            )
+            print(f"\nCreated radiation simulator for environment: {sim.get_environment()}")
             print(f"Intensity: {sim.get_intensity()}")
 
             # Run simulation

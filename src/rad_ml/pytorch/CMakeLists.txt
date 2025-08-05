@@ -29,11 +29,11 @@ target_link_libraries(rad_ml_pytorch
 
 # Link PyTorch if found
 if(PyTorch_FOUND)
-    # Add PyTorch include directories - need both root and API directories
+    # Add PyTorch include directories
     target_include_directories(rad_ml_pytorch
-        PRIVATE
-            ${PyTorch_INCLUDE_DIRS}
-            ${PyTorch_INCLUDE_DIRS}/..
+        PUBLIC
+            ${PyTorch_INCLUDE_DIR}
+            ${PyTorch_INCLUDE_DIR}/torch/csrc/api/include
     )
 
     # Try to link PyTorch libraries

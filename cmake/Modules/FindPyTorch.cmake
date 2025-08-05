@@ -1,149 +1,145 @@
-# FindPyTorch.cmake - Find PyTorch (LibTorch) installation
-#
-# This module finds the PyTorch C++ library (LibTorch) and sets up the necessary
-# variables and targets for use in CMake projects.
-#
-# Variables defined:
-#   PyTorch_FOUND - True if PyTorch was found
-#   PyTorch_INCLUDE_DIRS - PyTorch include directories
-#   PyTorch_LIBRARIES - PyTorch libraries
-#   PyTorch_VERSION - PyTorch version
-#
-# Targets defined:
-#   PyTorch::PyTorch - Imported target for PyTorch
+# FindPyTorch.cmake
+# Custom PyTorch finder that works with Homebrew and other installations
 
-# Set minimum CMake version
-cmake_minimum_required(VERSION 3.10)
-
-# Try to find PyTorch via Python first
-find_package(Python3 COMPONENTS Interpreter Development)
-if(Python3_FOUND)
-    # Get PyTorch path from Python
-    execute_process(
-        COMMAND ${Python3_EXECUTABLE} -c "import torch; print(torch.__file__)"
-        OUTPUT_VARIABLE PYTORCH_PYTHON_PATH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-    )
-
-    if(PYTORCH_PYTHON_PATH)
-        # Extract the directory containing PyTorch
-        get_filename_component(PYTORCH_ROOT "${PYTORCH_PYTHON_PATH}" DIRECTORY)
-        get_filename_component(PYTORCH_ROOT "${PYTORCH_ROOT}" DIRECTORY)
-        get_filename_component(PYTORCH_ROOT "${PYTORCH_ROOT}" DIRECTORY)
-        get_filename_component(PYTORCH_ROOT "${PYTORCH_ROOT}" DIRECTORY)
-
-        message(STATUS "Found PyTorch via Python at: ${PYTORCH_ROOT}")
-    endif()
+# Prevent infinite recursion
+if(PYTORCH_FIND_QUIETLY)
+    return()
 endif()
 
-# Find PyTorch installation - look for the root include directory
-find_path(PyTorch_INCLUDE_DIR
-    NAMES torch/torch.h
-    HINTS
-        ${PYTORCH_ROOT}/include
-        ${PyTorch_ROOT}/include
-        $ENV{PYTORCH_ROOT}/include
-        /usr/local/include
-        /usr/include
-        /opt/local/include
-        /opt/homebrew/include
-        /usr/local/opt/pytorch/include
-        /usr/local/opt/libtorch/include
-        /opt/homebrew/opt/libtorch/include
-    PATH_SUFFIXES
-        torch
-        pytorch
-        libtorch
+# Set flag to prevent recursion
+set(PYTORCH_FIND_QUIETLY TRUE)
+
+# Try to find PyTorch via Homebrew first (most common on macOS)
+find_path(PYTORCH_HOMEBREW_ROOT
+    NAMES lib/libtorch.dylib
+    PATHS
+        /usr/local/opt/pytorch
+        /opt/homebrew/opt/pytorch
+    NO_DEFAULT_PATH
 )
 
-# If not found, try to find it in the Python site-packages
-if(NOT PyTorch_INCLUDE_DIR AND PYTORCH_ROOT)
+if(PYTORCH_HOMEBREW_ROOT)
+    message(STATUS "Found PyTorch via Homebrew at: ${PYTORCH_HOMEBREW_ROOT}")
+
+    # Set up PyTorch variables for Homebrew installation
+    set(PyTorch_FOUND TRUE)
+    set(PyTorch_INCLUDE_DIR ${PYTORCH_HOMEBREW_ROOT}/include)
+    set(PyTorch_LIBRARY ${PYTORCH_HOMEBREW_ROOT}/lib/libtorch.dylib)
+
+    # Find all required libraries
+    find_library(PYTORCH_C10_LIBRARY
+        NAMES libc10.dylib
+        PATHS ${PYTORCH_HOMEBREW_ROOT}/lib
+        NO_DEFAULT_PATH
+    )
+
+    find_library(PYTORCH_CPU_LIBRARY
+        NAMES libtorch_cpu.dylib
+        PATHS ${PYTORCH_HOMEBREW_ROOT}/lib
+        NO_DEFAULT_PATH
+    )
+
+    find_library(PYTORCH_GLOBAL_DEPS_LIBRARY
+        NAMES libtorch_global_deps.dylib
+        PATHS ${PYTORCH_HOMEBREW_ROOT}/lib
+        NO_DEFAULT_PATH
+    )
+
+    # Build library list
+    set(PyTorch_LIBRARIES ${PyTorch_LIBRARY})
+    if(PYTORCH_C10_LIBRARY)
+        list(APPEND PyTorch_LIBRARIES ${PYTORCH_C10_LIBRARY})
+    endif()
+    if(PYTORCH_CPU_LIBRARY)
+        list(APPEND PyTorch_LIBRARIES ${PYTORCH_CPU_LIBRARY})
+    endif()
+    if(PYTORCH_GLOBAL_DEPS_LIBRARY)
+        list(APPEND PyTorch_LIBRARIES ${PYTORCH_GLOBAL_DEPS_LIBRARY})
+    endif()
+
+    message(STATUS "PyTorch include directory: ${PyTorch_INCLUDE_DIR}")
+    message(STATUS "PyTorch libraries: ${PyTorch_LIBRARIES}")
+
+else()
+    # Fallback: Try to find PyTorch in common locations
     find_path(PyTorch_INCLUDE_DIR
         NAMES torch/torch.h
-        HINTS
-            ${PYTORCH_ROOT}/include
+        PATHS
+            $ENV{PYTORCH_ROOT}/include
+            /usr/local/include
+            /opt/local/include
+            /usr/include
         PATH_SUFFIXES
             torch
             pytorch
-            libtorch
     )
-endif()
 
-# Find PyTorch libraries
-find_library(PyTorch_LIBRARY
-    NAMES torch torch_cpu torch_cuda
-    HINTS
-        ${PYTORCH_ROOT}/lib
-        ${PyTorch_ROOT}/lib
-        $ENV{PYTORCH_ROOT}/lib
-        /usr/local/lib
-        /usr/lib
-        /opt/local/lib
-        /opt/homebrew/lib
-        /usr/local/opt/pytorch/lib
-        /usr/local/opt/libtorch/lib
-        /opt/homebrew/opt/libtorch/lib
-)
-
-# Find additional PyTorch libraries
-find_library(PyTorch_C10_LIBRARY
-    NAMES c10 c10_cpu c10_cuda
-    HINTS
-        ${PYTORCH_ROOT}/lib
-        ${PyTorch_ROOT}/lib
-        $ENV{PYTORCH_ROOT}/lib
-        /usr/local/lib
-        /usr/lib
-        /opt/local/lib
-        /opt/homebrew/lib
-        /usr/local/opt/pytorch/lib
-        /usr/local/opt/libtorch/lib
-        /opt/homebrew/opt/libtorch/lib
-)
-
-# Check if PyTorch was found
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(PyTorch
-    REQUIRED_VARS PyTorch_INCLUDE_DIR PyTorch_LIBRARY
-    VERSION_VAR PyTorch_VERSION
-)
-
-# Set up variables
-if(PyTorch_FOUND)
-    set(PyTorch_INCLUDE_DIRS ${PyTorch_INCLUDE_DIR})
-    set(PyTorch_LIBRARIES ${PyTorch_LIBRARY})
-
-    # Add c10 library if found
-    if(PyTorch_C10_LIBRARY)
-        list(APPEND PyTorch_LIBRARIES ${PyTorch_C10_LIBRARY})
+    # Also try to find the actual torch.h file in the Homebrew Python site-packages
+    if(NOT PyTorch_INCLUDE_DIR)
+        find_path(PyTorch_INCLUDE_DIR
+            NAMES torch/csrc/api/include/torch/torch.h
+            PATHS
+                /usr/local/Cellar/pytorch/*/libexec/lib/python*/site-packages/torch/include
+                /opt/homebrew/Cellar/pytorch/*/libexec/lib/python*/site-packages/torch/include
+            NO_DEFAULT_PATH
+        )
     endif()
 
-    # Create imported target
-    if(NOT TARGET PyTorch::PyTorch)
-        add_library(PyTorch::PyTorch UNKNOWN IMPORTED)
-        set_target_properties(PyTorch::PyTorch PROPERTIES
-            IMPORTED_LOCATION "${PyTorch_LIBRARY}"
-            INTERFACE_INCLUDE_DIRECTORIES "${PyTorch_INCLUDE_DIR}"
+    find_library(PyTorch_LIBRARY
+        NAMES libtorch.dylib libtorch.so
+        PATHS
+            $ENV{PYTORCH_ROOT}/lib
+            /usr/local/lib
+            /opt/local/lib
+            /usr/lib
+    )
+
+    if(PyTorch_INCLUDE_DIR AND PyTorch_LIBRARY)
+        set(PyTorch_FOUND TRUE)
+        set(PyTorch_LIBRARIES ${PyTorch_LIBRARY})
+
+        # Try to find additional libraries
+        get_filename_component(PYTORCH_LIB_DIR "${PyTorch_LIBRARY}" DIRECTORY)
+
+        find_library(PYTORCH_C10_LIBRARY
+            NAMES libc10.dylib libc10.so
+            PATHS ${PYTORCH_LIB_DIR}
+            NO_DEFAULT_PATH
         )
 
-        # Add c10 library to the target if found
-        if(PyTorch_C10_LIBRARY)
-            set_target_properties(PyTorch::PyTorch PROPERTIES
-                INTERFACE_LINK_LIBRARIES "${PyTorch_C10_LIBRARY}"
-            )
-        endif()
-    endif()
+        find_library(PYTORCH_CPU_LIBRARY
+            NAMES libtorch_cpu.dylib libtorch_cpu.so
+            PATHS ${PYTORCH_LIB_DIR}
+            NO_DEFAULT_PATH
+        )
 
-    # Print status
-    message(STATUS "Found PyTorch: ${PyTorch_LIBRARY}")
-    message(STATUS "PyTorch include directory: ${PyTorch_INCLUDE_DIR}")
-    if(PyTorch_C10_LIBRARY)
-        message(STATUS "PyTorch C10 library: ${PyTorch_C10_LIBRARY}")
+        if(PYTORCH_C10_LIBRARY)
+            list(APPEND PyTorch_LIBRARIES ${PYTORCH_C10_LIBRARY})
+        endif()
+        if(PYTORCH_CPU_LIBRARY)
+            list(APPEND PyTorch_LIBRARIES ${PYTORCH_CPU_LIBRARY})
+        endif()
+
+        message(STATUS "Found PyTorch: ${PyTorch_LIBRARY}")
+        message(STATUS "PyTorch include directory: ${PyTorch_INCLUDE_DIR}")
+        message(STATUS "PyTorch libraries: ${PyTorch_LIBRARIES}")
     endif()
-else()
-    message(WARNING "PyTorch not found. PyTorch integration will be disabled.")
+endif()
+
+# Handle the case where PyTorch is not found
+if(NOT PyTorch_FOUND)
+    message(WARNING "PyTorch not found. Install via Homebrew: brew install pytorch")
+    message(WARNING "Or download from: https://pytorch.org/get-started/locally/")
 endif()
 
 # Mark variables as advanced
-mark_as_advanced(PyTorch_INCLUDE_DIR PyTorch_LIBRARY PyTorch_C10_LIBRARY)
+mark_as_advanced(
+    PyTorch_LIBRARY
+    PyTorch_INCLUDE_DIR
+    PyTorch_LIBRARIES
+    PYTORCH_C10_LIBRARY
+    PYTORCH_CPU_LIBRARY
+    PYTORCH_GLOBAL_DEPS_LIBRARY
+    PYTORCH_HOMEBREW_ROOT
+    PYTORCH_LIB_DIR
+)

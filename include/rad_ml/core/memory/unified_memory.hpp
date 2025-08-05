@@ -18,6 +18,25 @@
 namespace rad_ml {
 namespace memory {
 
+// Canary value for memory protection
+constexpr uint32_t CANARY_VALUE = 0xDEADBEEF;
+
+/**
+ * @brief Memory protection level
+ */
+enum class MemoryProtectionLevel {
+    NONE,       ///< No protection
+    MINIMAL,    ///< Minimal protection
+    MODERATE,   ///< Moderate protection
+    HIGH,       ///< High protection
+    VERY_HIGH,  ///< Very high protection
+    ADAPTIVE,   ///< Adaptive protection
+    CANARY,     ///< Canary values to detect overflow/underflow
+    CRC,        ///< Checksum to detect corruption
+    ECC,        ///< Error correcting code
+    TMR         ///< Triple modular redundancy
+};
+
 /**
  * @brief Memory allocation tracking information
  */
@@ -45,6 +64,46 @@ struct MemoryAllocationInfo {
           protection_level(MemoryProtectionLevel::NONE)
     {
     }
+
+    /**
+     * @brief Copy constructor
+     *
+     * @param other MemoryAllocationInfo to copy
+     */
+    MemoryAllocationInfo(const MemoryAllocationInfo& other)
+        : ptr(other.ptr),
+          original_ptr(other.original_ptr),
+          size(other.size),
+          allocation_time(other.allocation_time),
+          location(other.location),
+          type_name(other.type_name),
+          is_array(other.is_array),
+          is_protected(other.is_protected.load()),
+          protection_level(other.protection_level)
+    {
+    }
+
+    /**
+     * @brief Copy assignment operator
+     *
+     * @param other MemoryAllocationInfo to copy
+     * @return Reference to this object
+     */
+    MemoryAllocationInfo& operator=(const MemoryAllocationInfo& other)
+    {
+        if (this != &other) {
+            ptr = other.ptr;
+            original_ptr = other.original_ptr;
+            size = other.size;
+            allocation_time = other.allocation_time;
+            location = other.location;
+            type_name = other.type_name;
+            is_array = other.is_array;
+            is_protected.store(other.is_protected.load());
+            protection_level = other.protection_level;
+        }
+        return *this;
+    }
 };
 
 /**
@@ -64,17 +123,6 @@ struct MemoryStats {
     size_t detected_corruption = 0;  ///< Number of detected memory corruptions
     size_t repaired_corruption = 0;  ///< Number of repaired memory corruptions
     size_t leaked_allocations = 0;   ///< Number of leaked allocations
-};
-
-/**
- * @brief Memory protection level
- */
-enum class MemoryProtectionLevel {
-    NONE,    ///< No protection
-    CANARY,  ///< Canary values to detect overflow/underflow
-    CRC,     ///< Checksum to detect corruption
-    ECC,     ///< Error correcting code
-    TMR      ///< Triple modular redundancy
 };
 
 /**
@@ -292,7 +340,7 @@ class UnifiedMemoryManager {
             error::ErrorHandler::logError(error::ErrorInfo(
                 error::ErrorCode::MEMORY_ACCESS_VIOLATION, error::ErrorCategory::MEMORY,
                 error::ErrorSeverity::ERROR, "Attempted to free unallocated memory",
-                std::source_location::current(),
+                error::SourceLocation(__FILE__, __LINE__, __func__),
                 "Address: " + std::to_string(reinterpret_cast<uintptr_t>(ptr))));
             return false;
         }
@@ -305,7 +353,7 @@ class UnifiedMemoryManager {
                 error::ErrorHandler::logError(error::ErrorInfo(
                     error::ErrorCode::MEMORY_CORRUPTION_DETECTED, error::ErrorCategory::MEMORY,
                     error::ErrorSeverity::ERROR, "Memory corruption detected during deallocation",
-                    std::source_location::current(),
+                    error::SourceLocation(__FILE__, __LINE__, __func__),
                     "Address: " + std::to_string(reinterpret_cast<uintptr_t>(ptr))));
 
                 // Attempt to repair if possible
@@ -338,18 +386,16 @@ class UnifiedMemoryManager {
      * @brief Get allocation information for a pointer
      *
      * @param ptr Pointer to check
-     * @return Optional with allocation info, or empty if not found
+     * @return Pointer to allocation info if found, nullptr otherwise
      */
-    std::optional<MemoryAllocationInfo> getAllocationInfo(void* ptr) const
+    const MemoryAllocationInfo* getAllocationInfo(void* ptr) const
     {
         std::lock_guard<std::mutex> lock(mutex_);
-
         auto it = allocations_.find(ptr);
         if (it != allocations_.end()) {
-            return it->second;
+            return &(it->second);
         }
-
-        return std::nullopt;
+        return nullptr;
     }
 
     /**
@@ -436,7 +482,7 @@ class UnifiedMemoryManager {
                 error::ErrorCode::MEMORY_CORRUPTION_DETECTED, error::ErrorCategory::MEMORY,
                 error::ErrorSeverity::WARNING,
                 "Memory leaks detected: " + std::to_string(allocations_.size()) + " allocations",
-                std::source_location::current(), details));
+                error::SourceLocation(__FILE__, __LINE__, __func__), details));
         }
 
         return allocations_.size();

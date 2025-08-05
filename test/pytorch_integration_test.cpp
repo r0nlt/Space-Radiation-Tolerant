@@ -12,7 +12,6 @@
 #include <stdexcept>
 
 #ifdef RAD_ML_PYTORCH_ENABLED
-#include <torch/nn/modules.h>
 #include <torch/nn/modules/linear.h>
 #include <torch/optim/optimizer.h>
 #include <torch/optim/sgd.h>
@@ -67,7 +66,8 @@ int main()
         std::cout << "Radiation hardening applied successfully" << std::endl;
 
         // Test TMR protection
-        auto tmr_tensor = apply_tmr_protection(tensor, rad_ml::tmr::ProtectionLevel::HYBRID_REDUNDANCY);
+        auto tmr_tensor =
+            apply_tmr_protection(tensor, rad_ml::tmr::ProtectionLevel::HYBRID_REDUNDANCY);
         std::cout << "TMR protection applied successfully" << std::endl;
 
         // Test tensor integrity validation
