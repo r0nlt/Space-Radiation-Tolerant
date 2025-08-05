@@ -13,9 +13,11 @@
 
 #include "../common/types.hpp"
 #include "../error/error_handling.hpp"
+#include "../neural/multi_bit_protection.hpp"
 #include "../tmr/approximate_tmr.hpp"
 #include "../tmr/enhanced_tmr.hpp"
 #include "../tmr/health_weighted_tmr.hpp"
+#include "../tmr/tmr.hpp"
 
 namespace rad_ml {
 namespace neural {
@@ -262,15 +264,11 @@ class SelectiveHardening {
         // Apply protection based on level
         switch (level) {
             case ProtectionLevel::NONE:
-            case ProtectionLevel::MINIMAL:
-            case ProtectionLevel::MODERATE:
-            case ProtectionLevel::HIGH:
-            case ProtectionLevel::VERY_HIGH:
-            case ProtectionLevel::ADAPTIVE:
-                return value;  // No protection for these levels in this implementation
+                // No protection - return original value
+                return value;
 
-            case ProtectionLevel::CHECKSUM_ONLY: {
-                // Simple wrapper with CRC
+            case ProtectionLevel::MINIMAL: {
+                // Minimal protection - use basic checksum
                 struct ChecksumProtected {
                     T value;
                     uint32_t checksum;
@@ -291,9 +289,9 @@ class SelectiveHardening {
                         checksum = ~crc;
                     }
 
-                    bool verify() const
+                    T getValue() const
                     {
-                        // Recalculate and check
+                        // Verify checksum before returning
                         const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
                         size_t size = sizeof(T);
 
@@ -306,35 +304,167 @@ class SelectiveHardening {
                         }
                         crc = ~crc;
 
-                        return crc == checksum;
+                        // If checksum fails, return a safe default
+                        if (crc != checksum) {
+                            return T{};  // Return zero/default value
+                        }
+                        return value;
                     }
-
-                    T getValue() const { return value; }
                 };
 
                 ChecksumProtected protected_value(value);
-                return protected_value.getValue();  // Return the original value for now
+                return protected_value.getValue();
+            }
+
+            case ProtectionLevel::MODERATE: {
+                // Moderate protection - use basic TMR
+                tmr::TMR<T> tmr_value(value);
+                return tmr_value.get();
+            }
+
+            case ProtectionLevel::HIGH: {
+                // High protection - use health-weighted TMR
+                tmr::HealthWeightedTMR<T> tmr_value(value);
+                return tmr_value.get();
+            }
+
+            case ProtectionLevel::VERY_HIGH: {
+                // Very high protection - use enhanced TMR with CRC
+                tmr::EnhancedTMR<T> tmr_value(value);
+                return tmr_value.get();
+            }
+
+            case ProtectionLevel::ADAPTIVE: {
+                // Adaptive protection - use enhanced TMR with adaptive features
+                tmr::EnhancedTMR<T> tmr_value(value);
+                return tmr_value.get();
+            }
+
+            case ProtectionLevel::CHECKSUM_ONLY: {
+                // Checksum-only protection
+                struct ChecksumProtected {
+                    T value;
+                    uint32_t checksum;
+
+                    ChecksumProtected(T v) : value(v)
+                    {
+                        // Simple CRC calculation
+                        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
+                        size_t size = sizeof(T);
+
+                        uint32_t crc = 0xFFFFFFFF;
+                        for (size_t i = 0; i < size; i++) {
+                            crc ^= data[i];
+                            for (int j = 0; j < 8; j++) {
+                                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
+                            }
+                        }
+                        checksum = ~crc;
+                    }
+
+                    T getValue() const
+                    {
+                        // Verify checksum before returning
+                        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
+                        size_t size = sizeof(T);
+
+                        uint32_t crc = 0xFFFFFFFF;
+                        for (size_t i = 0; i < size; i++) {
+                            crc ^= data[i];
+                            for (int j = 0; j < 8; j++) {
+                                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
+                            }
+                        }
+                        crc = ~crc;
+
+                        // If checksum fails, return a safe default
+                        if (crc != checksum) {
+                            return T{};  // Return zero/default value
+                        }
+                        return value;
+                    }
+                };
+
+                ChecksumProtected protected_value(value);
+                return protected_value.getValue();
+            }
+
+            case ProtectionLevel::CHECKSUM_WITH_RECOVERY: {
+                // Checksum with recovery capability
+                struct ChecksumRecoveryProtected {
+                    T value;
+                    uint32_t checksum;
+                    T backup_value;
+
+                    ChecksumRecoveryProtected(T v) : value(v), backup_value(v)
+                    {
+                        // Calculate checksum
+                        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
+                        size_t size = sizeof(T);
+
+                        uint32_t crc = 0xFFFFFFFF;
+                        for (size_t i = 0; i < size; i++) {
+                            crc ^= data[i];
+                            for (int j = 0; j < 8; j++) {
+                                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
+                            }
+                        }
+                        checksum = ~crc;
+                    }
+
+                    T getValue() const
+                    {
+                        // Verify checksum before returning
+                        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
+                        size_t size = sizeof(T);
+
+                        uint32_t crc = 0xFFFFFFFF;
+                        for (size_t i = 0; i < size; i++) {
+                            crc ^= data[i];
+                            for (int j = 0; j < 8; j++) {
+                                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
+                            }
+                        }
+                        crc = ~crc;
+
+                        // If checksum fails, try to recover from backup
+                        if (crc != checksum) {
+                            return backup_value;  // Return backup value
+                        }
+                        return value;
+                    }
+                };
+
+                ChecksumRecoveryProtected protected_value(value);
+                return protected_value.getValue();
+            }
+
+            case ProtectionLevel::SELECTIVE_TMR: {
+                // Selective TMR - use basic TMR for critical components
+                tmr::TMR<T> tmr_value(value);
+                return tmr_value.get();
             }
 
             case ProtectionLevel::APPROXIMATE_TMR: {
-                // Use approximate TMR
+                // Approximate TMR with reduced precision
                 tmr::ApproximateTMR<T> tmr_value(value);
-                return tmr_value.get();  // Return the value from TMR
+                return tmr_value.get();
             }
 
             case ProtectionLevel::HEALTH_WEIGHTED_TMR: {
-                // Use health-weighted TMR
+                // Health-weighted TMR
                 tmr::HealthWeightedTMR<T> tmr_value(value);
-                return tmr_value.get();  // Return the value from TMR
+                return tmr_value.get();
             }
 
             case ProtectionLevel::FULL_TMR: {
-                // Use full TMR
+                // Full TMR with enhanced features
                 tmr::EnhancedTMR<T> tmr_value(value);
-                return tmr_value.get();  // Return the value from TMR
+                return tmr_value.get();
             }
 
             default:
+                // Unknown protection level - return original value
                 return value;
         }
     }
