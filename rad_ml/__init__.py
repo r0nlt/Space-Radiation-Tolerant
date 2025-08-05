@@ -1,3 +1,5 @@
+
+
 # Define version as fallback
 __version__ = "2.0.0"
 
@@ -8,6 +10,7 @@ try:
         initialize,
         shutdown,
         Version,
+
         # Enums
         MemoryProtectionLevel,
         ProtectionLevel,
@@ -15,13 +18,15 @@ try:
         RadiationEnvironment,
         MissionType,
         ErrorSeverity,
+
         # Simulation
         PhysicsRadiationSimulator,
         MissionSimulator,
         FaultInjector,
+
         # Neural network
         SelectiveHardening,
-        ErrorPredictor,
+        ErrorPredictor
     )
 
     # Update version from the core if available
@@ -29,10 +34,7 @@ try:
 except ImportError as e:
     # Fallback minimal functionality
     import warnings
-
-    warnings.warn(
-        f"Some core functionality could not be imported: {e}. Using fallback implementations."
-    )
+    warnings.warn(f"Some core functionality could not be imported: {e}. Using fallback implementations.")
 
     # Define minimal fallbacks for critical functions
     def initialize(enable_logging=True):
@@ -58,7 +60,6 @@ except ImportError as e:
         WARNING = 1
         ERROR = 2
         CRITICAL = 3
-
 
 # Import Pythonic TMR classes - these have built-in fallbacks
 from .tmr import StandardTMR, EnhancedTMR

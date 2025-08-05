@@ -13,15 +13,20 @@
 #pragma once
 
 #include <memory>
-#include <rad_ml/core/logger.hpp>
+#include <rad_ml/core/redundancy/tmr.hpp>
 #include <rad_ml/neural/adaptive_protection.hpp>
 #include <rad_ml/tmr/adaptive_protection.hpp>
+#include <vector>
+
+#ifdef RAD_ML_PYTORCH_ENABLED
+#include <torch/torch.h>
+#endif
 
 namespace rad_ml {
 namespace pytorch {
 
 /**
- * @brief PyTorch integration configuration
+ * @brief Configuration for PyTorch integration
  */
 struct PyTorchConfig {
     bool enable_tmr_protection = true;
@@ -37,24 +42,13 @@ struct PyTorchConfig {
 
 #ifdef RAD_ML_PYTORCH_ENABLED
 
-// Forward declarations for PyTorch types
-namespace torch {
-class Tensor;
-namespace nn {
-class Module;
-}
-namespace optim {
-class Optimizer;
-}
-}  // namespace torch
-
 /**
  * @brief PyTorch tensor wrapper with radiation protection
  */
 class ProtectedTensor {
    public:
     ProtectedTensor();
-    explicit ProtectedTensor(const torch::Tensor& tensor);
+    explicit ProtectedTensor(const ::torch::Tensor& tensor);
     ~ProtectedTensor();
 
     // Copy and move operations
@@ -64,8 +58,8 @@ class ProtectedTensor {
     ProtectedTensor& operator=(ProtectedTensor&& other) noexcept;
 
     // Access to underlying tensor
-    torch::Tensor& tensor();
-    const torch::Tensor& tensor() const;
+    ::torch::Tensor& tensor();
+    const ::torch::Tensor& tensor() const;
 
     // Protection methods
     void enable_protection(neural::ProtectionLevel level);
@@ -86,7 +80,7 @@ class ProtectedTensor {
 
     void initialize_protection();
     void update_tmr_copies();
-    torch::Tensor vote_tmr_copies();
+    ::torch::Tensor vote_tmr_copies();
 };
 
 /**
@@ -119,7 +113,7 @@ class RadiationHardenedModule {
     PyTorchConfig config_;
     bool protection_enabled_;
 
-    virtual torch::Tensor forward_protected(torch::Tensor input) = 0;
+    virtual ::torch::Tensor forward_protected(::torch::Tensor input) = 0;
     virtual void apply_weight_protection() = 0;
     virtual void validate_weights() = 0;
 
@@ -129,38 +123,71 @@ class RadiationHardenedModule {
     void validate_parameters();
 };
 
+#else
+
+// Dummy implementations when PyTorch is not available
+class ProtectedTensor {
+   public:
+    ProtectedTensor() = default;
+    explicit ProtectedTensor(void* tensor) {}
+    ~ProtectedTensor() = default;
+
+    void enable_protection(neural::ProtectionLevel level) {}
+    void disable_protection() {}
+    bool is_protected() const { return false; }
+    void apply_radiation_hardening() {}
+    void validate_integrity() {}
+    void enable_tmr_protection(tmr::ProtectionLevel strategy) {}
+    void disable_tmr_protection() {}
+};
+
+class RadiationHardenedModule {
+   public:
+    RadiationHardenedModule() = default;
+    explicit RadiationHardenedModule(const PyTorchConfig& config) {}
+    ~RadiationHardenedModule() = default;
+
+    void enable_protection(neural::ProtectionLevel level) {}
+    void disable_protection() {}
+    bool is_protected() const { return false; }
+    void apply_radiation_hardening() {}
+    void validate_model_integrity() {}
+    void enable_tmr_protection(tmr::ProtectionLevel strategy) {}
+    void disable_tmr_protection() {}
+    void protect_training_step() {}
+    void validate_gradients() {}
+
+   protected:
+    PyTorchConfig config_;
+    bool protection_enabled_ = false;
+};
+
 #endif  // RAD_ML_PYTORCH_ENABLED
 
 /**
- * @brief PyTorch integration manager
+ * @brief Main PyTorch integration class
  */
 class PyTorchIntegration {
    public:
     static PyTorchIntegration& get_instance();
 
-    // Initialization
     void initialize(const PyTorchConfig& config = PyTorchConfig{});
     void shutdown();
 
-    // Configuration
     const PyTorchConfig& get_config() const;
     void update_config(const PyTorchConfig& config);
 
-#ifdef RAD_ML_PYTORCH_ENABLED
     // Model protection
-    void protect_model(torch::nn::Module& model);
-    void harden_model(torch::nn::Module& model);
-
-    // Tensor protection
-    ProtectedTensor create_protected_tensor(const torch::Tensor& tensor);
-    void protect_tensor(torch::Tensor& tensor);
-
-    // Training protection
-    void protect_training_step(torch::nn::Module& model, torch::optim::Optimizer& optimizer);
-    void validate_training_state(torch::nn::Module& model);
+#ifdef RAD_ML_PYTORCH_ENABLED
+    void protect_model(::torch::nn::Module& model);
+    void harden_model(::torch::nn::Module& model);
+    ProtectedTensor create_protected_tensor(const ::torch::Tensor& tensor);
+    void protect_tensor(::torch::Tensor& tensor);
+    void protect_training_step(::torch::nn::Module& model, ::torch::optim::Optimizer& optimizer);
+    void validate_training_state(::torch::nn::Module& model);
 #endif
 
-    // Utility methods
+    // Availability checks
     bool is_pytorch_available() const;
     bool is_cuda_available() const;
 
@@ -178,14 +205,12 @@ class PyTorchIntegration {
     void setup_protection_systems();
 };
 
-#ifdef RAD_ML_PYTORCH_ENABLED
-
 // Utility functions
-torch::Tensor apply_radiation_hardening(const torch::Tensor& tensor);
-torch::Tensor apply_tmr_protection(const torch::Tensor& tensor, tmr::ProtectionLevel strategy);
-bool validate_tensor_integrity(const torch::Tensor& tensor);
-
-#endif  // RAD_ML_PYTORCH_ENABLED
+#ifdef RAD_ML_PYTORCH_ENABLED
+::torch::Tensor apply_radiation_hardening(const ::torch::Tensor& tensor);
+::torch::Tensor apply_tmr_protection(const ::torch::Tensor& tensor, tmr::ProtectionLevel strategy);
+bool validate_tensor_integrity(const ::torch::Tensor& tensor);
+#endif
 
 }  // namespace pytorch
 }  // namespace rad_ml

@@ -23,32 +23,33 @@ using float64 = double;
 
 // Forward declarations for common types
 namespace memory {
-    class ProtectedMemoryManager;
-    class MemoryScrubber;
-}
+class ProtectedMemoryManager;
+class MemoryScrubber;
+}  // namespace memory
 
 namespace tmr {
-    class TMRBase;
-    class ApproximateTMR;
-    template<typename T> class HealthWeightedTMR;
-    template<typename T> class EnhancedTMR;
-}
+class TMRBase;
+template <typename T>
+class HealthWeightedTMR;
+template <typename T>
+class EnhancedTMR;
+}  // namespace tmr
 
 namespace neural {
-    class NetworkModel;
-    class SelectiveHardening;
-    class LayerProtectionPolicy;
-    class TopologicalAnalyzer;
-    class GradientImportanceMapper;
-}
+class NetworkModel;
+class SelectiveHardening;
+class LayerProtectionPolicy;
+class TopologicalAnalyzer;
+class GradientImportanceMapper;
+}  // namespace neural
 
 namespace radiation {
-    class SEUSimulator;
-    class Environment;
-}
+class SEUSimulator;
+class Environment;
+}  // namespace radiation
 
 namespace error {
-    class ErrorHandler;
+class ErrorHandler;
 }
 
-} // namespace rad_ml 
+}  // namespace rad_ml

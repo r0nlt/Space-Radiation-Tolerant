@@ -12,6 +12,7 @@
 #include <tuple>
 #include <vector>
 
+#include "rad_ml/neural/advanced_reed_solomon.hpp"
 #include "rad_ml/neural/radiation_environment.hpp"
 #include "rad_ml/radiation/space_mission.hpp"
 
@@ -53,166 +54,8 @@ struct WeightCriticality {
     bool operator<(const WeightCriticality& other) const { return sensitivity < other.sensitivity; }
 };
 
-// Reed-Solomon implementation using GF(256)
-template <typename T>
-class RS8Bit8Sym {
-   private:
-    static constexpr uint8_t GF256_PRIM = 0x1D;  // Primitive polynomial x^8 + x^4 + x^3 + x^2 + 1
-    static constexpr size_t NSYM = 8;            // Number of parity symbols
-
-    // Galois Field tables (simplified - in production use precomputed tables)
-    std::array<uint8_t, 256> gf_exp;
-    std::array<uint8_t, 256> gf_log;
-
-   public:
-    RS8Bit8Sym()
-    {
-        // Initialize GF(256) tables
-        init_gf_tables();
-    }
-
-    std::vector<uint8_t> encode(const T& data)
-    {
-        // Convert data to bytes
-        std::vector<uint8_t> bytes(sizeof(T));
-        std::memcpy(bytes.data(), &data, sizeof(T));
-
-        // Add Reed-Solomon parity symbols
-        std::vector<uint8_t> encoded = bytes;
-        encoded.resize(bytes.size() + NSYM, 0);
-
-        // Simplified RS encoding (in production, use proper generator polynomial)
-        for (size_t i = 0; i < NSYM; ++i) {
-            uint8_t parity = 0;
-            for (size_t j = 0; j < bytes.size(); ++j) {
-                parity ^= gf_mult(bytes[j], gf_pow(2, i * j % 255));
-            }
-            encoded[bytes.size() + i] = parity;
-        }
-
-        return encoded;
-    }
-
-    std::optional<T> decode(std::vector<uint8_t>& encoded)
-    {
-        if (encoded.size() < sizeof(T) + NSYM) {
-            return std::nullopt;
-        }
-
-        // Extract data portion
-        std::vector<uint8_t> data(encoded.begin(), encoded.begin() + sizeof(T));
-
-        // Simple error detection (in production, use proper syndrome calculation)
-        auto expected_encoded = encode(*reinterpret_cast<T*>(data.data()));
-
-        size_t errors = 0;
-        for (size_t i = 0; i < encoded.size() && i < expected_encoded.size(); ++i) {
-            if (encoded[i] != expected_encoded[i]) {
-                errors++;
-            }
-        }
-
-        // Can correct up to NSYM/2 errors
-        if (errors > NSYM / 2) {
-            return std::nullopt;  // Too many errors
-        }
-
-        // Return corrected data
-        T result;
-        std::memcpy(&result, data.data(), sizeof(T));
-        return result;
-    }
-
-    std::vector<uint8_t> apply_bit_errors(std::vector<uint8_t> data, double error_rate,
-                                          uint64_t seed)
-    {
-        std::mt19937_64 rng(seed);
-        std::uniform_real_distribution<double> dist(0.0, 1.0);
-
-        for (auto& byte : data) {
-            for (int bit = 0; bit < 8; ++bit) {
-                if (dist(rng) < error_rate) {
-                    byte ^= (1 << bit);
-                }
-            }
-        }
-        return data;
-    }
-
-    double overhead_percent() const { return 100.0 * NSYM / sizeof(T); }
-
-   private:
-    void init_gf_tables()
-    {
-        // Initialize all entries to 0
-        std::fill(gf_exp.begin(), gf_exp.end(), 0);
-        std::fill(gf_log.begin(), gf_log.end(), 0);
-
-        uint16_t x = 1;
-        for (size_t i = 0; i < 255; ++i) {  // Only 255 non-zero elements
-            gf_exp[i] = static_cast<uint8_t>(x);
-            if (x < 256) {  // Bounds check
-                gf_log[x] = static_cast<uint8_t>(i);
-            }
-            x <<= 1;
-            if (x & 0x100) {
-                x ^= GF256_PRIM;
-            }
-        }
-        // Set gf_exp[255] = 1 (alpha^255 = 1)
-        gf_exp[255] = 1;
-    }
-
-    uint8_t gf_mult(uint8_t a, uint8_t b)
-    {
-        if (a == 0 || b == 0) return 0;
-        return gf_exp[(gf_log[a] + gf_log[b]) % 255];
-    }
-
-    uint8_t gf_pow(uint8_t base, uint8_t exp)
-    {
-        if (base == 0) return 0;
-        return gf_exp[(gf_log[base] * exp) % 255];
-    }
-};
-
-// RS with 16 symbols (stronger protection)
-template <typename T>
-class RS8Bit16Sym {
-   private:
-    static constexpr size_t NSYM = 16;
-    RS8Bit8Sym<T> base_rs;  // Reuse the base implementation
-
-   public:
-    std::vector<uint8_t> encode(const T& data)
-    {
-        auto encoded = base_rs.encode(data);
-        // Add extra parity symbols (simplified approach)
-        for (size_t i = 0; i < 8; ++i) {
-            encoded.push_back(encoded[i] ^ encoded[i + 8]);  // Simple additional parity
-        }
-        return encoded;
-    }
-
-    std::optional<T> decode(std::vector<uint8_t>& encoded)
-    {
-        if (encoded.size() < sizeof(T) + NSYM) {
-            return std::nullopt;
-        }
-
-        // Use first 8 symbols for primary correction
-        std::vector<uint8_t> primary(encoded.begin(), encoded.begin() + sizeof(T) + 8);
-        return base_rs.decode(primary);
-    }
-
-    std::vector<uint8_t> apply_bit_errors(std::vector<uint8_t> data, double error_rate,
-                                          uint64_t seed)
-    {
-        return base_rs.apply_bit_errors(data, error_rate, seed);
-    }
-
-    double overhead_percent() const { return 100.0 * NSYM / sizeof(T); }
-};
+// Note: Broken RS8Bit8Sym and RS8Bit16Sym implementations removed
+// Use AdvancedReedSolomon from advanced_reed_solomon.hpp instead
 
 // Multi-bit protection implementation
 template <typename T>
@@ -408,16 +251,16 @@ class AdaptiveProtection {
             }
 
             case ProtectionLevel::HIGH: {
-                // Reed-Solomon with 8 symbols
-                RS8Bit8Sym<U> rs;
+                // Reed-Solomon with 8 symbols using AdvancedReedSolomon
+                neural::RS8Bit8Sym<U> rs;
                 auto encoded = rs.encode(value);
                 // For now, return original value (in real system would store encoded)
                 return value;
             }
 
             case ProtectionLevel::VERY_HIGH: {
-                // Reed-Solomon with 16 symbols
-                RS8Bit16Sym<U> rs;
+                // Reed-Solomon with 16 symbols using AdvancedReedSolomon
+                neural::RS8Bit16Sym<U> rs;
                 auto encoded = rs.encode(value);
                 // For now, return original value (in real system would store encoded)
                 return value;
@@ -460,8 +303,8 @@ class AdaptiveProtection {
             }
 
             case ProtectionLevel::HIGH: {
-                // Reed-Solomon recovery (simplified)
-                RS8Bit8Sym<U> rs;
+                // Reed-Solomon recovery using AdvancedReedSolomon
+                neural::RS8Bit8Sym<U> rs;
                 std::vector<uint8_t> encoded(sizeof(U) + 8);
                 std::memcpy(encoded.data(), &value, sizeof(U));
                 auto decoded = rs.decode(encoded);
@@ -474,8 +317,8 @@ class AdaptiveProtection {
             }
 
             case ProtectionLevel::VERY_HIGH: {
-                // Reed-Solomon recovery (simplified)
-                RS8Bit16Sym<U> rs;
+                // Reed-Solomon recovery using AdvancedReedSolomon
+                neural::RS8Bit16Sym<U> rs;
                 std::vector<uint8_t> encoded(sizeof(U) + 16);
                 std::memcpy(encoded.data(), &value, sizeof(U));
                 auto decoded = rs.decode(encoded);

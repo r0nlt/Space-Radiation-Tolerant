@@ -33,6 +33,7 @@ if(PyTorch_FOUND)
     target_include_directories(rad_ml_pytorch
         PUBLIC
             ${PyTorch_INCLUDE_DIR}
+            ${PyTorch_INCLUDE_DIR}/torch/csrc/api/include
     )
 
     # Try to link PyTorch libraries

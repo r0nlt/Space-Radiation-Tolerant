@@ -74,6 +74,17 @@ else()
             pytorch
     )
 
+    # Also try to find the actual torch.h file in the Homebrew Python site-packages
+    if(NOT PyTorch_INCLUDE_DIR)
+        find_path(PyTorch_INCLUDE_DIR
+            NAMES torch/csrc/api/include/torch/torch.h
+            PATHS
+                /usr/local/Cellar/pytorch/*/libexec/lib/python*/site-packages/torch/include
+                /opt/homebrew/Cellar/pytorch/*/libexec/lib/python*/site-packages/torch/include
+            NO_DEFAULT_PATH
+        )
+    endif()
+
     find_library(PyTorch_LIBRARY
         NAMES libtorch.dylib libtorch.so
         PATHS

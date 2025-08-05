@@ -1,14 +1,5 @@
 #!/usr/bin/env python3
-"""
-Neural Network Protection Example for Radiation-Tolerant ML Framework
 
-This example demonstrates how to use neural network protection features
-in Python with the rad_ml framework.
-
-Author: Rishab Nuguru
-Copyright: © 2025 Rishab Nuguru
-License: AGPL v3 license
-"""
 
 import rad_ml
 import numpy as np

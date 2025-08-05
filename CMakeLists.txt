@@ -422,9 +422,6 @@ if(ENABLE_PYTORCH AND PyTorch_FOUND)
   )
   target_link_libraries(pytorch_integration_test
     PRIVATE
-    rad_ml_tmr
-    rad_ml_testing
-    rad_ml_research
     rad_ml_pytorch
     ${CMAKE_THREAD_LIBS_INIT}
   )
@@ -441,9 +438,6 @@ if(ENABLE_PYTORCH AND PyTorch_FOUND)
   )
   target_link_libraries(libtorch_resilience_test
     PRIVATE
-    rad_ml_tmr
-    rad_ml_testing
-    rad_ml_research
     rad_ml_pytorch
     ${CMAKE_THREAD_LIBS_INIT}
   )
@@ -463,9 +457,6 @@ if(ENABLE_PYTORCH AND PyTorch_FOUND)
   )
   target_link_libraries(libtorch_radiation_integration_test
     PRIVATE
-    rad_ml_tmr
-    rad_ml_testing
-    rad_ml_research
     rad_ml_pytorch
     ${CMAKE_THREAD_LIBS_INIT}
   )
@@ -485,9 +476,6 @@ if(ENABLE_PYTORCH AND PyTorch_FOUND)
   )
   target_link_libraries(libtorch_macos_compatibility_test
     PRIVATE
-    rad_ml_tmr
-    rad_ml_testing
-    rad_ml_research
     rad_ml_pytorch
     ${CMAKE_THREAD_LIBS_INIT}
   )
@@ -689,3 +677,148 @@ if(LMDB_FOUND)
 
     message(STATUS "Added AI Database test executables")
 endif()
+
+# Custom clean target to remove all generated executables and build artifacts
+add_custom_target(clean_all
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E remove_directory build
+    COMMAND ${CMAKE_COMMAND} -E remove_directory build_test
+    COMMAND ${CMAKE_COMMAND} -E remove_directory build_python
+    COMMAND ${CMAKE_COMMAND} -E remove_directory build2
+    COMMAND ${CMAKE_COMMAND} -E remove_directory build_full
+    COMMAND ${CMAKE_COMMAND} -E remove_directory build_dev
+    COMMAND ${CMAKE_COMMAND} -E remove_directory build_minimal
+    # Remove specific executables that might be in root directory
+    COMMAND ${CMAKE_COMMAND} -E remove -f monte_carlo_validation
+    COMMAND ${CMAKE_COMMAND} -E remove -f space_monte_carlo_validation
+    COMMAND ${CMAKE_COMMAND} -E remove -f realistic_space_validation
+    COMMAND ${CMAKE_COMMAND} -E remove -f framework_verification_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f enhanced_tmr_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f scientific_validation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f radiation_stress_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f systematic_fault_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f modern_features_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f ieee754_tmr_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f quantum_field_validation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f realistic_leo_mission_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f neural_network_validation
+    COMMAND ${CMAKE_COMMAND} -E remove -f monte_carlo_neuralnetwork
+    COMMAND ${CMAKE_COMMAND} -E remove -f quantum_field_example
+    COMMAND ${CMAKE_COMMAND} -E remove -f ml_radiation_training_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f cross_validation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f training_loop_diagnostic
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_radiation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f weight_diagnostic_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f trained_network_radiation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f trivial_radiation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f pytorch_integration_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f libtorch_resilience_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f libtorch_radiation_integration_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f libtorch_macos_compatibility_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f lmdb_basic_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f lmdb_datacenter_demo
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_ai_database_test_minimal
+    COMMAND ${CMAKE_COMMAND} -E remove -f ai_native_database_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_ai_database_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f nasa_esa_standard_test
+    # Remove debug executables
+    COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_correct_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_detailed_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_final_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_fixed_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_step_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_working_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f minimal_adaptive_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_adaptive_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_galois_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_shift_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f rs_memory_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f test_monte_carlo
+    # Remove Python cache and build artifacts
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/rad_ml/__pycache__
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/__pycache__
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/test_tensor.pt
+    # Remove database files
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/test_ai_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/test_async_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/test_error_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/test_types_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/test_minimal_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/compression_validation_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/optimal_anomaly_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/optimal_compression_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/quick_test_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/large_dataset_test_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/trained_vae_test_db
+    # Remove example executables
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/mission_simulator/mission_simulator
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/simple_nn/simple_nn
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/architecture_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/residual_network_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/auto_arch_search_example
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/radiation_aware_training_example
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/multi_particle_simulation_example
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/vae_example
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/vae_space_mission_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/vae_validation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/vae_production_example
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/vae_comprehensive_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/vae_monte_carlo_tuning_example
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/vae_quick_tuning_demo
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/quantum_enhanced_radiation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/vae_production_database_example
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/vae_database_trained_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/vae_simple_usage_example
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/quick_tuning_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/compression_validation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/large_dataset_compression_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/modern_cpp_training_example
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/cpu_optimized_training
+    COMMAND ${CMAKE_COMMAND} -E remove -f examples/mnist_training_example
+    COMMENT "Cleaning all build artifacts, executables, and database files"
+    VERBATIM
+)
+
+# Custom clean target to remove additional artifacts (not overriding the default clean)
+add_custom_target(clean_extras
+    COMMAND ${CMAKE_COMMAND} -E echo "Running additional cleanup..."
+    # Remove common executables
+    COMMAND ${CMAKE_COMMAND} -E remove -f monte_carlo_validation
+    COMMAND ${CMAKE_COMMAND} -E remove -f space_monte_carlo_validation
+    COMMAND ${CMAKE_COMMAND} -E remove -f framework_verification_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f enhanced_tmr_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f pytorch_integration_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f libtorch_resilience_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f libtorch_radiation_integration_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f libtorch_macos_compatibility_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f ai_native_database_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_ai_database_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_ai_database_test_minimal
+    COMMAND ${CMAKE_COMMAND} -E remove -f rs_memory_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_*_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f minimal_adaptive_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_adaptive_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_galois_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f simple_shift_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f test_monte_carlo
+    # Remove Python artifacts
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_SOURCE_DIR}/rad_ml/__pycache__
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/test_tensor.pt
+    # Remove specific untracked executables that commonly appear
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/galois_field_correct_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/galois_field_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/galois_field_detailed_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/galois_field_final_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/galois_field_fixed_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/galois_field_step_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/galois_field_working_debug
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/minimal_adaptive_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/rs_memory_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/simple_adaptive_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/simple_galois_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/simple_shift_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/test_monte_carlo
+    COMMENT "Cleaning additional build artifacts and untracked executables"
+    VERBATIM
+)
