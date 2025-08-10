@@ -19,8 +19,71 @@
 #include "../tmr/health_weighted_tmr.hpp"
 #include "../tmr/tmr.hpp"
 
+// Add error handling utilities at the top
+#include <optional>
+#include <stdexcept>
+
+// CRC Checksum helper class to reduce duplication
+class CRC32Helper {
+   public:
+    static uint32_t calculateCRC32(const void* data, size_t size)
+    {
+        const uint8_t* bytes = static_cast<const uint8_t*>(data);
+        uint32_t crc = 0xFFFFFFFF;
+
+        for (size_t i = 0; i < size; i++) {
+            crc ^= bytes[i];
+            for (int j = 0; j < 8; j++) {
+                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
+            }
+        }
+        return ~crc;
+    }
+
+    template <typename T>
+    static uint32_t calculateCRC32(const T& value)
+    {
+        return calculateCRC32(&value, sizeof(T));
+    }
+
+    template <typename T>
+    static bool verifyCRC32(const T& value, uint32_t expected_checksum)
+    {
+        return calculateCRC32(value) == expected_checksum;
+    }
+};
+
 namespace rad_ml {
 namespace neural {
+
+// Error types for protection failures
+class ProtectionError : public std::runtime_error {
+   public:
+    explicit ProtectionError(const std::string& message) : std::runtime_error(message) {}
+};
+
+class ChecksumError : public ProtectionError {
+   public:
+    explicit ChecksumError(const std::string& component_id)
+        : ProtectionError("Checksum validation failed for component: " + component_id)
+    {
+    }
+};
+
+// Result type for protection operations
+template <typename T>
+struct ProtectionResult {
+    std::optional<T> value;
+    bool success;
+    std::string error_message;
+
+    static ProtectionResult<T> createSuccess(const T& val) { return {val, true, ""}; }
+
+    static ProtectionResult<T> createFailure(const std::string& error)
+    {
+        return {std::nullopt, false, error};
+    }
+};
 
 /**
  * @brief Protection level for neural network components
@@ -253,91 +316,75 @@ class SelectiveHardening {
      * @return Protected value
      */
     template <typename T>
-    T applyProtection(const T& value, const std::string& component_id,
-                      const SensitivityAnalysisResult& analysis) const
+    ProtectionResult<T> applyProtection(const T& value, const std::string& component_id,
+                                        const SensitivityAnalysisResult& analysis) const
     {
-        // Get protection level for this component
-        auto it = analysis.protection_map.find(component_id);
-        ProtectionLevel level =
-            (it != analysis.protection_map.end()) ? it->second : ProtectionLevel::NONE;
+        // Find the protection level for this component
+        ProtectionLevel level = ProtectionLevel::NONE;
+        for (const auto& component : analysis.ranked_components) {
+            if (component.id == component_id) {
+                level = component.protection;
+                break;
+            }
+        }
 
-        // Apply protection based on level
         switch (level) {
-            case ProtectionLevel::NONE:
-                // No protection - return original value
-                return value;
+            case ProtectionLevel::NONE: {
+                return ProtectionResult<T>::createSuccess(value);
+            }
 
             case ProtectionLevel::MINIMAL: {
-                // Minimal protection - use basic checksum
+                // Minimal protection - use CRC checksum
                 struct ChecksumProtected {
                     T value;
                     uint32_t checksum;
 
                     ChecksumProtected(T v) : value(v)
                     {
-                        // Simple CRC calculation
-                        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
-                        size_t size = sizeof(T);
-
-                        uint32_t crc = 0xFFFFFFFF;
-                        for (size_t i = 0; i < size; i++) {
-                            crc ^= data[i];
-                            for (int j = 0; j < 8; j++) {
-                                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
-                            }
-                        }
-                        checksum = ~crc;
+                        checksum = CRC32Helper::calculateCRC32(value);
                     }
 
-                    T getValue() const
+                    ProtectionResult<T> getValue(const std::string& component_id) const
                     {
                         // Verify checksum before returning
-                        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
-                        size_t size = sizeof(T);
-
-                        uint32_t crc = 0xFFFFFFFF;
-                        for (size_t i = 0; i < size; i++) {
-                            crc ^= data[i];
-                            for (int j = 0; j < 8; j++) {
-                                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
-                            }
+                        if (!CRC32Helper::verifyCRC32(value, checksum)) {
+                            return ProtectionResult<T>::createFailure(
+                                "Checksum validation failed for component: " + component_id);
                         }
-                        crc = ~crc;
-
-                        // If checksum fails, return a safe default
-                        if (crc != checksum) {
-                            return T{};  // Return zero/default value
-                        }
-                        return value;
+                        return ProtectionResult<T>::createSuccess(value);
                     }
                 };
 
                 ChecksumProtected protected_value(value);
-                return protected_value.getValue();
+                return protected_value.getValue(component_id);
             }
 
             case ProtectionLevel::MODERATE: {
                 // Moderate protection - use basic TMR
                 tmr::TMR<T> tmr_value(value);
-                return tmr_value.get();
+                return ProtectionResult<T>::createSuccess(tmr_value.get());
             }
 
             case ProtectionLevel::HIGH: {
-                // High protection - use health-weighted TMR
+                // High protection - use health-weighted TMR with static configuration
+                // This provides robust protection with health monitoring but fixed parameters
                 tmr::HealthWeightedTMR<T> tmr_value(value);
-                return tmr_value.get();
+                return ProtectionResult<T>::createSuccess(tmr_value.get());
             }
 
             case ProtectionLevel::VERY_HIGH: {
-                // Very high protection - use enhanced TMR with CRC
+                // Very high protection - use enhanced TMR with CRC validation
+                // This provides maximum protection with additional integrity checks
                 tmr::EnhancedTMR<T> tmr_value(value);
-                return tmr_value.get();
+                return ProtectionResult<T>::createSuccess(tmr_value.get());
             }
 
             case ProtectionLevel::ADAPTIVE: {
-                // Adaptive protection - use enhanced TMR with adaptive features
+                // Adaptive protection - use enhanced TMR with runtime adaptation
+                // This dynamically adjusts protection based on error rates and mission conditions
+                // Currently uses EnhancedTMR but could be extended with adaptive features
                 tmr::EnhancedTMR<T> tmr_value(value);
-                return tmr_value.get();
+                return ProtectionResult<T>::createSuccess(tmr_value.get());
             }
 
             case ProtectionLevel::CHECKSUM_ONLY: {
@@ -348,45 +395,22 @@ class SelectiveHardening {
 
                     ChecksumProtected(T v) : value(v)
                     {
-                        // Simple CRC calculation
-                        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
-                        size_t size = sizeof(T);
-
-                        uint32_t crc = 0xFFFFFFFF;
-                        for (size_t i = 0; i < size; i++) {
-                            crc ^= data[i];
-                            for (int j = 0; j < 8; j++) {
-                                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
-                            }
-                        }
-                        checksum = ~crc;
+                        checksum = CRC32Helper::calculateCRC32(value);
                     }
 
-                    T getValue() const
+                    ProtectionResult<T> getValue(const std::string& component_id) const
                     {
                         // Verify checksum before returning
-                        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
-                        size_t size = sizeof(T);
-
-                        uint32_t crc = 0xFFFFFFFF;
-                        for (size_t i = 0; i < size; i++) {
-                            crc ^= data[i];
-                            for (int j = 0; j < 8; j++) {
-                                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
-                            }
+                        if (!CRC32Helper::verifyCRC32(value, checksum)) {
+                            return ProtectionResult<T>::createFailure(
+                                "Checksum validation failed for component: " + component_id);
                         }
-                        crc = ~crc;
-
-                        // If checksum fails, return a safe default
-                        if (crc != checksum) {
-                            return T{};  // Return zero/default value
-                        }
-                        return value;
+                        return ProtectionResult<T>::createSuccess(value);
                     }
                 };
 
                 ChecksumProtected protected_value(value);
-                return protected_value.getValue();
+                return protected_value.getValue(component_id);
             }
 
             case ProtectionLevel::CHECKSUM_WITH_RECOVERY: {
@@ -398,74 +422,59 @@ class SelectiveHardening {
 
                     ChecksumRecoveryProtected(T v) : value(v), backup_value(v)
                     {
-                        // Calculate checksum
-                        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
-                        size_t size = sizeof(T);
-
-                        uint32_t crc = 0xFFFFFFFF;
-                        for (size_t i = 0; i < size; i++) {
-                            crc ^= data[i];
-                            for (int j = 0; j < 8; j++) {
-                                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
-                            }
-                        }
-                        checksum = ~crc;
+                        checksum = CRC32Helper::calculateCRC32(value);
                     }
 
-                    T getValue() const
+                    ProtectionResult<T> getValue(const std::string& component_id) const
                     {
                         // Verify checksum before returning
-                        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
-                        size_t size = sizeof(T);
-
-                        uint32_t crc = 0xFFFFFFFF;
-                        for (size_t i = 0; i < size; i++) {
-                            crc ^= data[i];
-                            for (int j = 0; j < 8; j++) {
-                                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
+                        if (!CRC32Helper::verifyCRC32(value, checksum)) {
+                            // Try to recover from backup
+                            if (CRC32Helper::verifyCRC32(backup_value, checksum)) {
+                                return ProtectionResult<T>::createSuccess(backup_value);
+                            }
+                            else {
+                                return ProtectionResult<T>::createFailure(
+                                    "Both primary and backup values corrupted for component: " +
+                                    component_id);
                             }
                         }
-                        crc = ~crc;
-
-                        // If checksum fails, try to recover from backup
-                        if (crc != checksum) {
-                            return backup_value;  // Return backup value
-                        }
-                        return value;
+                        return ProtectionResult<T>::createSuccess(value);
                     }
                 };
 
                 ChecksumRecoveryProtected protected_value(value);
-                return protected_value.getValue();
+                return protected_value.getValue(component_id);
             }
 
             case ProtectionLevel::SELECTIVE_TMR: {
-                // Selective TMR - use basic TMR for critical components
+                // Selective TMR protection
                 tmr::TMR<T> tmr_value(value);
-                return tmr_value.get();
+                return ProtectionResult<T>::createSuccess(tmr_value.get());
             }
 
             case ProtectionLevel::APPROXIMATE_TMR: {
-                // Approximate TMR with reduced precision
+                // Approximate TMR protection
                 tmr::ApproximateTMR<T> tmr_value(value);
-                return tmr_value.get();
+                return ProtectionResult<T>::createSuccess(tmr_value.get());
             }
 
             case ProtectionLevel::HEALTH_WEIGHTED_TMR: {
-                // Health-weighted TMR
+                // Health-weighted TMR protection
                 tmr::HealthWeightedTMR<T> tmr_value(value);
-                return tmr_value.get();
+                return ProtectionResult<T>::createSuccess(tmr_value.get());
             }
 
             case ProtectionLevel::FULL_TMR: {
-                // Full TMR with enhanced features
+                // Full TMR protection
                 tmr::EnhancedTMR<T> tmr_value(value);
-                return tmr_value.get();
+                return ProtectionResult<T>::createSuccess(tmr_value.get());
             }
 
-            default:
-                // Unknown protection level - return original value
-                return value;
+            default: {
+                return ProtectionResult<T>::createFailure(
+                    "Unknown protection level for component: " + component_id);
+            }
         }
     }
 
