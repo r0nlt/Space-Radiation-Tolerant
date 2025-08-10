@@ -20,7 +20,7 @@ Enhanced Test Scenarios:
 - NEURAL_NETWORK: Tests with neural network protection
 - MISSION_ADAPTIVE: Tests with mission-specific adaptive protection
 - TEMPERATURE_EFFECTS: Tests with temperature-dependent effects
-- Test Date: 2025-08-10 13:46:52
+- Test Date: 2025-08-10 14:08:01
 
 ==========================================================================
 DATA TYPE: float
@@ -1300,15 +1300,15 @@ Error Type: COMBINED
   Total Trials: 100000
 
 ORIGINAL METHODS:
-  Standard Voting          : 99.9900% [99.9838% - 99.9962%]
-  Bit-Level Voting         : 99.9900% [99.9838% - 99.9962%]
-  Word Error Voting        : 99.9900% [99.9838% - 99.9962%]
-  Burst Error Voting       : 99.9900% [99.9838% - 99.9962%]
-  Adaptive Voting          : 99.9900% [99.9838% - 99.9962%]
+  Standard Voting          : 99.9860% [99.9787% - 99.9933%]
+  Bit-Level Voting         : 99.9860% [99.9787% - 99.9933%]
+  Word Error Voting        : 99.9860% [99.9787% - 99.9933%]
+  Burst Error Voting       : 99.9860% [99.9787% - 99.9933%]
+  Adaptive Voting          : 99.9860% [99.9787% - 99.9933%]
 
 ENHANCED METHODS:
-  Weighted Voting          : 99.9900% [99.9838% - 99.9962%]
-  Fast Bit Correction      : 99.9900% [99.9838% - 99.9962%]
+  Weighted Voting          : 99.9860% [99.9787% - 99.9933%]
+  Fast Bit Correction      : 99.9860% [99.9787% - 99.9933%]
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
@@ -2096,15 +2096,15 @@ Error Type: COMBINED
   Total Trials: 100000
 
 ORIGINAL METHODS:
-  Standard Voting          : 99.9770% [99.9676% - 99.9864%]
-  Bit-Level Voting         : 99.9770% [99.9676% - 99.9864%]
-  Word Error Voting        : 99.9770% [99.9676% - 99.9864%]
-  Burst Error Voting       : 99.9770% [99.9676% - 99.9864%]
-  Adaptive Voting          : 99.9770% [99.9676% - 99.9864%]
+  Standard Voting          : 99.9670% [99.9557% - 99.9783%]
+  Bit-Level Voting         : 99.9670% [99.9557% - 99.9783%]
+  Word Error Voting        : 99.9670% [99.9557% - 99.9783%]
+  Burst Error Voting       : 99.9670% [99.9557% - 99.9783%]
+  Adaptive Voting          : 99.9670% [99.9557% - 99.9783%]
 
 ENHANCED METHODS:
-  Weighted Voting          : 99.9770% [99.9676% - 99.9864%]
-  Fast Bit Correction      : 99.9770% [99.9676% - 99.9864%]
+  Weighted Voting          : 99.9670% [99.9557% - 99.9783%]
+  Fast Bit Correction      : 99.9670% [99.9557% - 99.9783%]
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
@@ -2892,15 +2892,15 @@ Error Type: COMBINED
   Total Trials: 100000
 
 ORIGINAL METHODS:
-  Standard Voting          : 99.9840% [99.9762% - 99.9918%]
-  Bit-Level Voting         : 99.9840% [99.9762% - 99.9918%]
-  Word Error Voting        : 99.9840% [99.9762% - 99.9918%]
-  Burst Error Voting       : 99.9840% [99.9762% - 99.9918%]
-  Adaptive Voting          : 99.9840% [99.9762% - 99.9918%]
+  Standard Voting          : 99.9810% [99.9725% - 99.9895%]
+  Bit-Level Voting         : 99.9810% [99.9725% - 99.9895%]
+  Word Error Voting        : 99.9810% [99.9725% - 99.9895%]
+  Burst Error Voting       : 99.9810% [99.9725% - 99.9895%]
+  Adaptive Voting          : 99.9810% [99.9725% - 99.9895%]
 
 ENHANCED METHODS:
-  Weighted Voting          : 99.9840% [99.9762% - 99.9918%]
-  Fast Bit Correction      : 99.9840% [99.9762% - 99.9918%]
+  Weighted Voting          : 99.9810% [99.9725% - 99.9895%]
+  Fast Bit Correction      : 99.9810% [99.9725% - 99.9895%]
   Pattern Detection        : 100.0000% [100.0000% - 100.0000%]
 
 MEMORY PROTECTION:
