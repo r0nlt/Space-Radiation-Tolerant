@@ -241,6 +241,23 @@ class EnhancedTMR {
     }
 
     /**
+     * @brief Repair all copies to a consistent value
+     *
+     * Uses the current weighted voting result as the source of truth
+     * and writes it back to all copies, then refreshes CRCs.
+     */
+    void repair()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        T majority_value = performWeightedVoting();
+        for (size_t i = 0; i < num_copies_; i++) {
+            copies_[i] = majority_value;
+        }
+        recalculateCRCs();
+        total_set_operations_++;
+    }
+
+    /**
      * @brief Try to get value with error handling
      *
      * @return std::optional<T> containing value if successful, or std::nullopt if error

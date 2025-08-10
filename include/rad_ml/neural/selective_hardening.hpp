@@ -1,5 +1,22 @@
 #pragma once
 
+/**
+ * @file selective_hardening.hpp
+ * @brief Selective hardening analysis and protection application for neural components
+ *
+ * Recent improvements (August 2025):
+ * - Performance: O(1) protection lookup via protection_map with legacy linear-scan fallback
+ * - Behavior: Unknown/unspecified protection levels default to NONE (return original value)
+ * - Maintainability: applyProtection refactored into small helper/policy functions
+ *   (protectNone, protectChecksumOnly, protectChecksumWithRecovery,
+ *    protectTmrBasic/Approximate/HealthWeighted/Enhanced)
+ * - Safety: CRC helpers now require trivially copyable types and use std::byte; marked noexcept
+ * - Strategy coverage: analyzeAndProtect now handles ALL_LAYERS, CRITICAL_LAYERS,
+ *   WEIGHT_THRESHOLD, and ADAPTIVE explicitly
+ * - Data structure: protection_map is std::unordered_map for O(1) semantics; if stable
+ *   iteration order is required for reporting, sort at the call site
+ */
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -283,10 +300,30 @@ class SelectiveHardening {
             case HardeningStrategy::PROTECT_ALL:
                 applyProtectAllStrategy(components, result);
                 break;
+            case HardeningStrategy::ALL_LAYERS:
+                // Treat as protect all components for initial assignment
+                applyProtectAllStrategy(components, result);
+                break;
+            case HardeningStrategy::CRITICAL_LAYERS:
+                // Use layerwise importance model to prioritize critical layers
+                applyLayerwiseImportanceStrategy(result);
+                break;
+            case HardeningStrategy::WEIGHT_THRESHOLD:
+                // Map to fixed-threshold strategy using configured threshold
+                applyFixedThresholdStrategy(result);
+                break;
             case HardeningStrategy::FIXED_THRESHOLD:
                 applyFixedThresholdStrategy(result);
                 break;
             case HardeningStrategy::RESOURCE_CONSTRAINED:
+                applyResourceConstrainedStrategy(result);
+                break;
+            case HardeningStrategy::ADAPTIVE_RUNTIME:
+                // Initial protection is same as resource constrained
+                applyResourceConstrainedStrategy(result);
+                break;
+            case HardeningStrategy::ADAPTIVE:
+                // Alias to adaptive runtime's initial assignment
                 applyResourceConstrainedStrategy(result);
                 break;
             case HardeningStrategy::LAYERWISE_IMPORTANCE:
@@ -300,10 +337,6 @@ class SelectiveHardening {
                 break;
             case HardeningStrategy::IMPORTANCE_DECAY:
                 applyImportanceDecayStrategy(result);
-                break;
-            case HardeningStrategy::ADAPTIVE_RUNTIME:
-                // Initial protection is same as resource constrained
-                applyResourceConstrainedStrategy(result);
                 break;
         }
 
