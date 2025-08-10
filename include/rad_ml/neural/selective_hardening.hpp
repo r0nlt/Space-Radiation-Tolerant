@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <iostream>
@@ -28,13 +29,13 @@
 // CRC Checksum helper class to reduce duplication
 class CRC32Helper {
    public:
-    static uint32_t calculateCRC32(const void* data, size_t size)
+    static uint32_t calculateCRC32(const void* data, size_t size) noexcept
     {
-        const uint8_t* bytes = static_cast<const uint8_t*>(data);
+        const std::byte* bytes = static_cast<const std::byte*>(data);
         uint32_t crc = 0xFFFFFFFF;
 
         for (size_t i = 0; i < size; i++) {
-            crc ^= bytes[i];
+            crc ^= static_cast<uint32_t>(std::to_integer<uint8_t>(bytes[i]));
             for (int j = 0; j < 8; j++) {
                 crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
             }
@@ -43,17 +44,17 @@ class CRC32Helper {
     }
 
     template <typename T>
-    static uint32_t calculateCRC32(const T& value)
+    static uint32_t calculateCRC32(const T& value) noexcept
     {
-        static_assert(std::is_trivially_copyable<T>::value,
+        static_assert(std::is_trivially_copyable_v<T>,
                       "CRC32Helper::calculateCRC32 requires T to be trivially copyable");
         return calculateCRC32(&value, sizeof(T));
     }
 
     template <typename T>
-    static bool verifyCRC32(const T& value, uint32_t expected_checksum)
+    static bool verifyCRC32(const T& value, uint32_t expected_checksum) noexcept
     {
-        static_assert(std::is_trivially_copyable<T>::value,
+        static_assert(std::is_trivially_copyable_v<T>,
                       "CRC32Helper::verifyCRC32 requires T to be trivially copyable");
         return calculateCRC32(value) == expected_checksum;
     }
@@ -186,11 +187,12 @@ enum class HardeningStrategy {
  * @brief Result of a sensitivity analysis
  */
 struct SensitivityAnalysisResult {
-    std::vector<NetworkComponent> ranked_components;        ///< Components ranked by criticality
-    std::map<std::string, double> layer_criticality;        ///< Layer-level criticality scores
-    std::map<std::string, ProtectionLevel> protection_map;  ///< Recommended protection levels
-    double resource_usage;                                  ///< Estimated resource usage (0-1)
-    double expected_error_rate;                             ///< Expected error rate with protection
+    std::vector<NetworkComponent> ranked_components;  ///< Components ranked by criticality
+    std::map<std::string, double> layer_criticality;  ///< Layer-level criticality scores
+    std::unordered_map<std::string, ProtectionLevel>
+        protection_map;          ///< Recommended protection levels
+    double resource_usage;       ///< Estimated resource usage (0-1)
+    double expected_error_rate;  ///< Expected error rate with protection
     double baseline_error_rate;  ///< Baseline error rate without protection
 };
 
@@ -1018,6 +1020,12 @@ class SelectiveHardening {
         switch (strategy) {
             case HardeningStrategy::PROTECT_ALL:
                 return "Protect All";
+            case HardeningStrategy::ALL_LAYERS:
+                return "All Layers";
+            case HardeningStrategy::CRITICAL_LAYERS:
+                return "Critical Layers";
+            case HardeningStrategy::WEIGHT_THRESHOLD:
+                return "Weight Threshold";
             case HardeningStrategy::FIXED_THRESHOLD:
                 return "Fixed Threshold";
             case HardeningStrategy::RESOURCE_CONSTRAINED:
