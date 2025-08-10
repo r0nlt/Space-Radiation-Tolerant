@@ -500,6 +500,11 @@ AI Native Database is a modern C++ database that uses Variational Autoencoders (
   - Error detection and correction enhancements
   - Test results and performance characteristics
 
+- **[Selective Hardening Improvements](./FAQ/AI-NATIVE-DATABASE/SELECTIVE_HARDENING_IMPROVEMENTS.md)**
+  - O(1) protection lookups, refactored helper policies
+  - Fail-safe defaults for unknown protection levels
+  - CRC safety constraints and expanded strategy handling
+
 - **[Database Testing Guide](./FAQ/LibTorchTesting/TESTING_LIBTORCH.md)**
   - Comprehensive database functionality verification
   - C++ testing methodologies and validation
@@ -517,7 +522,6 @@ AI Native Database is a modern C++ database that uses Variational Autoencoders (
 - ✅ **Reed-Solomon Integration**: Advanced error correction with Galois Field arithmetic
 - ✅ **Memory Management**: RAII, move semantics, and efficient resource handling
 - ✅ **Type Safety**: Strong typing with concepts and compile-time checks
-
 
 #### **Usage Example**
 
