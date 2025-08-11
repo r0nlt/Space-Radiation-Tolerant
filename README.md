@@ -24,7 +24,7 @@ A C++ software framework for implementing machine learning models that can opera
 Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help provide cost effecient solution for COTS processors as AI demand increases.
 
 Status:
-July 5 2025
+August 11 2025
 - Paper published!
 - PyTorch Integration
 - cleaning up codebase
@@ -94,7 +94,7 @@ Enhanced Methods Improvement: 0.0003% over traditional methods
 NASA-style verification report generated: nasa_verification_report.txt
 ```
 
-**Expected Runtime:** ~10-60 minutes depending on number of trials and system being used.
+**Expected Runtime:** ~3-10 minutes depending on number of trials and system being used.
 
 
 ## Building the Framework
@@ -147,34 +147,31 @@ vcpkg install pytorch
 ```
 
 ### CMake Configuration
+(These build configurations are not finalized and will be finalized eventually when I can think of a good way to organize this better currently everything in being built in root but separate build directories will be organized with certain builds being used to validate and test the framework more efficiently since make now takes a lot more time as the project gets better.)
 
-The framework uses modern CMake with configurable options. Here are the main build configurations:
+The framework uses modern CMake with configurable options. Here are the main root-based build configurations:
 
 #### Basic Build (Core Framework)
 ```bash
-mkdir build && cd build
-cmake ..
+cmake .
 make -j$(nproc)  # or make -j4 on macOS
 ```
 
 #### Full Build with PyTorch Integration
 ```bash
-mkdir build_full && cd build_full
-cmake -DENABLE_PYTORCH=ON -DBUILD_TESTING=ON -DENABLE_VISUALIZATION=ON ..
+cmake -DENABLE_PYTORCH=ON -DBUILD_TESTING=ON -DENABLE_VISUALIZATION=ON .
 make -j$(nproc)
 ```
 
 #### Development Build (Recommended)
 ```bash
-mkdir build_dev && cd build_dev
-cmake -DENABLE_PYTORCH=ON -DBUILD_TESTING=ON -DENABLE_IDE_INTEGRATION=ON ..
+cmake -DENABLE_PYTORCH=ON -DBUILD_TESTING=ON -DENABLE_IDE_INTEGRATION=ON .
 make -j$(nproc)
 ```
 
 #### Minimal Build (Core Only)
 ```bash
-mkdir build_minimal && cd build_minimal
-cmake -DENABLE_PYTORCH=OFF -DBUILD_TESTING=OFF -DUSE_MINIMAL_PYTHON_BINDINGS=ON ..
+cmake -DENABLE_PYTORCH=OFF -DBUILD_TESTING=OFF -DUSE_MINIMAL_PYTHON_BINDINGS=ON .
 make -j$(nproc)
 ```
 
