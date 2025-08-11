@@ -15,28 +15,30 @@
 **Email:** spacelabsai@gmail.com
 
 **Version:** v1.0.2 (In Development)
+
 **Status:** Development Phase - AI Native Database Implementation
 
-A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom library focused to engineer systems resilient to radiation effects in Space Environments. Currently the framework explores embedded databases using VAE nerual network alongside LMDB (Lightning Mememory Mapped Database).
+A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom library focused to engineer systems resilient to radiation effects in Space Environments. Currently the framework explores embedded databases using VAE neural network alongside LMDB (Lightning Memory Mapped Database).
 
 ## About Space-Radiation-Tolerant
 
-Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help provide cost effecient solution for COTS processors as AI demand increases.
+Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help provide cost efficient solution for COTS processors as AI demand increases.
 
 Status:
 August 11 2025
 - Paper published!
-- PyTorch Integration
-- cleaning up codebase
-- increase in better documentation
+- PyTorch Integrated & being tested
+- cleaning up codebase and streamlining github landing page
+- increase in better documentation and visuals
 - Radiation Tolerant AI Native Embedded Database (in development)
+- Getting to CUDA and GPU training
 
 ### Approach
 
 - **Open Source First**: Software is released under the AGPL v3 license
 - **Research-Driven**: Solutions are inspired by physics, sustainability, mathematics, and Tour of C++ standards
 - **Community Focused**: I welcome anyone to peer review!
-- **Quality Assurance**: Many tests and edge cases and continous testing as RadML approaches publication
+- **Quality Assurance**: High bench mark and robust testing as we approach hardware-in-the-loop validation.
 - **Documentation**: Comprehensive documentation and on going updates
 
 ### RadML Monte Carlo Validation
@@ -287,7 +289,7 @@ The Student Guide provides easy-to-follow steps for:
 ## Table of Contents
 
 - [How Radiation Affects Computing](#how-radiation-affects-computing)
-- [How to Build](#how-to-build)
+- [How to Build](#building-the-framework)
 - [Quick Start Guide](#quick-start-guide)
 - [Common API Usage Examples](#common-api-usage-examples)
 - [Python Bindings Usage](#python-bindings-usage)
@@ -334,78 +336,6 @@ The Student Guide provides easy-to-follow steps for:
 
 For a detailed guide on radiation effects, see [Radiation Effects Guide](./rootMarkdown/radiationEffects/radiation_effects_guide.md).
 
-## How to Build
-
-### 1. Build from Root Directory
-Build directly from the root directory:
-```bash
-cmake .
-make
-```
-
-## 1.1 Building custom targets
-```bash
-make monte_carlo_validation
-```
-
-## 1.2 Clean in Root Directory
-Clean root directory
-```bash
-make clean
-```
-## 1.3 Testing
-Running a executable test after compiling build
-./example_test_executable
-```bash
-./monte_carlo_validation
-```
-
-
-### 2. Configure CMake (with Custom Paths if Needed)
-
-If your dependencies (like Eigen or Boost) are in non-standard locations, or you want to set a custom install prefix, specify them as follows:
-
-```bash
-cmake -DEIGEN3_INCLUDE_DIR=/path/to/eigen \
-      -DBOOST_ROOT=/path/to/boost \
-      -DCMAKE_INSTALL_PREFIX=/your/install/path \
-      ..
-```
-- You can add as many `-DVARIABLE=VALUE` options as needed.
-- To use a specific compiler:
-  ```bash
-  cmake -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ ..
-  ```
-
-**Common variables:**
-- `EIGEN3_INCLUDE_DIR` — Path to Eigen headers
-- `BOOST_ROOT` — Path to Boost installation
-- `CMAKE_INSTALL_PREFIX` — Where to install after `make install`
-- `CMAKE_C_COMPILER` and `CMAKE_CXX_COMPILER` — Custom compiler paths
-
-### 3. Build the Project
-```bash
-make -j$(nproc)
-```
-
-### 4. Install (Optional)
-```bash
-make install
-```
-
-### 5. Troubleshooting
-- If CMake cannot find a dependency, check the error message for the variable to override.
-- If you see a pybind11 CMake error, run:
-  ```bash
-  ../apply-patches.sh
-  cmake ..
-  ```
-
-**Tip:**
-To see all configurable CMake variables, run:
-```bash
-cmake -LH ..
-```
 
 ## Quick Start Guide
 
