@@ -223,6 +223,17 @@ add_executable(systematic_fault_test test/verification/systematic_fault_test.cpp
 target_link_libraries(systematic_fault_test rad_ml_tmr rad_ml_testing)
 add_test(NAME systematic_fault_test COMMAND systematic_fault_test)
 
+# Add radiation environment validation executable
+add_executable(radiation_environment_validation
+  test/verification/radiation_environment_validation.cpp
+)
+target_link_libraries(radiation_environment_validation
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+)
+add_test(NAME radiation_environment_validation COMMAND radiation_environment_validation)
+
 add_executable(modern_features_test test/verification/modern_features_test.cpp)
 target_link_libraries(modern_features_test rad_ml_tmr rad_ml_testing)
 add_test(NAME modern_features_test COMMAND modern_features_test)
