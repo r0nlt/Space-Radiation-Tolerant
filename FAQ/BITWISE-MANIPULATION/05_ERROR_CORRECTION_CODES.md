@@ -197,7 +197,7 @@ The Berlekamp–Massey algorithm computes the error locator polynomial Λ(x) by 
 S_j = −(Λ₁ S_{j−1} + Λ₂ S_{j−2} + … + Λ_T S_{j−T})
 ```
 
-In GF(2^m), subtraction equals addition, so the minus sign has no effect in implementation. After Λ(x) is found, the error evaluator polynomial is constructed as the truncated product Ω(x) = [S(x) · Λ(x)] mod x^{nsym+1}.
+In GF(2^m), subtraction equals addition, so the minus sign has no effect in implementation. After Λ(x) is found, the error evaluator polynomial is constructed as the truncated product Ω(x) = [S(x) · Λ(x)] mod x^{nsym}.
 
 ```cpp
 std::tuple<std::vector<element_t>, std::vector<element_t>> rs_find_error_locator(

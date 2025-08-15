@@ -232,7 +232,7 @@ class GaloisField {
      *
      * After Λ(x) is determined, the evaluator is formed by the truncated product
      *
-     *   Ω(x) = (S(x) · Λ(x)) mod x^{nsym+1},
+     *   Ω(x) = (S(x) · Λ(x)) mod x^{nsym},
      *
      * where S(x) = S₁x + S₂x² + … collects the nonzero syndromes.
      *
@@ -280,7 +280,7 @@ class GaloisField {
             }
         }
 
-        // Form Ω(x) by truncated product: Ω(x) = S(x) · Λ(x) mod x^{nsym+1}
+        // Form Ω(x) by truncated product: Ω(x) = S(x) · Λ(x) mod x^{nsym}
         std::vector<element_t> err_eval(nsym);
 
         for (uint8_t i = 0; i < nsym; ++i) {

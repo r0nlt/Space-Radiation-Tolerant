@@ -500,7 +500,7 @@ S_j = −(Λ₁ S_{j−1} + Λ₂ S_{j−2} + … + Λ_T S_{j−T}),  for j ≥ 
 Notes for GF(2^m):
 - In GF(2^m), subtraction equals addition (XOR), so the leading minus sign is implementation-neutral.
 - After Λ(x) is found, the error evaluator polynomial is the truncated product
-  Ω(x) = [S(x) · Λ(x)] mod x^{nsym+1}, where S(x) = S₁x + S₂x² + … .
+  Ω(x) = [S(x) · Λ(x)] mod x^{nsym}, where S(x) = S₁x + S₂x² + … .
   This truncation is essential; it is not the full product.
 
 The implementation:
