@@ -189,7 +189,15 @@ std::vector<element_t> rs_calc_syndromes(const std::vector<element_t>& msg, uint
 - **Error Location**: Syndrome pattern indicates error positions
 - **Error Count**: Number of non-zero syndromes ≤ 2 × number of errors
 
-### 2. Berlekamp-Massey Algorithm
+### 2. Berlekamp–Massey Algorithm
+
+The Berlekamp–Massey algorithm computes the error locator polynomial Λ(x) by identifying the minimal linear recurrence that fits the syndrome sequence. In autoregressive/LFSR terms, Λ is the feedback polynomial. For j ≥ T (number of errors):
+
+```
+S_j = −(Λ₁ S_{j−1} + Λ₂ S_{j−2} + … + Λ_T S_{j−T})
+```
+
+In GF(2^m), subtraction equals addition, so the minus sign has no effect in implementation. After Λ(x) is found, the error evaluator polynomial is constructed as the truncated product Ω(x) = [S(x) · Λ(x)] mod x^{nsym+1}.
 
 ```cpp
 std::tuple<std::vector<element_t>, std::vector<element_t>> rs_find_error_locator(
@@ -230,6 +238,8 @@ std::tuple<std::vector<element_t>, std::vector<element_t>> rs_find_error_locator
 
 ### 3. Chien Search for Error Locations
 
+Evaluate Λ at α^{−i} for i = 0..n−1; a zero indicates an error at position (n−1−i). This linear-time scan in n with a small factor deg(Λ) efficiently finds all error locations.
+
 ```cpp
 std::vector<size_t> rs_find_errors(const std::vector<element_t>& err_loc, size_t msg_len) const {
     std::vector<size_t> error_positions;
@@ -249,6 +259,14 @@ std::vector<size_t> rs_find_errors(const std::vector<element_t>& err_loc, size_t
 ```
 
 ### 4. Forney Algorithm for Error Values
+
+For each error position j, compute magnitude using Forney’s formula:
+
+```
+E_j = − Ω(α^{−j}) / (α^{−j} · Λ'(α^{−j}))
+```
+
+Only odd coefficients contribute to Λ'(x) in characteristic 2, and the leading minus can be omitted in GF(2^m).
 
 ```cpp
 std::vector<element_t> rs_correct_errors_at_positions(

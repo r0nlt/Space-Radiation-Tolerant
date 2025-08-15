@@ -80,9 +80,9 @@ Encoding steps:
 Decoding steps:
 1. Calculate syndromes to detect errors
 2. If syndromes are all zero, no errors exist
-3. Use Berlekamp-Massey algorithm to find error locator polynomial
-4. Use Chien search to find error locations
-5. Use Forney algorithm to calculate error values
+3. Use Berlekamp–Massey to find Λ(x) (minimal locator polynomial from syndromes)
+4. Use Chien search to find error locations (roots where Λ(α^{−j}) = 0)
+5. Use Forney algorithm to calculate error values: E_j = −Ω(α^{−j}) / (α^{−j} · Λ'(α^{−j}))
 6. Correct the errors by XORing with error values
 7. Convert corrected bytes back to float
 
