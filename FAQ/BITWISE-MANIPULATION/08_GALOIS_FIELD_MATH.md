@@ -491,7 +491,19 @@ If E(x) is the error polynomial, then:
 
 ### Berlekamp-Massey Algorithm: Finding Error Locations
 
-The Berlekamp-Massey algorithm is the heart of Reed-Solomon decoding. It finds the error locator polynomial from the syndromes - a remarkable piece of mathematics:
+The Berlekamp–Massey (BM) algorithm finds the minimal error locator polynomial Λ(x) from the syndrome sequence. Conceptually, it discovers the shortest linear recurrence satisfied by the syndromes:
+
+```
+S_j = −(Λ₁ S_{j−1} + Λ₂ S_{j−2} + … + Λ_T S_{j−T}),  for j ≥ T
+```
+
+Notes for GF(2^m):
+- In GF(2^m), subtraction equals addition (XOR), so the leading minus sign is implementation-neutral.
+- After Λ(x) is found, the error evaluator polynomial is the truncated product
+  Ω(x) = [S(x) · Λ(x)] mod x^{nsym}, where S(x) = S₁x + S₂x² + … .
+  This truncation is essential; it is not the full product.
+
+The implementation:
 
 ```cpp
 // From include/rad_ml/neural/galois_field.hpp
@@ -547,6 +559,8 @@ std::tuple<std::vector<element_t>, std::vector<element_t>> rs_find_error_locator
 
 ### Chien Search for Error Positions
 
+Chien search evaluates the locator polynomial at inverses of the evaluation points to find roots efficiently. For an error at position j (0-based from the left), we have Λ(α^{−j}) = 0. Scanning all positions yields the set of error locations. Complexity: O(n · deg(Λ)).
+
 ```cpp
 // From include/rad_ml/neural/galois_field.hpp
 std::vector<size_t> rs_find_errors(const std::vector<element_t>& err_loc, size_t msg_len) const {
@@ -585,6 +599,14 @@ std::vector<size_t> rs_find_errors(const std::vector<element_t>& err_loc, size_t
 ```
 
 ### Forney Algorithm for Error Correction
+
+Given Λ(x), Ω(x), and the root positions, Forney’s formula computes each error magnitude E_j at position j:
+
+```
+E_j = − Ω(α^{−j}) / (α^{−j} · Λ'(α^{−j}))
+```
+
+where Λ' is the formal derivative of Λ. In GF(2^m), subtraction equals addition, so the minus sign is immaterial in code. Only odd-indexed coefficients contribute to Λ'(x) in characteristic 2.
 
 ```cpp
 // From include/rad_ml/neural/galois_field.hpp

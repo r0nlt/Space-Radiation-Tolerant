@@ -204,37 +204,71 @@ class GaloisField {
     }
 
     /**
-     * @brief Find error locator and evaluator polynomials using Berlekamp-Massey algorithm
+     * @brief Compute Λ(x) and Ω(x) via the Berlekamp–Massey (BM) decoding step
      *
-     * @param syndromes Syndromes from rs_calc_syndromes
-     * @param nsym Number of ecc symbols
-     * @return Tuple of error locator and evaluator polynomials
+     * This routine performs the core Reed–Solomon decoding step that turns a
+     * sequence of syndromes into:
+     *  - Λ(x): error locator polynomial (roots correspond to error locations)
+     *  - Ω(x): error evaluator polynomial (used to compute error magnitudes)
+     *
+     * Conceptual model
+     * -----------------
+     * The BM algorithm finds the shortest linear recurrence that the syndrome
+     * sequence satisfies. In field terms, it finds Λ(x) = 1 + Λ₁x + … + Λ_T x^T
+     * such that for j ≥ T the syndromes obey the recurrence
+     *
+     *   S_j = −(Λ₁ S_{j−1} + Λ₂ S_{j−2} + … + Λ_T S_{j−T}).
+     *
+     * In GF(2^m), subtraction equals addition (XOR), so the minus sign can be
+     * dropped in implementation. The degree T is the number of symbol errors.
+     *
+     * Implementation sketch
+     * ---------------------
+     * We iterate through the syndrome indices, maintain the current locator
+     * polynomial `err_loc` and a backup `old_loc`. At each step we compute the
+     * discrepancy Δ (delta). If Δ ≠ 0, we update `err_loc` using a shifted copy
+     * of `old_loc` (corresponds to multiplying by x) scaled by Δ; when a new
+     * maximum span is reached, we also scale and swap `old_loc` per BM rules.
+     *
+     * After Λ(x) is determined, the evaluator is formed by the truncated product
+     *
+     *   Ω(x) = (S(x) · Λ(x)) mod x^{nsym},
+     *
+     * where S(x) = S₁x + S₂x² + … collects the nonzero syndromes.
+     *
+     * @param syndromes Syndromes from rs_calc_syndromes (size nsym+1; syndromes[0]==0)
+     * @param nsym Number of ECC symbols (designed correction capacity is nsym/2)
+     * @return Tuple {Λ(x), Ω(x)} as vectors of coefficients (highest degree first)
      */
     std::tuple<std::vector<element_t>, std::vector<element_t>> rs_find_error_locator(
         const std::vector<element_t>& syndromes, uint8_t nsym) const
     {
-        // Berlekamp-Massey algorithm to find the error locator polynomial
+        // Berlekamp–Massey: initialize locator polynomials
         std::vector<element_t> err_loc = {1};  // Initialize error locator polynomial
         std::vector<element_t> old_loc = {1};  // Previous iteration
 
         for (uint8_t i = 0; i < nsym; ++i) {
-            // Compute discrepancy
+            // Compute discrepancy Δ = S_{i+1} + sum_{j=1..deg(Λ)} Λ_j S_{i+1−j}
+            // Note: in GF(2^m) addition/subtraction is XOR, hence additions below
             element_t delta = syndromes[i + 1];
             for (size_t j = 1; j < err_loc.size(); ++j) {
+                // err_loc is stored highest degree first; index from the back
                 delta = add(delta, multiply(err_loc[err_loc.size() - 1 - j], syndromes[i + 1 - j]));
             }
 
-            // Shift old_loc and multiply by delta
+            // Candidate update: shift old_loc by one (multiply by x)
             std::vector<element_t> new_loc = old_loc;
             new_loc.insert(new_loc.begin(), 0);  // Multiply by x
 
             if (delta != 0) {
+                // Λ_new(x) = Λ(x) + Δ · x · B(x), where B(x) is previous best
                 for (size_t j = 0; j < new_loc.size(); ++j) {
                     new_loc[j] = add(err_loc[j], multiply(delta, new_loc[j]));
                 }
             }
 
             if (2 * old_loc.size() <= i + 1 && delta != 0) {
+                // A new maximum linear span has been achieved: update backup
                 old_loc = err_loc;
                 for (auto& el : old_loc) {
                     el = multiply(el, delta);
@@ -246,8 +280,7 @@ class GaloisField {
             }
         }
 
-        // Calculate error evaluator polynomial using the formula:
-        // Ω(x) = Syndromes(x) * Λ(x) mod x^(nsym+1)
+        // Form Ω(x) by truncated product: Ω(x) = S(x) · Λ(x) mod x^{nsym}
         std::vector<element_t> err_eval(nsym);
 
         for (uint8_t i = 0; i < nsym; ++i) {
@@ -264,9 +297,16 @@ class GaloisField {
     /**
      * @brief Find error positions using Chien search
      *
-     * @param err_loc Error locator polynomial
-     * @param msg_len Message length
-     * @return Vector of error positions
+     * Chien search evaluates the locator polynomial Λ(x) at successive inverses
+     * of field elements corresponding to codeword positions. For RS codes with
+     * evaluation points α^0, α^1, …, α^{n−1}, an error at position j implies
+     * Λ(α^{−j}) = 0. We scan all positions and collect the roots.
+     *
+     * Complexity: O(n · deg(Λ)).
+     *
+     * @param err_loc Error locator polynomial Λ(x) (coefficients highest degree first)
+     * @param msg_len Message length (n)
+     * @return Vector of error positions (0-based, from left to right)
      */
     std::vector<size_t> rs_find_errors(const std::vector<element_t>& err_loc, size_t msg_len) const
     {
@@ -279,7 +319,7 @@ class GaloisField {
             return {};  // Error count exceeds message length - uncorrectable
         }
 
-        // Chien search: evaluate error locator polynomial at all positions
+        // Chien search: evaluate Λ(α^{−i}) at all positions i
         for (size_t i = 0; i < msg_len; ++i) {
             element_t eval = 0;
             element_t x_inv = exp_table[(field_size - 1 - i) % (field_size - 1)];  // α^(-i)
@@ -304,13 +344,21 @@ class GaloisField {
     }
 
     /**
-     * @brief Correct errors in a message using Forney algorithm
+     * @brief Correct errors using the Forney algorithm
+     *
+     * Given Λ(x), Ω(x), and the set of error positions, Forney's formula
+     * computes error magnitudes E_j at each position j as
+     *
+     *   E_j = − Ω(α^{−j}) / (α^{−j} · Λ'(α^{−j}))
+     *
+     * where Λ' is the formal derivative of Λ. In GF(2^m) subtraction==addition,
+     * so the sign is omitted in implementation.
      *
      * @param msg_in Message with errors
-     * @param err_pos Error positions
-     * @param err_loc Error locator polynomial
-     * @param err_eval Error evaluator polynomial
-     * @return Corrected message
+     * @param err_pos Error positions (0-based indices)
+     * @param err_loc Error locator polynomial Λ(x)
+     * @param err_eval Error evaluator polynomial Ω(x)
+     * @return Corrected message (same size as msg_in)
      */
     std::vector<element_t> rs_correct_errors_at_positions(
         const std::vector<element_t>& msg_in, const std::vector<size_t>& err_pos,
@@ -332,7 +380,7 @@ class GaloisField {
                 err_eval_at_pos = add(err_eval_at_pos, multiply(err_eval[j], pow(x_inv, j)));
             }
 
-            // Calculate error locator derivative at position
+            // Calculate Λ'(α^{−j}); only odd coefficients contribute in GF(2)
             element_t err_loc_deriv = 0;
             for (size_t j = 1; j < err_loc.size(); j += 2) {
                 err_loc_deriv = add(err_loc_deriv, multiply(err_loc[j], pow(x_inv, j - 1)));
@@ -349,10 +397,19 @@ class GaloisField {
     }
 
     /**
-     * @brief Complete Reed-Solomon error correction process
+     * @brief Complete Reed–Solomon decoding pipeline
+     *
+     * Steps:
+     *  1) Compute syndromes S₁..S_nsym.
+     *  2) Run Berlekamp–Massey to obtain Λ(x) and Ω(x).
+     *  3) Use Chien search to locate error positions (roots of Λ).
+     *  4) Apply Forney algorithm to compute magnitudes and correct the codeword.
+     *
+     * Returns std::nullopt if the error pattern is beyond the code's capability
+     * (e.g., root count mismatch or derivative zero).
      *
      * @param msg Message with errors
-     * @param nsym Number of ecc symbols
+     * @param nsym Number of ECC symbols
      * @return Corrected message or std::nullopt if uncorrectable
      */
     std::optional<std::vector<element_t>> rs_correct_errors(const std::vector<element_t>& msg,
