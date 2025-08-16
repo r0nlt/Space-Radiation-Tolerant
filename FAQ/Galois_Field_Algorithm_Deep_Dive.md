@@ -780,8 +780,9 @@ f(x) = a₀ + x(a₁ + x(a₂ + ... + x(a_{n-1} + x a_n)...))
 
 ---
 
-# Mermaid Diagram of RS decoding pipeline over Galios Field implementation
+# Mermaid Diagram of RS decoding pipeline over Galois Field implementation
 
+```mermaid
 graph TD
   A["Input: msg (length n) with nsym ECC"] --> B["Compute syndromes S0..Snsym<br/>S_i = eval_poly(msg, α^i)"]
   B --> C{"Any non-zero among S1..Snsym?"}
@@ -806,3 +807,4 @@ graph TD
   E -. uses .-> GB
   G -. uses .-> GB
   G -. uses .-> GC
+```
