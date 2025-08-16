@@ -268,7 +268,7 @@ std::vector<size_t> rs_find_errors(const std::vector<element_t>& err_loc,
 - Coefficient order: `err_loc` coefficients are stored highest-degree-first, and Horner evaluation follows that order.
 - **Horner's Method**: O(deg(Λ)) field operations per position
 - **Total Complexity**: O(n × deg(Λ)) where n is message length
-- **Early Termination**: Can stop when num_errors positions are found
+- **Early termination**: Possible optimization (not implemented) to stop when `num_errors` positions are found
 - **Validation**: Ensures root count matches polynomial degree
 
 ---
@@ -327,10 +327,10 @@ std::vector<element_t> rs_correct_errors_at_positions(
 ```
 
 ### Error Correction Properties
-- **Time Complexity**: O(t²) where t is the number of errors
-- **Field Operations**: O(t²) multiplications, divisions, and exponentiations
-- **Numerical Stability**: Handles division by zero gracefully
-- **Correction Accuracy**: Perfect correction up to design capacity
+- **Time Complexity**: Typically O(t·nsym); with nsym≈2t this is O(t²)
+- **Field Operations**: Multiplications, divisions, and exponentiations dominated by evaluator/derivative evaluations
+- **Division by zero**: If Λ'(α^(-j)) = 0, division raises an exception (not caught in `rs_correct_errors`)
+- **Correction accuracy**: Corrects up to t=⌊nsym/2⌋ symbol errors assuming distinct error locations and n ≤ 2^m − 1
 
 ---
 
@@ -445,33 +445,103 @@ void test_field_properties() {
 }
 ```
 
-### Reed-Solomon Validation
+### Reed-Solomon Validation (Advanced Example from framework)
 
 ```cpp
-// Test complete encoding/decoding pipeline
-void test_rs_pipeline() {
-    GaloisField<8, 0x11d> gf;
+#include <rad_ml/neural/advanced_reed_solomon.hpp>
 
-    // Test data
-    std::vector<uint8_t> data = {1, 2, 3, 4, 5, 6, 7, 8};
-    uint8_t nsym = 4;  // 4 error correction symbols
+// Complex, realistic encode/decode with interleaving and burst errors
+void test_rs_pipeline_advanced() {
+    using namespace rad_ml::neural;
 
-    // Generate generator polynomial
-    auto gen_poly = gf.rs_generator_poly(nsym);
+    // A non-trivial payload type (must be trivially copyable)
+    struct Payload {
+        uint32_t id;
+        float telemetry[3];
+        uint16_t flags;
+    } payload{42u, {3.14159f, -2.5f, 0.001f}, 0xA55A};
 
-    // Encode data (simplified - actual implementation would be more complex)
-    std::vector<uint8_t> encoded = data;
-    encoded.insert(encoded.end(), gen_poly.begin(), gen_poly.end());
+    // RS codec: 8-bit symbols with 8 ECC symbols (t = 4)
+    RS8Bit8Sym<Payload> rs;
 
-    // Simulate errors
-    encoded[2] = 255;  // Corrupt a symbol
+    // Encode payload
+    std::vector<uint8_t> cw = rs.encode(payload);
 
-    // Decode with error correction
-    auto decoded = gf.rs_correct_errors(encoded, nsym);
+    // Optional: Bit interleaving to mitigate burst errors
+    std::vector<uint8_t> interleaved = rs.interleave(cw);
+
+    // Inject spatially correlated burst errors
+    std::vector<uint8_t> corrupted = rs.apply_burst_errors(interleaved, /*error_rate=*/0.02, /*burst_size=*/5, /*seed=*/1234);
+
+    // De-interleave before decoding
+    std::vector<uint8_t> deinterleaved = rs.deinterleave(corrupted);
+
+    // Attempt decode/correction
+    auto decoded = rs.decode(deinterleaved);
     assert(decoded.has_value());
-    assert(decoded.value() == data);
+
+    // Validate exact recovery
+    const Payload& out = decoded.value();
+    assert(out.id == payload.id);
+    assert(out.flags == payload.flags);
+    for (int i = 0; i < 3; ++i) {
+        assert(std::fabs(out.telemetry[i] - payload.telemetry[i]) < 1e-6f);
+    }
 }
 ```
+
+### System-level Monte Carlo validation (complex example in framework)
+
+This repository also includes a large-scale Monte Carlo harness that exercises protection strategies, burst-like faults, and measures end-to-end effects under varied “mission” settings. In that harness, the RS codec in the test is a mocked adapter (for speed/independence), but the flow mirrors the production pipeline (encode → disturb with burst errors → decode and assess correctness/overhead).
+
+Key excerpt from `test/verification/monte_carlo_neuralnetwork.cpp`:
+
+```1182:1201:test/verification/monte_carlo_neuralnetwork.cpp
+void testReedSolomon(size_t num_tests = 1000) {
+    std::cout << "\n=== Reed-Solomon Error Correction Test ===\n";
+    using DataType = float;
+    constexpr uint8_t symbol_sizes[] = {4, 8, 8};
+    constexpr uint8_t ecc_symbols[] = {4, 8, 16};
+    std::mt19937_64 rng(42);
+    std::uniform_real_distribution<float> value_dist(-100.0f, 100.0f);
+    for (size_t test_idx = 0; test_idx < 3; ++test_idx) {
+        uint8_t symbol_size = symbol_sizes[test_idx];
+        uint8_t ecc_size = ecc_symbols[test_idx];
+        size_t correctable = 0, uncorrectable = 0; double avg_overhead = 0.0;
+        for (size_t i = 0; i < num_tests; ++i) {
+            DataType test_value = value_dist(rng);
+            if (test_idx == 0) {
+                AdvancedReedSolomon<DataType, 4, 4> rs;
+                auto encoded = rs.encode(test_value);
+                avg_overhead += rs.overhead_percent();
+                // Apply random bit errors (burst-like)
+                double error_rate = 0.01;
+                auto corrupted = rs.apply_burst_errors(encoded, error_rate, 3, rng());
+                auto decoded = rs.decode(corrupted);
+                if (decoded && *decoded == test_value) correctable++; else uncorrectable++;
+            }
+```
+
+Notes:
+- This harness uses a local, mocked `AdvancedReedSolomon` for speed; your production codec lives in `include/rad_ml/neural/advanced_reed_solomon.hpp` and is demonstrated in the advanced example above.
+- The complex test loops across symbol sizes and ECC strengths, injects burst errors, and aggregates correction/overhead metrics—useful for reliability-style reporting.
+
+#### How to run and interpret the complex test
+
+- Build and run `test/verification/monte_carlo_neuralnetwork.cpp` (default mode runs Monte Carlo plus RS test). Use `--optimize` to run the extended optimizer scenario.
+- Test matrix exercised in RS section:
+  - **Symbol sizes**: 4, 8
+  - **ECC symbols**: 4, 8, 16 (correction capacity t = nsym/2)
+  - **Error model**: burst-like flips with error_rate ∈ {0.01, 0.02, 0.05}, burst length 3–4
+- Reported metrics (printed and CSV):
+  - **Correctable/Uncorrectable**: counts and percentages over `num_tests`
+  - **Average overhead**: matches `overhead_percent()` for the chosen RS config
+  - **(Monte Carlo block)** Accuracy, preservation, correction effectiveness, overhead, execution time
+
+#### Aligning doc example with the complex test
+
+- To mirror the test settings exactly, set `error_rate = 0.02` and `burst_size = 3` for RS(8,8) scenarios in the advanced example; use `burst_size = 4` for RS(8,16).
+- For performance-sensitive batch validation, prefer the mocked harness; for production codec validation, use the advanced example above (real `AdvancedReedSolomon`).
 
 ---
 
@@ -725,7 +795,7 @@ f(x) = a₀ + x(a₁ + x(a₂ + ... + x(a_{n-1} + x a_n)...))
 ```
 
 **Complexity**: O(n) multiplications and additions
-**Numerical stability**: Minimizes accumulation of rounding errors
+**Note**: Over GF(2^m) there are no rounding errors; Horner's method reduces operation count and improves cache locality
 
 ### **6. Mathematical Optimization Theory**
 
