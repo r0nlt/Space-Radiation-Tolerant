@@ -86,9 +86,9 @@ MEMORY PROTECTION:
 
 CHALLENGING TEST SCENARIOS (Success Rates):
   [Shows: adaptive_voting% | best_real_method% (method_name)]
-  Multi-Copy Corruption:  55.9910% adaptive | 100.0000% Aligned Memory
-  Edge Cases:            100.0000% adaptive | 100.0000% Aligned Memory
-  Correlated Errors:     21.4756% adaptive | 100.0000% Aligned Memory (prevents spatial correlation)
+  Multi-Copy Corruption:  55.9812% adaptive | 100.0000% Aligned Memory/Pattern Detection/Protected Value
+  Edge Cases:            100.0000% adaptive | 100.0000% Aligned Memory/Pattern Detection/Protected Value/Weighted Voting
+  Correlated Errors:     21.4286% adaptive | 100.0000% Aligned Memory/Pattern Detection/Protected Value (prevents spatial correlation)
   Recovery Detection:    100.0000%
   Recovery Correction:   100.0000%
   Recovery Uncorrectable:0.0000%
@@ -102,10 +102,11 @@ NASA-style verification report generated: nasa_verification_report.txt
 **Key Insights from Enhanced Results:**
 
 - **Dual Reporting**: Shows both realistic adaptive voting performance and best achievable results with optimal method selection
-- **Correlated Errors Challenge**: Reed-Solomon adaptive voting achieves 21.48% (hitting mathematical limits for spatial correlation), while Aligned Memory prevents correlation entirely (100%)
-- **Multi-Copy Corruption**: Demonstrates the 44% performance gap between standard approaches (56%) and prevention-based strategies (100%)
-- **Aligned Memory Dominance**: Consistently wins across all challenging scenarios through physics-based error prevention rather than post-error correction
-- **Method Attribution**: Dynamic winner detection shows exactly which protection strategy achieves optimal performance for each scenario
+- **Prevention vs Correction Paradigm**: Three prevention-based methods (Aligned Memory/Pattern Detection/Protected Value) consistently achieve 100% success, while correction-based approaches hit mathematical limits (21-56%)
+- **Correlated Errors Challenge**: Reed-Solomon adaptive voting achieves 21.43% (hitting mathematical limits for spatial correlation), while prevention methods avoid the problem entirely (100%)
+- **Multi-Copy Corruption**: Demonstrates the 44% performance gap between correction approaches (56%) and prevention strategies (100%)
+- **Tie Detection**: Enhanced floating-point safe winner detection reveals that multiple prevention strategies achieve identical performance, showing this is an architectural class advantage rather than a single algorithm win
+- **Physics Over Mathematics**: Prevention-based approaches that understand radiation physics consistently outperform even sophisticated mathematical error correction algorithms
 
 **Expected Runtime:** ~3-10 minutes depending on number of trials and system being used.
 
