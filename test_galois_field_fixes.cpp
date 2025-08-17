@@ -20,8 +20,10 @@
 #include <chrono>
 #include <iostream>
 #include <random>
+#include <set>
 #include <vector>
 
+#include "include/rad_ml/neural/advanced_reed_solomon.hpp"
 #include "include/rad_ml/neural/galois_field.hpp"
 
 using namespace rad_ml::neural;
@@ -441,11 +443,124 @@ void test_galois_field_fixes_validation()
 }
 
 /**
+ * @brief Test the complete Reed-Solomon pipeline with proper workflow
+ */
+void test_proper_reed_solomon_pipeline()
+{
+    std::cout << "\nTesting proper Reed-Solomon pipeline workflow...\n";
+
+    // Test different data types and scenarios
+    struct TestScenario {
+        std::string name;
+        int num_errors;
+        bool should_succeed;
+    };
+
+    std::vector<TestScenario> scenarios = {{"Single error correction", 1, true},
+                                           {"Double error correction", 2, true},
+                                           {"Triple error correction", 3, true},
+                                           {"Quad error correction", 4, true},
+                                           {"Beyond capacity (5+ errors)", 6, false}};
+
+    int total_tests = 0;
+    int successful_tests = 0;
+
+    for (const auto& scenario : scenarios) {
+        std::cout << "\n  Testing: " << scenario.name << "\n";
+
+        // Test with float (neural network weights)
+        {
+            AdvancedReedSolomon<float> rs_float;
+            float original_weight = 2.71828f;  // e
+
+            std::cout << "    Float test: ";
+            auto encoded = rs_float.encode(original_weight);
+
+            // Inject errors
+            std::mt19937 rng(12345);
+            std::uniform_int_distribution<size_t> pos_dist(0, encoded.size() - 1);
+            std::uniform_int_distribution<uint8_t> err_dist(1, 255);
+
+            std::set<size_t> error_positions;
+            for (int i = 0; i < scenario.num_errors; ++i) {
+                size_t pos;
+                do {
+                    pos = pos_dist(rng);
+                } while (error_positions.count(pos));
+                error_positions.insert(pos);
+                encoded[pos] ^= err_dist(rng);
+            }
+
+            auto decoded = rs_float.decode(encoded);
+            bool success =
+                decoded.has_value() && std::abs(decoded.value() - original_weight) < 1e-6f;
+
+            total_tests++;
+            if (success == scenario.should_succeed) {
+                successful_tests++;
+                std::cout << (success ? "✓ Corrected" : "✓ Failed as expected") << "\n";
+            }
+            else {
+                std::cout << (success ? "✗ Unexpected success" : "✗ Unexpected failure") << "\n";
+            }
+        }
+
+        // Test with double (high precision)
+        {
+            AdvancedReedSolomon<double> rs_double;
+            double original_value = 3.141592653589793;  // π
+
+            std::cout << "    Double test: ";
+            auto encoded = rs_double.encode(original_value);
+
+            // Inject same pattern of errors
+            std::mt19937 rng(12345);
+            std::uniform_int_distribution<size_t> pos_dist(0, encoded.size() - 1);
+            std::uniform_int_distribution<uint8_t> err_dist(1, 255);
+
+            std::set<size_t> error_positions;
+            for (int i = 0; i < scenario.num_errors; ++i) {
+                size_t pos;
+                do {
+                    pos = pos_dist(rng);
+                } while (error_positions.count(pos));
+                error_positions.insert(pos);
+                encoded[pos] ^= err_dist(rng);
+            }
+
+            auto decoded = rs_double.decode(encoded);
+            bool success =
+                decoded.has_value() && std::abs(decoded.value() - original_value) < 1e-15;
+
+            total_tests++;
+            if (success == scenario.should_succeed) {
+                successful_tests++;
+                std::cout << (success ? "✓ Corrected" : "✓ Failed as expected") << "\n";
+            }
+            else {
+                std::cout << (success ? "✗ Unexpected success" : "✗ Unexpected failure") << "\n";
+            }
+        }
+    }
+
+    std::cout << "\nPipeline test summary: " << successful_tests << "/" << total_tests << " ("
+              << (100.0 * successful_tests / total_tests) << "%) tests passed\n";
+
+    if (successful_tests == total_tests) {
+        std::cout << "✓ Reed-Solomon pipeline works perfectly!\n";
+    }
+    else {
+        std::cout << "✗ Pipeline has issues\n";
+    }
+}
+
+/**
  * @brief Stress test the fixes under extreme conditions
  */
 void stress_test_galois_fixes()
 {
     std::cout << "\nStress testing Galois field fixes...\n";
+    std::cout << "DEBUG: Starting stress test function\n";
 
     GF256 gf;
     const int stress_iterations = 100;
@@ -492,25 +607,197 @@ void stress_test_galois_fixes()
             // Expected to fail sometimes with random polynomials
         }
 
-        // Stress test 3: Complete pipeline with random errors
+        // Stress test 3: Complete pipeline with proper Reed-Solomon workflow
         try {
-            std::vector<uint8_t> test_data(30, 0x55);
+            // Use AdvancedReedSolomon for proper encode->corrupt->decode workflow
+            AdvancedReedSolomon<float> rs_codec;
 
-            // Inject random errors
-            std::uniform_int_distribution<size_t> pos_dist(0, test_data.size() - 1);
+            // Test with a neural network weight value
+            float test_weight = 3.14159f + (iter * 0.001f);  // Vary the test data
+
+            // Step 1: Encode the data properly
+            auto encoded_data = rs_codec.encode(test_weight);
+
+            // Step 2: Inject errors into the ENCODED codeword
+            std::uniform_int_distribution<size_t> pos_dist(0, encoded_data.size() - 1);
             std::uniform_int_distribution<uint8_t> err_dist(1, 255);
 
-            for (int e = 0; e < 3; ++e) {  // 3 random errors
-                test_data[pos_dist(rng)] ^= err_dist(rng);
+            std::vector<size_t> error_positions;
+            int max_correctable_errors = rs_codec.correction_capability();
+            int num_errors =
+                std::min(3, max_correctable_errors);  // Stay within correction capability
+
+            for (int e = 0; e < num_errors; ++e) {
+                size_t pos = pos_dist(rng);
+                // Avoid injecting errors at the same position
+                while (std::find(error_positions.begin(), error_positions.end(), pos) !=
+                       error_positions.end()) {
+                    pos = pos_dist(rng);
+                }
+                error_positions.push_back(pos);
+                encoded_data[pos] ^= err_dist(rng);
             }
 
-            auto result = gf.rs_correct_errors(test_data, 8);
-            if (result.has_value()) {
-                pipeline_successes++;
+            // Step 3: Decode (which internally calls rs_correct_errors properly)
+            auto decoded_result = rs_codec.decode(encoded_data);
+
+            if (decoded_result.has_value()) {
+                // Verify we got back the original data
+                float recovered = decoded_result.value();
+                if (std::abs(recovered - test_weight) < 1e-6f) {
+                    pipeline_successes++;
+                }
             }
         }
         catch (...) {
             // Some failures expected with random data
+        }
+    }
+
+    std::cout << "\n=== DEBUG: About to test proper pipeline ===\n";
+
+    // Now test PROPER Reed-Solomon pipeline workflow
+    std::cout << "\nTesting PROPER Reed-Solomon pipeline (encode->corrupt->decode)...\n";
+    int proper_pipeline_successes = 0;
+
+    // Test manual Reed-Solomon encoding first
+    std::cout << "  Testing manual Reed-Solomon encoding/decoding...\n";
+    try {
+        GF256 gf;
+
+        // Create proper Reed-Solomon codeword manually
+        std::vector<uint8_t> data = {0x01, 0x02, 0x03, 0x04};
+        const uint8_t nsym = 4;
+
+        // Get generator polynomial
+        auto gen_poly = gf.rs_generator_poly(nsym);
+
+        // Manual systematic encoding: compute ECC symbols
+        std::vector<uint8_t> msg_padded = data;
+        msg_padded.resize(data.size() + nsym, 0);
+
+        // Polynomial division to get remainder (ECC symbols)
+        for (size_t i = 0; i < data.size(); ++i) {
+            uint8_t feedback = msg_padded[i];
+            if (feedback != 0) {
+                for (size_t j = 1; j < gen_poly.size() && (i + j) < msg_padded.size(); ++j) {
+                    msg_padded[i + j] =
+                        gf.add(msg_padded[i + j], gf.multiply(feedback, gen_poly[j]));
+                }
+            }
+        }
+
+        // Create systematic codeword: [data | ecc]
+        std::vector<uint8_t> codeword = data;
+        for (size_t i = data.size(); i < msg_padded.size(); ++i) {
+            codeword.push_back(msg_padded[i]);
+        }
+
+        // Test without errors
+        auto result = gf.rs_correct_errors(codeword, nsym);
+        if (result.has_value()) {
+            std::cout << "    ✓ Manual encoding: rs_correct_errors works\n";
+            proper_pipeline_successes++;
+        }
+        else {
+            std::cout << "    ✗ Manual encoding: rs_correct_errors failed\n";
+        }
+
+        // Test with single error
+        std::vector<uint8_t> corrupted = codeword;
+        corrupted[1] ^= 0x55;
+        auto corrected = gf.rs_correct_errors(corrupted, nsym);
+        if (corrected.has_value()) {
+            std::cout << "    ✓ With error: rs_correct_errors works\n";
+            proper_pipeline_successes++;
+        }
+        else {
+            std::cout << "    ✗ With error: rs_correct_errors failed\n";
+        }
+    }
+    catch (...) {
+        std::cout << "    ✗ Manual encoding threw exception\n";
+    }
+
+    // First test: No errors (should always work)
+    std::cout << "  Testing encode-decode with NO errors...\n";
+    try {
+        AdvancedReedSolomon<float> rs_codec;
+        float test_weight = 3.14159f;
+
+        auto encoded_data = rs_codec.encode(test_weight);
+        auto decoded_result = rs_codec.decode(encoded_data);
+
+        if (decoded_result.has_value()) {
+            float recovered = decoded_result.value();
+            float diff = std::abs(recovered - test_weight);
+            std::cout << "    ✓ NO ERRORS: " << test_weight << " -> " << recovered
+                      << " (diff=" << diff << ")\n";
+            proper_pipeline_successes++;
+        }
+        else {
+            std::cout << "    ✗ NO ERRORS: Basic encode-decode cycle FAILED!\n";
+        }
+    }
+    catch (const std::exception& e) {
+        std::cout << "    EXCEPTION (no errors): " << e.what() << "\n";
+    }
+
+    for (int iter = 0; iter < 10; ++iter) {  // Debug with fewer iterations first
+        try {
+            // Use AdvancedReedSolomon for proper workflow
+            AdvancedReedSolomon<float> rs_codec;
+
+            // Test with neural network weight values
+            float test_weight = 3.14159f + (iter * 0.001f);
+
+            // Step 1: Encode properly
+            auto encoded_data = rs_codec.encode(test_weight);
+            std::cout << "  Iter " << iter << ": Encoded size=" << encoded_data.size()
+                      << ", correction_capability=" << rs_codec.correction_capability() << "\n";
+
+            // Step 2: Inject errors into ENCODED codeword (not raw data!)
+            std::uniform_int_distribution<size_t> pos_dist(0, encoded_data.size() - 1);
+            std::uniform_int_distribution<uint8_t> err_dist(1, 255);
+
+            // Stay within correction capability
+            int max_errors = rs_codec.correction_capability();
+            int num_errors = std::min(2, max_errors);  // Use fewer errors for debugging
+
+            std::set<size_t> error_positions;
+            for (int e = 0; e < num_errors; ++e) {
+                size_t pos;
+                do {
+                    pos = pos_dist(rng);
+                } while (error_positions.count(pos));
+                error_positions.insert(pos);
+                uint8_t original = encoded_data[pos];
+                encoded_data[pos] ^= err_dist(rng);
+                std::cout << "    Injected error at pos " << pos << ": " << (int)original << " -> "
+                          << (int)encoded_data[pos] << "\n";
+            }
+
+            // Step 3: Decode (calls rs_correct_errors internally)
+            auto decoded_result = rs_codec.decode(encoded_data);
+
+            if (decoded_result.has_value()) {
+                float recovered = decoded_result.value();
+                float diff = std::abs(recovered - test_weight);
+                std::cout << "    SUCCESS: " << test_weight << " -> " << recovered
+                          << " (diff=" << diff << ")\n";
+                if (diff < 1e-6f) {
+                    proper_pipeline_successes++;
+                }
+            }
+            else {
+                std::cout << "    FAILED: decode returned nullopt\n";
+            }
+        }
+        catch (const std::exception& e) {
+            std::cout << "    EXCEPTION: " << e.what() << "\n";
+        }
+        catch (...) {
+            std::cout << "    UNKNOWN EXCEPTION\n";
         }
     }
 
@@ -519,15 +806,22 @@ void stress_test_galois_fixes()
               << (100.0 * berlekamp_successes / stress_iterations) << "%)\n";
     std::cout << "  Forney algorithm successes: " << forney_successes << " ("
               << (100.0 * forney_successes / stress_iterations) << "%)\n";
-    std::cout << "  Complete pipeline successes: " << pipeline_successes << " ("
-              << (100.0 * pipeline_successes / stress_iterations) << "%)\n";
+    std::cout << "  OLD pipeline (broken - raw data): " << pipeline_successes << " ("
+              << (100.0 * pipeline_successes / stress_iterations) << "%) ✗ Expected 0%\n";
+    std::cout << "  NEW pipeline (proper workflow): " << proper_pipeline_successes << " ("
+              << (100.0 * proper_pipeline_successes / 10) << "%) ✓ Should be high!\n";
 
-    // Success criteria: At least some successes indicate the fixes work
-    if (berlekamp_successes > 0 && forney_successes > 0 && pipeline_successes > 0) {
-        std::cout << "✓ Stress test passed - fixes are robust\n";
+    // Success criteria: Individual algorithms work + proper pipeline works
+    if (berlekamp_successes > 0 && forney_successes > 0 &&
+        proper_pipeline_successes > (stress_iterations * 0.8)) {
+        std::cout << "✓ Stress test passed - fixes work perfectly with proper workflow!\n";
+        std::cout << "  Individual algorithms: FIXED (" << berlekamp_successes + forney_successes
+                  << "/200 successes)\n";
+        std::cout << "  Pipeline issue: RESOLVED (proper workflow achieves "
+                  << (100.0 * proper_pipeline_successes / stress_iterations) << "% success)\n";
     }
     else {
-        std::cout << "✗ Stress test failed - fixes may have issues\n";
+        std::cout << "✗ Stress test failed - check implementation\n";
     }
 }
 

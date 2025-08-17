@@ -428,8 +428,11 @@ class GaloisField {
         auto syndromes = rs_calc_syndromes(msg, nsym);
 
         // Check if message has errors
+        // For Reed-Solomon codes, we check syndromes S₁ through S_(nsym-1)
+        // The generator polynomial has roots at α⁰, α¹, ..., α^(nsym-1)
+        // So syndromes at α¹, α², ..., α^(nsym-1) should be zero for valid codewords
         bool has_errors = false;
-        for (size_t i = 1; i < syndromes.size(); ++i) {
+        for (size_t i = 1; i < nsym; ++i) {  // Changed from syndromes.size() to nsym
             if (syndromes[i] != 0) {
                 has_errors = true;
                 break;
