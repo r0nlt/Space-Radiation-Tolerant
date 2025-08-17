@@ -282,6 +282,20 @@ target_link_libraries(quantum_field_example
   rad_ml_qft
 )
 
+# Add the Galois field fixes validation test
+add_executable(galois_field_fixes_test
+  test_galois_field_fixes.cpp
+)
+target_link_libraries(galois_field_fixes_test
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+)
+target_include_directories(galois_field_fixes_test PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+)
+add_test(NAME galois_field_fixes_test COMMAND galois_field_fixes_test)
+
 # Add the ML Radiation Training test
 add_executable(ml_radiation_training_test
   test/ml_radiation_training_test.cpp
@@ -721,6 +735,7 @@ add_custom_target(clean_all
     COMMAND ${CMAKE_COMMAND} -E remove -f ai_native_database_test
     COMMAND ${CMAKE_COMMAND} -E remove -f simple_ai_database_test
     COMMAND ${CMAKE_COMMAND} -E remove -f nasa_esa_standard_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_fixes_test
     # Remove debug executables
     COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_debug
     COMMAND ${CMAKE_COMMAND} -E remove -f galois_field_correct_debug
