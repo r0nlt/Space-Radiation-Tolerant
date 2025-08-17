@@ -1279,9 +1279,11 @@ void printSummaryResults(const std::map<std::string, std::map<std::string, TestR
               << (method_success_rates["Aligned Memory"] * 100 / total_count) << "%\n";
 
     // Add reports for enhanced test scenarios
-    std::cout << "\nENHANCED TEST SCENARIOS (Success Rates):\n";
+    std::cout << "\nCHALLENGING TEST SCENARIOS (Success Rates):\n";
+    std::cout << "  [Shows: adaptive_voting% | best_real_method% (method_name)]\n";
 
     std::map<std::string, double> enhanced_test_success;
+    std::map<std::string, std::string> best_method_names;  // Track which method won for each test
     int enhanced_test_count = 0;
 
     // Gather results from the enhanced test scenarios
@@ -1333,17 +1335,60 @@ void printSummaryResults(const std::map<std::string, std::map<std::string, TestR
                         recovery_uncorrectable_rate;
                 }
                 else {
-                    // For other tests, use the max of all protection methods
-                    double best_protection_rate =
-                        std::max({static_cast<double>(test_results.weighted_voting_success) /
-                                      test_results.total_trials,
-                                  static_cast<double>(test_results.pattern_detection_success) /
-                                      test_results.total_trials,
-                                  static_cast<double>(test_results.protected_value_success) /
-                                      test_results.total_trials,
-                                  static_cast<double>(test_results.aligned_memory_success) /
-                                      test_results.total_trials});
-                    enhanced_test_success[test_type + "_best"] += best_protection_rate;
+                    // For other tests, find the max of all protection methods and track which one
+                    // Use a struct to avoid floating-point equality comparison issues
+                    struct MethodRate {
+                        double rate;
+                        std::string name;
+                    };
+
+                    std::vector<MethodRate> methods = {
+                        {static_cast<double>(test_results.weighted_voting_success) /
+                             test_results.total_trials,
+                         "Weighted Voting"},
+                        {static_cast<double>(test_results.pattern_detection_success) /
+                             test_results.total_trials,
+                         "Pattern Detection"},
+                        {static_cast<double>(test_results.protected_value_success) /
+                             test_results.total_trials,
+                         "Protected Value"},
+                        {static_cast<double>(test_results.aligned_memory_success) /
+                             test_results.total_trials,
+                         "Aligned Memory"}};
+
+                    // Find the best method by tracking during iteration (avoids floating-point
+                    // equality issues)
+                    auto best_method = *std::max_element(
+                        methods.begin(), methods.end(),
+                        [](const MethodRate& a, const MethodRate& b) { return a.rate < b.rate; });
+
+                    // Handle ties by checking if multiple methods have the same rate (within
+                    // epsilon)
+                    const double epsilon = 1e-10;
+                    std::vector<std::string> tied_methods;
+                    for (const auto& method : methods) {
+                        if (std::abs(method.rate - best_method.rate) < epsilon) {
+                            tied_methods.push_back(method.name);
+                        }
+                    }
+
+                    // If there's a tie, create a combined name; otherwise use the single winner
+                    std::string best_method_name;
+                    if (tied_methods.size() > 1) {
+                        // Sort for consistent tie reporting
+                        std::sort(tied_methods.begin(), tied_methods.end());
+                        best_method_name =
+                            tied_methods[0];  // Use first alphabetically for consistency
+                        for (size_t i = 1; i < tied_methods.size(); ++i) {
+                            best_method_name += "/" + tied_methods[i];
+                        }
+                    }
+                    else {
+                        best_method_name = best_method.name;
+                    }
+
+                    enhanced_test_success[test_type + "_best"] += best_method.rate;
+                    best_method_names[test_type] = best_method_name;
                 }
 
                 enhanced_test_success[test_type + "_adaptive"] += adaptive_rate;
@@ -1356,11 +1401,20 @@ void printSummaryResults(const std::map<std::string, std::map<std::string, TestR
     int test_count = enhanced_test_count / 4;  // Divide by number of test types
     if (test_count > 0) {
         std::cout << "  Multi-Copy Corruption:  " << std::fixed << std::setprecision(4)
-                  << (enhanced_test_success["MULTI_CORRUPTION_best"] * 100 / test_count) << "%\n";
+                  << (enhanced_test_success["MULTI_CORRUPTION_adaptive"] * 100 / test_count)
+                  << "% adaptive | " << std::fixed << std::setprecision(4)
+                  << (enhanced_test_success["MULTI_CORRUPTION_best"] * 100 / test_count) << "% "
+                  << best_method_names["MULTI_CORRUPTION"] << "\n";
         std::cout << "  Edge Cases:            " << std::fixed << std::setprecision(4)
-                  << (enhanced_test_success["EDGE_CASES_best"] * 100 / test_count) << "%\n";
+                  << (enhanced_test_success["EDGE_CASES_adaptive"] * 100 / test_count)
+                  << "% adaptive | " << std::fixed << std::setprecision(4)
+                  << (enhanced_test_success["EDGE_CASES_best"] * 100 / test_count) << "% "
+                  << best_method_names["EDGE_CASES"] << "\n";
         std::cout << "  Correlated Errors:     " << std::fixed << std::setprecision(4)
-                  << (enhanced_test_success["CORRELATED_ERRORS_best"] * 100 / test_count) << "%\n";
+                  << (enhanced_test_success["CORRELATED_ERRORS_adaptive"] * 100 / test_count)
+                  << "% adaptive | " << std::fixed << std::setprecision(4)
+                  << (enhanced_test_success["CORRELATED_ERRORS_best"] * 100 / test_count) << "% "
+                  << best_method_names["CORRELATED_ERRORS"] << " (prevents spatial correlation)\n";
         std::cout << "  Recovery Detection:    " << std::fixed << std::setprecision(4)
                   << (enhanced_test_success["RECOVERY_TEST_detection"] * 100 / test_count) << "%\n";
         std::cout << "  Recovery Correction:   " << std::fixed << std::setprecision(4)
