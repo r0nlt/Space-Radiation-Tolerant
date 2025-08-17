@@ -405,6 +405,13 @@ class AdvancedReedSolomon {
 
         std::vector<element_t> remainder(ECCSymbols, 0);
 
+        // Check for possible data truncation
+        if (message.size() < data_symbols) {
+            std::cerr << "Warning: message size (" << message.size()
+                      << ") is less than data_symbols (" << data_symbols
+                      << "). Data will be truncated during encoding." << std::endl;
+        }
+
         // Process each message symbol (systematic encoding)
         for (size_t i = 0; i < std::min(data_symbols, message.size()); ++i) {
             element_t feedback = field_.add(message[i], remainder[0]);

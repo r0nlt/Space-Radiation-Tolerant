@@ -24,6 +24,14 @@ void print_vector(const std::vector<uint8_t>& vec, const std::string& name)
 std::vector<uint8_t> polynomial_division(const std::vector<uint8_t>& dividend,
                                          const std::vector<uint8_t>& divisor, const GF256& gf)
 {
+    // Guard against invalid input sizes
+    if (dividend.size() < divisor.size()) {
+        std::cerr << "Error: dividend size (" << dividend.size()
+                  << ") is smaller than divisor size (" << divisor.size()
+                  << "). Cannot perform polynomial division." << std::endl;
+        return std::vector<uint8_t>(divisor.size() - 1, 0);  // Return zero remainder
+    }
+
     std::vector<uint8_t> remainder = dividend;
 
     // Perform polynomial long division
