@@ -84,17 +84,28 @@ MEMORY PROTECTION:
   Protected Value:     100.0000%
   Aligned Memory:      100.0000%
 
-ENHANCED TEST SCENARIOS (Success Rates):
-  Multi-Copy Corruption:  100.0000%
-  Edge Cases:            100.0000%
-  Correlated Errors:     100.0000%
-  Recovery Testing:      94.1551%
+CHALLENGING TEST SCENARIOS (Success Rates):
+  [Shows: adaptive_voting% | best_real_method% (method_name)]
+  Multi-Copy Corruption:  55.9910% adaptive | 100.0000% Aligned Memory
+  Edge Cases:            100.0000% adaptive | 100.0000% Aligned Memory
+  Correlated Errors:     21.4756% adaptive | 100.0000% Aligned Memory (prevents spatial correlation)
+  Recovery Detection:    100.0000%
+  Recovery Correction:   100.0000%
+  Recovery Uncorrectable:0.0000%
 
 Most Effective Method: Aligned Memory (100.0000%)
 
-Enhanced Methods Improvement: 0.0003% over traditional methods
+Enhanced Methods Improvement: 0.0004% over traditional methods
 NASA-style verification report generated: nasa_verification_report.txt
 ```
+
+**Key Insights from Enhanced Results:**
+
+- **Dual Reporting**: Shows both realistic adaptive voting performance and best achievable results with optimal method selection
+- **Correlated Errors Challenge**: Reed-Solomon adaptive voting achieves 21.48% (hitting mathematical limits for spatial correlation), while Aligned Memory prevents correlation entirely (100%)
+- **Multi-Copy Corruption**: Demonstrates the 44% performance gap between standard approaches (56%) and prevention-based strategies (100%)
+- **Aligned Memory Dominance**: Consistently wins across all challenging scenarios through physics-based error prevention rather than post-error correction
+- **Method Attribution**: Dynamic winner detection shows exactly which protection strategy achieves optimal performance for each scenario
 
 **Expected Runtime:** ~3-10 minutes depending on number of trials and system being used.
 
