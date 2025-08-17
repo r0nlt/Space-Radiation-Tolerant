@@ -263,7 +263,9 @@ class GaloisField {
             if (delta != 0) {
                 // Λ_new(x) = Λ(x) + Δ · x · B(x), where B(x) is previous best
                 for (size_t j = 0; j < new_loc.size(); ++j) {
-                    new_loc[j] = add(err_loc[j], multiply(delta, new_loc[j]));
+                    element_t current_err_loc_coeff =
+                        (j < err_loc.size()) ? err_loc[j] : static_cast<element_t>(0);
+                    new_loc[j] = add(current_err_loc_coeff, multiply(delta, new_loc[j]));
                 }
             }
 
@@ -380,10 +382,17 @@ class GaloisField {
                 err_eval_at_pos = add(err_eval_at_pos, multiply(err_eval[j], pow(x_inv, j)));
             }
 
-            // Calculate Λ'(α^{−j}); only odd coefficients contribute in GF(2)
+            // Calculate Λ'(α^{−j}) using formal derivative over GF(2)
+            // Coefficients are stored highest-degree-first; only odd-degree terms contribute
             element_t err_loc_deriv = 0;
-            for (size_t j = 1; j < err_loc.size(); j += 2) {
-                err_loc_deriv = add(err_loc_deriv, multiply(err_loc[j], pow(x_inv, j - 1)));
+            size_t locator_degree = (err_loc.empty() ? 0 : err_loc.size() - 1);
+            for (size_t k = 0; k < err_loc.size(); ++k) {
+                size_t term_degree = locator_degree - k;
+                if ((term_degree & 1U) == 1U) {  // odd degree survives in characteristic-2
+                    // Contribution: coeff * (α^{-j})^{degree-1}
+                    err_loc_deriv =
+                        add(err_loc_deriv, multiply(err_loc[k], pow(x_inv, term_degree - 1)));
+                }
             }
 
             // Calculate error magnitude
