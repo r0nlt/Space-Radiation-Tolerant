@@ -6,7 +6,7 @@ The Radiation-Tolerant ML Framework uses **Clang** as one of its primary support
 
 C++ language has historically presented significant challenges for cross-platform development. Building a codebase that compiles and runs correctly on Windows, macOS, and Linux requires conditional compilation, separate build configurations for each platform, as well as a deep understanding of each compiler's quirks. This complexity frequently undermined the promise of C++ as a portable, system-level language.
 
-Clang, conceived as more than just a compiler, LLVM is a comprehensive infrastructure for building language tools. Clang has already been adopted by industry leaders such as Apple, Google, and Microsoft. Clang has become a standard for modern C++ development.
+Clang was conceived as more than just a compiler; it is the C++ frontend for LLVM, a comprehensive and modular infrastructure for building language tools.
 
 ## LLVM Architecture Benefits for Radiation-Tolerant Systems
 
