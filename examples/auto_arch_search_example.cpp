@@ -90,10 +90,20 @@ int main()
         // Set deterministic seed for reproducible results
         searcher.setSeed(42);
 
+        // Enable adaptive mutation based on population diversity
+        searcher.setAdaptiveMutation(true, 0.1, 0.3, 0.5, 0.01);
+
         std::cout << "🧬 Starting evolutionary architecture search...\n";
         std::cout << "   Population size: 10\n";
         std::cout << "   Generations: 5\n";
-        std::cout << "   Monte Carlo trials: 3\n\n";
+        std::cout << "   Monte Carlo trials: 3\n";
+        std::cout << "   Adaptive mutation: ENABLED\n\n";
+
+        std::cout << "📊 Adaptive Mutation Parameters:\n";
+        std::cout << "   Base rate: 0.1\n";
+        std::cout << "   Diversity threshold: 0.3\n";
+        std::cout << "   Max rate: 0.5\n";
+        std::cout << "   Min rate: 0.01\n\n";
 
         // Run ONLY evolutionary search (remove random search)
         auto result = searcher.evolutionarySearch(10, 5, 0.1, 5, true, 3);
@@ -126,6 +136,15 @@ int main()
         std::cout << "Results saved to: auto_arch_search_results.csv\n";
 
         std::cout << "\n✅ Auto architecture search completed successfully!\n";
+        std::cout << "\n🔬 Adaptive Mutation Analysis:\n";
+        std::cout << "============================\n";
+        std::cout << "The adaptive mutation system dynamically adjusted the mutation rate\n";
+        std::cout << "based on population diversity during the evolutionary search.\n";
+        std::cout << "This improves the genetic algorithm's ability to:\n";
+        std::cout << "• Escape local optima when diversity is low\n";
+        std::cout << "• Focus on exploitation when diversity is high\n";
+        std::cout << "• Respond to population convergence\n";
+        std::cout << "• Maintain exploration in later generations\n\n";
     }
     catch (const std::exception& e) {
         std::cerr << "❌ Error: " << e.what() << std::endl;

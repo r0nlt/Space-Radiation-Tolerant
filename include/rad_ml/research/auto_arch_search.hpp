@@ -23,6 +23,132 @@
 namespace rad_ml {
 namespace research {
 
+// Forward declarations
+struct NetworkConfig;
+class AutoArchSearch;
+
+/**
+ * @brief Advanced Multi-Operator Adaptive Strategy (MOAS) Controller
+ *
+ * This class implements an adaptive mutation system that uses multiple specialized
+ * mutation operators and dynamically adjusts their usage based on historical performance.
+ */
+class AdaptiveMutationController {
+   private:
+    // Reference to parent class for accessing data
+    AutoArchSearch* parent_;
+    /**
+     * @brief Individual mutation operator with performance tracking
+     */
+    struct MutationOperator {
+        std::function<NetworkConfig(const NetworkConfig&, double)> operator_func;
+        std::string name;
+        double success_rate;
+        double credit_score;
+        int applications;
+        double total_improvement;
+
+        MutationOperator(std::function<NetworkConfig(const NetworkConfig&, double)> func,
+                         const std::string& op_name)
+            : operator_func(func),
+              name(op_name),
+              success_rate(0.5),
+              credit_score(0.0),
+              applications(0),
+              total_improvement(0.0)
+        {
+        }
+    };
+
+    std::vector<MutationOperator> mutation_operators_;
+    std::vector<double> operator_probabilities_;
+    std::mt19937* random_generator_;
+
+    // Learning parameters
+    const double learning_rate_ = 0.1;
+    const double exploration_factor_ = 0.1;
+    const int min_applications_ = 5;  // Minimum trials before using performance data
+
+   public:
+    /**
+     * @brief Construct adaptive mutation controller
+     * @param parent Reference to parent AutoArchSearch instance
+     * @param rng Random number generator reference
+     */
+    AdaptiveMutationController(AutoArchSearch* parent, std::mt19937& rng);
+
+    /**
+     * @brief Add a new mutation operator to the adaptive system
+     * @param op Function implementing the mutation operator
+     * @param name Descriptive name for the operator
+     */
+    void addMutationOperator(std::function<NetworkConfig(const NetworkConfig&, double)> op,
+                             const std::string& name);
+
+    /**
+     * @brief Perform adaptive mutation using the best operator
+     * @param config Original configuration
+     * @param base_rate Base mutation rate
+     * @return Mutated configuration
+     */
+    NetworkConfig adaptiveMutate(const NetworkConfig& config, double base_rate);
+
+    /**
+     * @brief Update operator credits based on fitness improvements
+     * @param improvement_scores Vector of fitness improvements for recent mutations
+     * @param used_operators Vector of operator indices used for those mutations
+     */
+    void updateOperatorCredits(const std::vector<double>& improvement_scores,
+                               const std::vector<size_t>& used_operators);
+
+    /**
+     * @brief Get current operator statistics for monitoring
+     * @return Vector of operator statistics (name, applications, success_rate, credit_score)
+     */
+    std::vector<std::tuple<std::string, int, double, double>> getOperatorStatistics() const;
+
+    /**
+     * @brief Reset all operator statistics (useful for new evolutionary runs)
+     */
+    void resetStatistics();
+
+   private:
+    /**
+     * @brief Initialize default mutation operators
+     */
+    void initializeDefaultOperators();
+
+    /**
+     * @brief Select an operator using epsilon-greedy strategy
+     * @return Index of selected operator
+     */
+    size_t selectOperatorDynamically();
+
+    /**
+     * @brief Update operator probabilities based on credit scores
+     */
+    void updateProbabilities();
+
+    /**
+     * @brief Calculate softmax probabilities from credit scores
+     * @param credit_scores Vector of credit scores
+     * @return Vector of probabilities
+     */
+    std::vector<double> softmax(const std::vector<double>& credit_scores) const;
+
+    // Helper methods for random value generation
+    size_t getRandomLayerSize();
+    double getRandomDropoutRate();
+    neural::ProtectionLevel getRandomProtectionLevel();
+
+    // Specialized mutation operator implementations
+    NetworkConfig mutateArchitectureFocused(const NetworkConfig& config, double rate);
+    NetworkConfig mutateParameterFocused(const NetworkConfig& config, double rate);
+    NetworkConfig mutateProtectionFocused(const NetworkConfig& config, double rate);
+    NetworkConfig mutateBalanced(const NetworkConfig& config, double rate);
+    NetworkConfig mutateAggressive(const NetworkConfig& config, double rate);
+};
+
 /**
  * @brief Configuration of a neural network architecture
  */
@@ -217,11 +343,51 @@ class AutoArchSearch {
     void setSeed(unsigned int seed);
 
     /**
+     * @brief Enable adaptive mutation rates based on population diversity
+     *
+     * @param enable Whether to enable adaptive mutation
+     * @param base_rate Base mutation rate (default 0.1)
+     * @param diversity_threshold Threshold for triggering rate adjustment (default 0.3)
+     * @param max_rate Maximum mutation rate (default 0.5)
+     * @param min_rate Minimum mutation rate (default 0.01)
+     */
+    void setAdaptiveMutation(bool enable, double base_rate = 0.1, double diversity_threshold = 0.3,
+                             double max_rate = 0.5, double min_rate = 0.01);
+
+    /**
      * @brief Get all tested configurations
      *
      * @return Map of configurations and their results
      */
     const std::map<NetworkConfig, ArchitectureTestResult>& getTestedConfigurations() const;
+
+    // Public access to core adaptive functions for testing
+    double calculatePopulationDiversity_PUBLIC(const std::vector<NetworkConfig>& population) const
+    {
+        return calculatePopulationDiversity(population);
+    }
+    double calculateAdaptiveMutationRate_PUBLIC(const std::vector<NetworkConfig>& population,
+                                                const std::vector<double>& fitness,
+                                                size_t generation, size_t total_generations) const
+    {
+        return calculateAdaptiveMutationRate(population, fitness, generation, total_generations);
+    }
+    double calculateConfigDistance_PUBLIC(const NetworkConfig& config1,
+                                          const NetworkConfig& config2) const
+    {
+        return calculateConfigDistance(config1, config2);
+    }
+
+    // Public wrappers for genetic operators for testing
+    NetworkConfig mutateConfig_PUBLIC(const NetworkConfig& config, double mutation_rate)
+    {
+        return mutateConfig(config, mutation_rate);
+    }
+    NetworkConfig crossoverConfigs_PUBLIC(const NetworkConfig& parent1,
+                                          const NetworkConfig& parent2)
+    {
+        return crossoverConfigs(parent1, parent2);
+    }
 
    private:
     // Dataset fields
@@ -246,6 +412,13 @@ class AutoArchSearch {
     // Search options
     bool test_residual_connections_;
 
+    // Adaptive mutation settings
+    bool adaptive_mutation_enabled_;
+    double adaptive_base_rate_;
+    double diversity_threshold_;
+    double adaptive_max_rate_;
+    double adaptive_min_rate_;
+
     // Architecture tester
     std::unique_ptr<ArchitectureTester> tester_;
 
@@ -255,6 +428,12 @@ class AutoArchSearch {
 
     // Random number generator
     std::mt19937 random_generator_;
+
+    // Advanced adaptive mutation controller
+    std::unique_ptr<AdaptiveMutationController> adaptive_controller_;
+
+    // Allow AdaptiveMutationController to access private members
+    friend class AdaptiveMutationController;
 
     /**
      * @brief Test a specific configuration
@@ -286,6 +465,15 @@ class AutoArchSearch {
     NetworkConfig mutateConfig(const NetworkConfig& config, double mutation_rate);
 
     /**
+     * @brief Basic mutation implementation (fallback when adaptive controller is disabled)
+     *
+     * @param config Original configuration
+     * @param mutation_rate Mutation rate
+     * @return Mutated configuration
+     */
+    NetworkConfig mutateConfigBasic(const NetworkConfig& config, double mutation_rate);
+
+    /**
      * @brief Crossover two configurations to create a new one
      *
      * @param parent1 First parent configuration
@@ -300,6 +488,48 @@ class AutoArchSearch {
      * @return Vector of all configurations to test
      */
     std::vector<NetworkConfig> generateAllConfigs();
+
+    /**
+     * @brief Calculate population diversity based on configuration differences
+     *
+     * @param population Current population
+     * @return Diversity score between 0.0 (identical) and 1.0 (maximally diverse)
+     */
+    double calculatePopulationDiversity(const std::vector<NetworkConfig>& population) const;
+
+    /**
+     * @brief Calculate adaptive mutation rate based on population diversity
+     *
+     * @param population Current population
+     * @param fitness Current fitness values
+     * @param generation Current generation number
+     * @param total_generations Total number of generations
+     * @return Adaptive mutation rate
+     */
+    double calculateAdaptiveMutationRate(const std::vector<NetworkConfig>& population,
+                                         const std::vector<double>& fitness, size_t generation,
+                                         size_t total_generations) const;
+
+    /**
+     * @brief Calculate configuration distance between two network configs
+     *
+     * @param config1 First configuration
+     * @param config2 Second configuration
+     * @return Distance score (0.0 = identical, higher = more different)
+     */
+    double calculateConfigDistance(const NetworkConfig& config1,
+                                   const NetworkConfig& config2) const;
+
+    /**
+     * @brief Get adaptive mutation operator statistics
+     * @return Vector of operator statistics (name, applications, success_rate, credit_score)
+     */
+    std::vector<std::tuple<std::string, int, double, double>> getMutationOperatorStatistics() const;
+
+    /**
+     * @brief Reset adaptive mutation controller statistics
+     */
+    void resetMutationOperatorStatistics();
 
     /**
      * @brief Helper method to generate layer size combinations recursively
