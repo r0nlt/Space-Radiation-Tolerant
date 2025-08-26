@@ -23,7 +23,7 @@
 #include "../../include/rad_ml/core/redundancy/space_enhanced_tmr.hpp"
 #include "../../include/rad_ml/core/space_flight_config.hpp"
 
-// Enable testing methods in the real framework
+// Enable testing methods in both TMR implementations
 #define ENABLE_TESTING
 
 using namespace rad_ml::core::redundancy;
@@ -269,7 +269,71 @@ SpaceTestResults runComparisonTest(int env_index)
         }
     }
 
-    // Test space-optimized EnhancedTMR (focus on advanced strategies)
+    // ===== TEST STANDARD ENHANCED TMR =====
+    auto standard_start = std::chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < NUM_TRIALS_PER_TEST; i++) {
+        // Create standard EnhancedTMR with original value
+        EnhancedTMR<T> standard_tmr(original_values[i]);
+
+        // Track what type of corruption we're applying
+        bool actual_corruption_exists = false;
+        int corruption_type = 0;  // 0=none, 1=single, 2=double, 3=triple
+
+        if (i % 3 == 0) {
+            // Single copy corruption
+            actual_corruption_exists = (corrupted_values_1[i] != original_values[i]);
+            if (actual_corruption_exists) {
+                corruption_type = 1;
+            }
+        }
+        else if (i % 3 == 1) {
+            // Double copy corruption
+            actual_corruption_exists = (corrupted_values_1[i] != original_values[i] ||
+                                        corrupted_values_2[i] != original_values[i]);
+            if (actual_corruption_exists) {
+                corruption_type = 2;
+            }
+        }
+        else {
+            // Triple copy corruption
+            actual_corruption_exists = (corrupted_values_1[i] != original_values[i] ||
+                                        corrupted_values_2[i] != original_values[i] ||
+                                        corrupted_values_3[i] != original_values[i]);
+            if (actual_corruption_exists) {
+                corruption_type = 3;
+            }
+        }
+
+        // Apply corruption to the standard TMR system
+        standard_tmr.setForTesting(0, corrupted_values_1[i]);
+        standard_tmr.setForTesting(1, corrupted_values_2[i]);
+        standard_tmr.setForTesting(2, corrupted_values_3[i]);
+
+        // Get value through standard interface and analyze results
+        T standard_result = standard_tmr.get();
+
+        // Check standard results - EnhancedTMR doesn't provide status codes
+        if (standard_result == original_values[i]) {
+            results.standard_match_original++;
+            results.standard_success++;  // EnhancedTMR is considered successful if it returns
+                                         // correct value
+        }
+        else {
+            results.standard_uncorrectable++;
+        }
+    }
+
+    auto standard_end = std::chrono::high_resolution_clock::now();
+
+    // Calculate standard metrics
+    results.standard_execution_time_ms =
+        std::chrono::duration<double, std::milli>(standard_end - standard_start).count();
+
+    results.standard_accuracy =
+        static_cast<double>(results.standard_match_original) / results.total_trials;
+
+    // ===== TEST SPACE-OPTIMIZED ENHANCED TMR =====
     auto space_start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < NUM_TRIALS_PER_TEST; i++) {
@@ -398,12 +462,14 @@ SpaceTestResults runComparisonTest(int env_index)
             ? static_cast<double>(results.errors_corrected) / total_actual_errors
             : 1.0;
 
-    // Add protection against division by zero
-    if (results.space_execution_time_ms > 0.0001) {
-        results.performance_ratio = results.space_execution_time_ms;
+    // Calculate performance ratio (space time / standard time)
+    // Lower ratio means space version is faster
+    if (results.standard_execution_time_ms > 0.0001) {
+        results.performance_ratio =
+            results.space_execution_time_ms / results.standard_execution_time_ms;
     }
     else {
-        results.performance_ratio = 1.0;  // Default to 1.0 (no improvement) if timing is too small
+        results.performance_ratio = 1.0;  // Default to 1.0 if standard timing is too small
     }
 
     return results;
@@ -422,14 +488,14 @@ void generateSpaceVerificationReport(
     const char* type_names[NUM_DATA_TYPES] = {"int32_t", "int64_t", "float", "double"};
 
     // Overall summary table
-    std::cout
-        << "+------------+------------+------------+------------+------------+------------+\n";
-    std::cout
-        << "| Data Type  | Space Opt. | Error      | Error      | Radiation  | Performance|\n";
-    std::cout
-        << "|            | Accuracy   | Detection  | Correction | Resistance | (ms)       |\n";
-    std::cout
-        << "+------------+------------+------------+------------+------------+------------+\n";
+    std::cout << "+------------+------------+------------+------------+------------+------------+--"
+                 "----------+\n";
+    std::cout << "| Data Type  | Standard   | Space Opt. | Accuracy   | Error      | Error      | "
+                 "Perform.   |\n";
+    std::cout << "|            | Accuracy   | Accuracy   | Improv. %  | Detection  | Correction | "
+                 "Ratio      |\n";
+    std::cout << "+------------+------------+------------+------------+------------+------------+--"
+                 "----------+\n";
 
     for (int type_idx = 0; type_idx < NUM_DATA_TYPES; type_idx++) {
         // Calculate averages across environments
@@ -459,19 +525,36 @@ void generateSpaceVerificationReport(
         avg_performance_ratio /= NUM_ENVIRONMENTS;
         radiation_resistance /= NUM_ENVIRONMENTS;
 
-        // Print row
+        // Calculate averages for standard accuracy and improvement
+        double avg_standard_accuracy = 0.0;
+        double avg_improvement = 0.0;
+
+        for (int env_idx = 0; env_idx < NUM_ENVIRONMENTS; env_idx++) {
+            const auto& result = all_results[type_idx][env_idx];
+            avg_standard_accuracy += result.standard_accuracy;
+        }
+        avg_standard_accuracy /= NUM_ENVIRONMENTS;
+
+        // Calculate improvement percentage
+        if (avg_standard_accuracy > 0.0) {
+            avg_improvement =
+                ((avg_space_accuracy - avg_standard_accuracy) / avg_standard_accuracy) * 100.0;
+        }
+
+        // Print row with all metrics
         std::cout << "| " << std::left << std::setw(10) << type_names[type_idx] << " | "
                   << std::fixed << std::setprecision(2) << std::setw(10)
-                  << (avg_space_accuracy * 100.0) << "% | " << std::fixed << std::setprecision(1)
-                  << std::setw(10) << (avg_detection_rate * 100.0) << "% | " << std::fixed
-                  << std::setprecision(1) << std::setw(10) << (avg_correction_rate * 100.0)
-                  << "% | " << std::fixed << std::setprecision(2) << std::setw(10)
-                  << radiation_resistance << " | " << std::fixed << std::setprecision(2)
-                  << std::setw(10) << avg_performance_ratio << "ms |\n";
+                  << (avg_standard_accuracy * 100.0) << "% | " << std::fixed << std::setprecision(2)
+                  << std::setw(10) << (avg_space_accuracy * 100.0) << "% | " << std::fixed
+                  << std::setprecision(1) << std::setw(10) << avg_improvement << "% | "
+                  << std::fixed << std::setprecision(1) << std::setw(10)
+                  << (avg_detection_rate * 100.0) << "% | " << std::fixed << std::setprecision(1)
+                  << std::setw(10) << (avg_correction_rate * 100.0) << "% | " << std::fixed
+                  << std::setprecision(2) << std::setw(8) << avg_performance_ratio << "x |\n";
     }
 
-    std::cout
-        << "+------------+------------+------------+------------+------------+------------+\n\n";
+    std::cout << "+------------+------------+------------+------------+------------+------------+--"
+                 "----------+\n\n";
 
     // Advanced Error Correction Strategies Report
     std::cout << "=== ADVANCED ERROR CORRECTION STRATEGIES ===\n\n";
@@ -565,50 +648,79 @@ void generateSpaceVerificationReport(
         std::cout << "Environment: " << SPACE_ENVIRONMENTS[env_idx].name
                   << " (Severity: " << SPACE_ENVIRONMENTS[env_idx].error_severity << ")\n";
 
-        std::cout
-            << "+------------+------------+------------+------------+------------+------------+\n";
-        std::cout << "| Data Type  | Space Opt. | Time (ms)  | Error      |\n";
-        std::cout << "+------------+------------+------------+------------+\n";
+        std::cout << "+------------+------------+------------+------------+------------+-----------"
+                     "-+------------+\n";
+        std::cout << "| Data Type  | Standard   | Space Opt. | Standard   | Space Opt. | Error     "
+                     " | Error      |\n";
+        std::cout << "|            | Success    | Success    | Time (ms)  | Time (ms)  | Detection "
+                     " | Correction |\n";
+        std::cout << "+------------+------------+------------+------------+------------+-----------"
+                     "-+------------+\n";
 
         for (int type_idx = 0; type_idx < NUM_DATA_TYPES; type_idx++) {
             const auto& result = all_results[type_idx][env_idx];
 
-            // Print row
+            // Calculate percentages
+            double standard_success_rate = result.standard_success * 100.0 / result.total_trials;
+            double space_success_rate = result.space_success * 100.0 / result.total_trials;
+            double detection_rate = result.error_detection_rate * 100.0;
+            double correction_rate = result.error_correction_rate * 100.0;
+
+            // Print row with all metrics
             std::cout << "| " << std::left << std::setw(10) << type_names[type_idx] << " | "
-                      << std::fixed << std::setprecision(2) << std::setw(10)
-                      << (result.space_accuracy * 100.0) << "% | " << std::fixed
-                      << std::setprecision(2) << std::setw(10) << result.space_execution_time_ms
+                      << std::fixed << std::setprecision(1) << std::setw(10)
+                      << standard_success_rate << "% | " << std::fixed << std::setprecision(1)
+                      << std::setw(10) << space_success_rate << "% | " << std::fixed
+                      << std::setprecision(2) << std::setw(10) << result.standard_execution_time_ms
                       << " | " << std::fixed << std::setprecision(2) << std::setw(10)
-                      << (result.space_success / result.total_trials * 100.0) << "% |\n";
+                      << result.space_execution_time_ms << " | " << std::fixed
+                      << std::setprecision(1) << std::setw(10) << detection_rate << "% | "
+                      << std::fixed << std::setprecision(1) << std::setw(10) << correction_rate
+                      << "% |\n";
         }
 
-        std::cout << "+------------+------------+------------+------------+\n\n";
+        std::cout << "+------------+------------+------------+------------+------------+-----------"
+                     "-+------------+\n\n";
     }
 
     // Final conclusions
     std::cout << "=== CONCLUSION ===\n\n";
 
-    // Calculate overall averages
+    // Calculate overall averages for both implementations
+    double overall_standard_accuracy = 0.0;
     double overall_space_accuracy = 0.0;
     double overall_performance_ratio = 0.0;
+    double overall_improvement = 0.0;
 
     for (int type_idx = 0; type_idx < NUM_DATA_TYPES; type_idx++) {
         for (int env_idx = 0; env_idx < NUM_ENVIRONMENTS; env_idx++) {
             const auto& result = all_results[type_idx][env_idx];
+            overall_standard_accuracy += result.standard_accuracy;
             overall_space_accuracy += result.space_accuracy;
             overall_performance_ratio += result.performance_ratio;
         }
     }
 
     // Average across all tests
+    overall_standard_accuracy /= (NUM_DATA_TYPES * NUM_ENVIRONMENTS);
     overall_space_accuracy /= (NUM_DATA_TYPES * NUM_ENVIRONMENTS);
     overall_performance_ratio /= (NUM_DATA_TYPES * NUM_ENVIRONMENTS);
 
-    std::cout << "The space-optimized TMR implementation achieves:\n";
-    std::cout << "- Overall accuracy: " << std::fixed << std::setprecision(2)
+    if (overall_standard_accuracy > 0.0) {
+        overall_improvement =
+            ((overall_space_accuracy - overall_standard_accuracy) / overall_standard_accuracy) *
+            100.0;
+    }
+
+    std::cout << "Comparative TMR validation results:\n";
+    std::cout << "- Standard EnhancedTMR accuracy: " << std::fixed << std::setprecision(2)
+              << (overall_standard_accuracy * 100.0) << "%\n";
+    std::cout << "- Space-Optimized TMR accuracy: " << std::fixed << std::setprecision(2)
               << (overall_space_accuracy * 100.0) << "%\n";
-    std::cout << "- Performance improvement: " << std::fixed << std::setprecision(2)
-              << overall_performance_ratio << "x faster\n\n";
+    std::cout << "- Accuracy improvement: " << std::fixed << std::setprecision(1)
+              << overall_improvement << "%\n";
+    std::cout << "- Average performance ratio: " << std::fixed << std::setprecision(2)
+              << overall_performance_ratio << "x\n\n";
 
     // Calculate overall advanced metrics
     double overall_detection_rate = 0.0;
