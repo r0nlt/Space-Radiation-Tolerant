@@ -33,7 +33,12 @@ namespace redundancy {
 class SpaceCRC {
    public:
     /**
-     * @brief Calculate CRC32 checksum for arbitrary data (fixed size algorithm)
+     * @brief Calculate CRC32 checksum for arbitrary data with deterministic execution time
+     *
+     * This method provides a fixed-size algorithm with deterministic timing behavior
+     * essential for real-time space applications. The inner loop is manually unrolled
+     * to process all 8 bits of each byte from the outer loop, ensuring consistent
+     * execution time regardless of data patterns.
      *
      * @param data Pointer to the data
      * @param size Size of the data in bytes
@@ -118,6 +123,11 @@ struct SpaceErrorStats {
  */
 template <typename T>
 class SpaceEnhancedTMR {
+    // Enforce type constraints: T must be trivially copyable to prevent undefined behavior
+    static_assert(
+        std::is_trivially_copyable<T>::value,
+        "SpaceEnhancedTMR requires T to be trivially copyable for safe memory operations");
+
    public:
     /**
      * @brief Default constructor
@@ -804,8 +814,5 @@ class SpaceEnhancedTMR {
 }  // namespace redundancy
 }  // namespace core
 }  // namespace rad_ml
-
-// Define ENABLE_TESTING for test builds
-#define ENABLE_TESTING
 
 #endif  // RAD_ML_SPACE_ENHANCED_TMR_HPP
