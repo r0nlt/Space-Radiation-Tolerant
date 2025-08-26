@@ -14,9 +14,7 @@
 
 **Email:** spacelabsai@gmail.com
 
-**Version:** v1.0.2 (In Development)
-
-**Status:** Development Phase - AI Native Database Implementation
+**Version:** v1.0.2.1
 
 A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom library focused to engineer systems resilient to radiation effects in Space Environments. Currently the framework explores embedded databases using VAE neural network alongside LMDB (Lightning Memory Mapped Database).
 
@@ -25,90 +23,88 @@ A C++ software framework for implementing machine learning models that can opera
 Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help provide cost efficient solution for COTS processors as AI demand increases.
 
 Status:
-August 11 2025
-- Paper published!
-- PyTorch Integrated & being tested
-- cleaning up codebase and streamlining github landing page
+August 26 2025
+- Started refreshing and updating older documentation, tests, and optimizing foundational code
+- PyTorch has been integrated, there are a few tests but I will find time to explore that later
+- Cleaning up codebase and better documentation and become a priority in terms of making sure the repo becomes ready to integrate with a custom LLM.
 - increase in better documentation and visuals
-- Radiation Tolerant AI Native Embedded Database (in development)
-- Getting to CUDA and GPU training
+- Radiation Tolerant AI Native Embedded Database (in development, mostly looking to get through documentation and updating outdated things before I finish this)
+- CUDA is postponed until I get a better GPU
+- This is now just a project I do on the side.
 
 ### Approach
 
 - **Open Source First**: Software is released under the AGPL v3 license
-- **Research-Driven**: Solutions are inspired by physics, sustainability, mathematics, and Tour of C++ standards
-- **Community Focused**: I welcome anyone to peer review!
+- **Research-Driven**: Solutions are inspired by physics, sustainability, mathematics, and Tour of C++ / modern programming
+- **Community Focused**: Feel free to research, this is mostly just a radiation defense manual
 - **Quality Assurance**: High bench mark and robust testing as we approach hardware-in-the-loop validation.
 - **Documentation**: Comprehensive documentation and on going updates
 
-### RadML Monte Carlo Validation
+### 🚀 Enhanced Evolutionary System Architecture (v1.0.2.1)
 
-The Monte Carlo validation test provides comprehensive statistical validation of the radiation-tolerant framework using NASA-aligned methodologies. This test validates the effectiveness of enhanced voting mechanisms and protection methods across multiple space radiation environments.
+**Multi-Operator Adaptive Genetic Algorithm with Real-Time Performance Tracking**
 
-This updated test expands the network compared to the old simple one.
+### 📚 Documentation Links:
+- **[Auto Architecture Search Guide](AUTO_ARCH_SEARCH_GUIDE.md)**
+- **[Scientific Validation Report](autoarchsearchwriteup.md)**
+- **[Genetic Algorithm Architecture](FAQ/GENETICS/Genetic_Algorithm_Architecture.md)**
 
-**To run the Monte Carlo validation:**
-```bash
-./monte_carlo_validation
+```mermaid
+graph TB
+    %% Define styles for different component types
+    classDef userInterface fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef optimization fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef evaluation fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef protection fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef core fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef data fill:#f5f5f5,stroke:#424242,stroke-width:1px
+    classDef external fill:#fff8e1,stroke:#f57f17,stroke-width:1px
+
+    %% Main Architecture Flow
+    UI[🎯 User Interface<br/>Configuration API<br/>Results Visualization] --> OE[🧬 Optimization Engine<br/>Evolutionary Search<br/>Population Management]
+    OE --> EE[📊 Evaluation Engine<br/>Radiation Testing<br/>Performance Metrics]
+    EE --> PE[🛡️ Protection Engine<br/>Fault Tolerance<br/>Error Correction]
+    PE --> CF[⚙️ Core Framework<br/>Neural Networks<br/>Radiation Simulation]
+
+    %% Optimization Engine Subsystems
+    AMC[🎲 Adaptive Mutation Controller<br/>5 Specialized Operators<br/>Credit Assignment System] --> OE
+    PDM[📈 Population Diversity Monitor<br/>Real-time Convergence<br/>Adaptive Rate Control] --> OE
+    OSS[🎯 Operator Selection System<br/>Epsilon-Greedy Strategy<br/>Performance Tracking] --> OE
+
+    %% Evaluation Engine Subsystems
+    RES[🌌 Radiation Environment Simulator<br/>7 Space Environments<br/>Physics-Based Modeling] --> EE
+    MVC[🎯 Monte Carlo Validator<br/>Statistical Reliability<br/>Confidence Intervals] --> EE
+    SA[📊 Statistical Analyzer<br/>Performance Metrics<br/>Comparative Analysis] --> EE
+
+    %% Protection Engine Subsystems
+    TMR[🔄 TMR Manager<br/>Triple Modular Redundancy<br/>Dynamic Allocation] --> PE
+    AP[🎛️ Adaptive Protection<br/>Context-Aware Strategies<br/>Performance Optimization] --> PE
+    ECS[🔧 Error Correction System<br/>Detection & Recovery<br/>Fault Classification] --> PE
+
+    %% Core Framework Subsystems
+    NN[🧠 Neural Network Engine<br/>Architecture Optimization<br/>Weight Protection] --> CF
+    RS[🌌 Radiation Simulator<br/>SEU/SEFI Modeling<br/>Multi-Particle Effects] --> CF
+    TM[📊 Training Manager<br/>Radiation-Aware Learning<br/>Adaptive Algorithms] --> CF
+
+    %% Data Flow and External Interfaces
+    DB[(📁 Results Database<br/>CSV Export<br/>Performance Logs)] --> UI
+    CF --> DB
+
+    CONFIG[📄 Configuration Files<br/>Mission Profiles<br/>Optimization Settings] --> UI
+
+    EXT[🔗 External Interfaces<br/>Spacecraft Systems<br/>Telemetry Integration] --> UI
+    UI --> EXT
+
+    %% Apply styling
+    class UI userInterface
+    class OE optimization
+    class EE evaluation
+    class PE protection
+    class CF core
+    class DB data
+    class CONFIG,EXT external
 ```
 
-**Source:** [`test/verification/monte_carlo_validation.cpp`](test/verification/monte_carlo_validation.cpp)
-
-**What This Test Validates:**
-
-- **28.8 Million Total Trials**: 100,000 trials per test case across 4 data types, 8 environments, and 9 test scenarios
-- **Real Space Environments**: LEO, GEO, LUNAR, SAA, SOLAR_STORM, JUPITER, MARS, EUROPA with physics-based radiation modeling
-- **Comprehensive Error Injection**: Single-bit upsets (SEUs), multi-bit upsets (MCUs), burst errors, word errors, and physics-based quantum simulation
-- **13 Protection Methods**: Standard voting, bit-level voting, adaptive voting, weighted voting, pattern detection, protected values, aligned memory, and more
-- **Advanced Test Scenarios**: Multi-copy corruption, edge cases, correlated errors, recovery testing, neural network protection, mission-adaptive protection, and temperature effects
-
-**Test Output:**
-
-```
-=== Summary Results ===
-Average Success Rates Across All Tests:
----------------------------------------------------------
-ORIGINAL METHODS:
-  Standard Voting:    99.9994%
-  Bit-Level Voting:   99.9994%
-  Word-Error Voting:  99.9994%
-  Burst-Error Voting: 99.9994%
-  Adaptive Voting:    99.9994%
-
-ENHANCED METHODS:
-  Weighted Voting:     99.9994%
-  Fast Bit Correction: 99.9994%
-  Pattern Detection:   100.0000%
-
-MEMORY PROTECTION:
-  Protected Value:     100.0000%
-  Aligned Memory:      100.0000%
-
-CHALLENGING TEST SCENARIOS (Success Rates):
-  [Shows: adaptive_voting% | best_real_method% (method_name)]
-  Multi-Copy Corruption:  55.9812% adaptive | 100.0000% Aligned Memory/Pattern Detection/Protected Value
-  Edge Cases:            100.0000% adaptive | 100.0000% Aligned Memory/Pattern Detection/Protected Value/Weighted Voting
-  Correlated Errors:     21.4286% adaptive | 100.0000% Aligned Memory/Pattern Detection/Protected Value (prevents spatial correlation)
-  Recovery Detection:    100.0000%
-  Recovery Correction:   100.0000%
-  Recovery Uncorrectable:0.0000%
-
-Most Effective Method: Aligned Memory (100.0000%)
-
-Enhanced Methods Improvement: 0.0004% over traditional methods
-NASA-style verification report generated: nasa_verification_report.txt
-```
-
-**Key Insights from Enhanced Results:**
-
-- **Dual Reporting**: Shows both realistic adaptive voting performance and best achievable results with optimal method selection
-- **Prevention vs Correction Paradigm**: Three prevention-based methods (Aligned Memory/Pattern Detection/Protected Value) consistently achieve 100% success, while correction-based approaches hit mathematical limits (21-56%)
-- **Correlated Errors Challenge**: Reed-Solomon adaptive voting achieves 21.43% (hitting mathematical limits for spatial correlation), while prevention methods avoid the problem entirely (100%)
-- **Multi-Copy Corruption**: Demonstrates the 44% performance gap between correction approaches (56%) and prevention strategies (100%)
-- **Tie Detection**: Enhanced floating-point safe winner detection reveals that multiple prevention strategies achieve identical performance, showing this is an architectural class advantage rather than a single algorithm win
-- **Physics Over Mathematics**: Prevention-based approaches that understand radiation physics consistently outperform even sophisticated mathematical error correction algorithms
-
-**Expected Runtime:** ~3-10 minutes depending on number of trials and system being used.
 
 
 ## Building the Framework
@@ -275,17 +271,75 @@ make clean
 make -j$(nproc)
 ```
 
-#### Build Verification
+### RadML Monte Carlo Validation
 
-To verify your build is working correctly:
+The Monte Carlo validation test provides comprehensive statistical validation of the radiation-tolerant framework using NASA-aligned methodologies. This test validates the effectiveness of enhanced voting mechanisms and protection methods across multiple space radiation environments.
 
+This updated test expands the network compared to the old simple one.
+
+**To run the Monte Carlo validation:**
 ```bash
-# Run Monte Carlo validation (comprehensive test)
-./build_test/monte_carlo_validation
-
-# Expected output: 99.9%+ success rates across all protection methods
-# Runtime: ~27 seconds for 25,000 trials per test case
+./monte_carlo_validation
 ```
+
+**Source:** [`test/verification/monte_carlo_validation.cpp`](test/verification/monte_carlo_validation.cpp)
+
+**What This Test Validates:**
+
+- **28.8 Million Total Trials**: 100,000 trials per test case across 4 data types, 8 environments, and 9 test scenarios
+- **Real Space Environments**: LEO, GEO, LUNAR, SAA, SOLAR_STORM, JUPITER, MARS, EUROPA with physics-based radiation modeling
+- **Comprehensive Error Injection**: Single-bit upsets (SEUs), multi-bit upsets (MCUs), burst errors, word errors, and physics-based quantum simulation
+- **13 Protection Methods**: Standard voting, bit-level voting, adaptive voting, weighted voting, pattern detection, protected values, aligned memory, and more
+- **Advanced Test Scenarios**: Multi-copy corruption, edge cases, correlated errors, recovery testing, neural network protection, mission-adaptive protection, and temperature effects
+
+**Test Output:**
+
+```
+=== Summary Results ===
+Average Success Rates Across All Tests:
+---------------------------------------------------------
+ORIGINAL METHODS:
+  Standard Voting:    99.9994%
+  Bit-Level Voting:   99.9994%
+  Word-Error Voting:  99.9994%
+  Burst-Error Voting: 99.9994%
+  Adaptive Voting:    99.9994%
+
+ENHANCED METHODS:
+  Weighted Voting:     99.9994%
+  Fast Bit Correction: 99.9994%
+  Pattern Detection:   100.0000%
+
+MEMORY PROTECTION:
+  Protected Value:     100.0000%
+  Aligned Memory:      100.0000%
+
+CHALLENGING TEST SCENARIOS (Success Rates):
+  [Shows: adaptive_voting% | best_real_method% (method_name)]
+  Multi-Copy Corruption:  55.9812% adaptive | 100.0000% Aligned Memory/Pattern Detection/Protected Value
+  Edge Cases:            100.0000% adaptive | 100.0000% Aligned Memory/Pattern Detection/Protected Value/Weighted Voting
+  Correlated Errors:     21.4286% adaptive | 100.0000% Aligned Memory/Pattern Detection/Protected Value (prevents spatial correlation)
+  Recovery Detection:    100.0000%
+  Recovery Correction:   100.0000%
+  Recovery Uncorrectable:0.0000%
+
+Most Effective Method: Aligned Memory (100.0000%)
+
+Enhanced Methods Improvement: 0.0004% over traditional methods
+NASA-style verification report generated: nasa_verification_report.txt
+```
+
+**Key Insights from Enhanced Results:**
+
+- **Dual Reporting**: Shows both realistic adaptive voting performance and best achievable results with optimal method selection
+- **Prevention vs Correction Paradigm**: Three prevention-based methods (Aligned Memory/Pattern Detection/Protected Value) consistently achieve 100% success, while correction-based approaches hit mathematical limits (21-56%)
+- **Correlated Errors Challenge**: Reed-Solomon adaptive voting achieves 21.43% (hitting mathematical limits for spatial correlation), while prevention methods avoid the problem entirely (100%)
+- **Multi-Copy Corruption**: Demonstrates the 44% performance gap between correction approaches (56%) and prevention strategies (100%)
+- **Tie Detection**: Enhanced floating-point safe winner detection reveals that multiple prevention strategies achieve identical performance, showing this is an architectural class advantage rather than a single algorithm win
+- **Physics Over Mathematics**: Prevention-based approaches that understand radiation physics consistently outperform even sophisticated mathematical error correction algorithms
+
+**Expected Runtime:** ~3-10 minutes depending on number of trials and system being used.
+
 
 
 ## Important Note for Students
@@ -390,7 +444,8 @@ For the full code example, see [Handling Detected Errors](./rootMarkdown/errorHa
 
 For the full code example, see [Enhanced Mission Simulator Guide](./rootMarkdown/enhancedMissionSimulator/using_enhanced_mission_simulator.md).
 
-## AI Native Database (v1.0.2)
+
+## AI Native Database (v1.0.2): In Dev
 
 **Status:** ✅ Implemented and Tested (Development Phase)
 **Version:** v1.0.2
