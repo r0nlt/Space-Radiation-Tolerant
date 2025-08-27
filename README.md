@@ -104,8 +104,10 @@ graph TB
     class DB data
     class CONFIG,EXT external
 ```
+- **GTest Streamlined** Installation problems, better cross development for various environments and testing/troubleshooting
+  - 📚 [GTest Troubleshooting & Usage Guide](FAQ/RADML_BUILD/GTEST_TROUBLESHOOTING.md) - Complete testing documentation, troubleshooting, and command reference
 
-
+- More things will be extended like this as well for more flexibility.
 
 ## Building the Framework
 
