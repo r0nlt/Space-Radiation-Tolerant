@@ -82,24 +82,109 @@ else()
     message(WARNING "LMDB not found. AI-native database features will be disabled.")
 endif()
 
-# Find GoogleTest
-find_package(GTest)
+# Find GoogleTest with multiple fallback strategies
+option(DOWNLOAD_GTEST "Download and build GTest if not found" ON)
+find_package(GTest QUIET)
 if(NOT GTEST_FOUND)
-  message(STATUS "GTest not found via find_package, trying manual paths")
-  if(EXISTS "/usr/local/Cellar/googletest/1.17.0/include/gtest/gtest.h")
-    set(GTEST_INCLUDE_DIRS "/usr/local/Cellar/googletest/1.17.0/include")
-    set(GTEST_LIBRARIES "/usr/local/Cellar/googletest/1.17.0/lib/libgtest.a" "/usr/local/Cellar/googletest/1.17.0/lib/libgtest_main.a")
+  message(STATUS "GTest not found via find_package, trying alternative methods...")
+
+  # Try to find GTest via pkg-config (common on Linux)
+  find_package(PkgConfig QUIET)
+  if(PKG_CONFIG_FOUND)
+    pkg_check_modules(GTEST QUIET gtest)
+    if(GTEST_FOUND)
+      message(STATUS "Found GTest via pkg-config")
+    endif()
+  endif()
+
+  # Try common installation paths
+  if(NOT GTEST_FOUND)
+    set(GTEST_SEARCH_PATHS
+      "/usr/local/include"
+      "/usr/include"
+      "/opt/local/include"
+      "/opt/homebrew/include"
+      "/usr/local/opt/googletest/include"
+      "/usr/local/Cellar/googletest/*/include"
+      "/opt/homebrew/Cellar/googletest/*/include"
+    )
+
+    foreach(SEARCH_PATH ${GTEST_SEARCH_PATHS})
+      if(EXISTS "${SEARCH_PATH}/gtest/gtest.h")
+        set(GTEST_INCLUDE_DIRS "${SEARCH_PATH}")
+        message(STATUS "Found GTest headers at: ${GTEST_INCLUDE_DIRS}")
+        break()
+      endif()
+    endforeach()
+
+    # Try to find the library files
+    if(GTEST_INCLUDE_DIRS)
+      set(GTEST_LIBRARY_PATHS
+        "/usr/local/lib"
+        "/usr/lib"
+        "/opt/local/lib"
+        "/opt/homebrew/lib"
+        "/usr/local/opt/googletest/lib"
+        "/usr/local/Cellar/googletest/*/lib"
+        "/opt/homebrew/Cellar/googletest/*/lib"
+      )
+
+      foreach(LIB_PATH ${GTEST_LIBRARY_PATHS})
+        if(EXISTS "${LIB_PATH}/libgtest.a")
+          set(GTEST_LIBRARIES "${LIB_PATH}/libgtest.a")
+          if(EXISTS "${LIB_PATH}/libgtest_main.a")
+            list(APPEND GTEST_LIBRARIES "${LIB_PATH}/libgtest_main.a")
+          endif()
+          message(STATUS "Found GTest libraries at: ${GTEST_LIBRARIES}")
+          set(GTEST_FOUND TRUE)
+          break()
+        endif()
+      endforeach()
+    endif()
+  endif()
+
+  # If still not found and download is enabled, download GTest
+  if(NOT GTEST_FOUND AND DOWNLOAD_GTEST)
+    message(STATUS "GTest not found, downloading and building from source...")
+    include(FetchContent)
+    FetchContent_Declare(
+      googletest
+      GIT_REPOSITORY https://github.com/google/googletest.git
+      GIT_TAG release-1.12.1
+    )
+    FetchContent_MakeAvailable(googletest)
     set(GTEST_FOUND TRUE)
-    message(STATUS "Found GTest at /usr/local/Cellar/googletest")
+    message(STATUS "GTest downloaded and built successfully")
   endif()
 endif()
 
 if(GTEST_FOUND)
-  include_directories(${GTEST_INCLUDE_DIRS})
-  message(STATUS "GTest include directories: ${GTEST_INCLUDE_DIRS}")
-  message(STATUS "GTest libraries: ${GTEST_LIBRARIES}")
+  # Create a proper GTest target for better integration
+  if(NOT TARGET GTest::GTest)
+    add_library(GTest::GTest UNKNOWN IMPORTED)
+    set_target_properties(GTest::GTest PROPERTIES
+      IMPORTED_LOCATION "${GTEST_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIRS}"
+    )
+  endif()
+
+  if(NOT TARGET GTest::Main)
+    add_library(GTest::Main UNKNOWN IMPORTED)
+    set_target_properties(GTest::Main PROPERTIES
+      IMPORTED_LOCATION "${GTEST_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIRS}"
+      INTERFACE_LINK_LIBRARIES GTest::GTest
+    )
+  endif()
+
+  message(STATUS "GTest found successfully!")
+  message(STATUS "  Include directories: ${GTEST_INCLUDE_DIRS}")
+  message(STATUS "  Libraries: ${GTEST_LIBRARIES}")
+  message(STATUS "  Imported targets: GTest::GTest, GTest::Main")
 else()
-  message(WARNING "GTest not found, some tests may not compile")
+  message(WARNING "GTest not found - testing will be disabled")
+  option(BUILD_TESTING "Build with testing enabled" OFF)
+  message(STATUS "BUILD_TESTING set to OFF due to missing GTest")
 endif()
 
 # Use modern Boost find_package approach
@@ -115,9 +200,29 @@ if(EIGEN3_INCLUDE_DIR)
   include_directories(BEFORE ${EIGEN3_INCLUDE_DIR})
   message(STATUS "Using Eigen3 from: ${EIGEN3_INCLUDE_DIR}")
 else()
-  # Fallback to default locations
-  include_directories(BEFORE /usr/local/include/eigen3 /usr/include/eigen3)
-  message(STATUS "Using default Eigen3 locations")
+  # Try to find Eigen3 in common locations
+  set(EIGEN3_SEARCH_PATHS
+    "/usr/local/include/eigen3"
+    "/usr/include/eigen3"
+    "/opt/local/include/eigen3"
+    "/opt/homebrew/include/eigen3"
+    "/usr/local/opt/eigen/include/eigen3"
+    "/opt/homebrew/Cellar/eigen/*/include/eigen3"
+  )
+
+  foreach(SEARCH_PATH ${EIGEN3_SEARCH_PATHS})
+    if(EXISTS "${SEARCH_PATH}/Eigen/Core")
+      set(EIGEN3_INCLUDE_DIR "${SEARCH_PATH}")
+      include_directories(BEFORE ${EIGEN3_INCLUDE_DIR})
+      message(STATUS "Found Eigen3 at: ${EIGEN3_INCLUDE_DIR}")
+      break()
+    endif()
+  endforeach()
+
+  if(NOT EIGEN3_INCLUDE_DIR)
+    message(WARNING "Eigen3 not found in standard locations")
+    message(STATUS "Please install Eigen3 or set EIGEN3_INCLUDE_DIR")
+  endif()
 endif()
 
 # Project includes
