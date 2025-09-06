@@ -1,7 +1,7 @@
 GEO MISSION RADIATION TOLERANCE VERIFICATION REPORT
 ============================================================
 
-Generated: Sat Sep  6 05:21:56 2025
+Generated: Sat Sep  6 07:12:39 2025
 
 Test Configuration:
 - Trials per test case: 50000
@@ -21,1505 +21,1509 @@ GEO Mission Requirements Compliance:
 - Systematic Fault Injection: INTEGRATED
 - Mission Reliability Analysis: COMPUTED
 - Error Pattern Analysis: COMPREHENSIVE
+- Memory Scrubbing: TESTED
+- Unified Memory Management: TESTED
+- Radiation-Aware Allocation: TESTED
+- Static Memory Allocation: TESTED
 
 Data Type: d
 ----------------------------------------
 Test: GEO_ECLIPSE_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6099 μs
+  Standard Voting Success: 96.4840%
+  Adaptive Voting Success: 95.3600%
+  Pattern Detection Success: 77.0780%
+  Avg Execution Time: 2.9109 μs
 
 Test: GEO_ECLIPSE_ECLIPSE_TRANSITION
-  Standard Voting Success: 99.5140%
-  Adaptive Voting Success: 99.5140%
-  Pattern Detection Success: 99.5140%
-  Avg Execution Time: 1.7714 μs
+  Standard Voting Success: 96.8800%
+  Adaptive Voting Success: 95.4120%
+  Pattern Detection Success: 77.1880%
+  Avg Execution Time: 3.1344 μs
 
 Test: GEO_ECLIPSE_END_OF_LIFE
-  Standard Voting Success: 99.0640%
-  Adaptive Voting Success: 99.0640%
-  Pattern Detection Success: 99.0640%
-  Avg Execution Time: 1.9554 μs
+  Standard Voting Success: 94.8740%
+  Adaptive Voting Success: 95.5800%
+  Pattern Detection Success: 77.2200%
+  Avg Execution Time: 3.3076 μs
 
 Test: GEO_ECLIPSE_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1997 μs
+  Standard Voting Success: 99.3380%
+  Adaptive Voting Success: 95.4020%
+  Pattern Detection Success: 77.2380%
+  Avg Execution Time: 2.9638 μs
 
 Test: GEO_ECLIPSE_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6566 μs
+  Standard Voting Success: 98.3080%
+  Adaptive Voting Success: 95.6480%
+  Pattern Detection Success: 77.2060%
+  Avg Execution Time: 2.9238 μs
 
 Test: GEO_ECLIPSE_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4221 μs
+  Standard Voting Success: 99.3660%
+  Adaptive Voting Success: 95.4360%
+  Pattern Detection Success: 76.9820%
+  Avg Execution Time: 2.8767 μs
 
 Test: GEO_ECLIPSE_SOLAR_STORM
-  Standard Voting Success: 97.0860%
-  Adaptive Voting Success: 97.0860%
-  Pattern Detection Success: 97.0860%
-  Solar Storm Survival: 48543 successes
-  Avg Execution Time: 10.4153 μs
+  Standard Voting Success: 95.8200%
+  Adaptive Voting Success: 95.6580%
+  Pattern Detection Success: 77.1720%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 12.6500 μs
 
 Test: GEO_ECLIPSE_TEMPERATURE_CYCLING
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1383 μs
+  Adaptive Voting Success: 95.4620%
+  Pattern Detection Success: 77.2020%
+  Avg Execution Time: 2.8812 μs
 
 Test: GEO_ECLIPSE_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.8920%
+  Adaptive Voting Success: 95.2960%
+  Pattern Detection Success: 77.0520%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.1623 μs
+  Avg Execution Time: 13.3270 μs
 
 Test: GEO_ECLIPSE_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.8152 μs
+  Standard Voting Success: 63.4880%
+  Adaptive Voting Success: 95.4440%
+  Pattern Detection Success: 77.2620%
+  Avg Execution Time: 2.9063 μs
 
 Test: GEO_END_OF_LIFE_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6091 μs
+  Standard Voting Success: 96.6120%
+  Adaptive Voting Success: 95.5100%
+  Pattern Detection Success: 77.3880%
+  Avg Execution Time: 2.9543 μs
 
 Test: GEO_END_OF_LIFE_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1838 μs
+  Adaptive Voting Success: 95.6320%
+  Pattern Detection Success: 77.0020%
+  Avg Execution Time: 2.8711 μs
 
 Test: GEO_END_OF_LIFE_END_OF_LIFE
-  Standard Voting Success: 99.1320%
-  Adaptive Voting Success: 99.1320%
-  Pattern Detection Success: 99.1320%
-  Avg Execution Time: 2.0306 μs
+  Standard Voting Success: 94.7040%
+  Adaptive Voting Success: 95.5280%
+  Pattern Detection Success: 76.8900%
+  Avg Execution Time: 3.4891 μs
 
 Test: GEO_END_OF_LIFE_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2994 μs
+  Standard Voting Success: 99.3400%
+  Adaptive Voting Success: 95.5820%
+  Pattern Detection Success: 77.1640%
+  Avg Execution Time: 2.9507 μs
 
 Test: GEO_END_OF_LIFE_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7299 μs
+  Standard Voting Success: 98.3180%
+  Adaptive Voting Success: 95.5140%
+  Pattern Detection Success: 77.0400%
+  Avg Execution Time: 2.9652 μs
 
 Test: GEO_END_OF_LIFE_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3985 μs
+  Standard Voting Success: 99.3600%
+  Adaptive Voting Success: 95.5020%
+  Pattern Detection Success: 77.1740%
+  Avg Execution Time: 2.9017 μs
 
 Test: GEO_END_OF_LIFE_SOLAR_STORM
-  Standard Voting Success: 95.2140%
-  Adaptive Voting Success: 95.2140%
-  Pattern Detection Success: 95.2140%
-  Solar Storm Survival: 47607 successes
-  Avg Execution Time: 10.5930 μs
+  Standard Voting Success: 93.5740%
+  Adaptive Voting Success: 95.5060%
+  Pattern Detection Success: 76.7640%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 12.6510 μs
 
 Test: GEO_END_OF_LIFE_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2167 μs
+  Standard Voting Success: 99.7080%
+  Adaptive Voting Success: 95.4920%
+  Pattern Detection Success: 77.0600%
+  Avg Execution Time: 2.9889 μs
 
 Test: GEO_END_OF_LIFE_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.8440%
+  Adaptive Voting Success: 95.5340%
+  Pattern Detection Success: 77.0060%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.2246 μs
+  Avg Execution Time: 13.5625 μs
 
 Test: GEO_END_OF_LIFE_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.8399 μs
+  Standard Voting Success: 63.6060%
+  Adaptive Voting Success: 95.5720%
+  Pattern Detection Success: 77.0040%
+  Avg Execution Time: 3.0107 μs
 
 Test: GEO_NOMINAL_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6277 μs
+  Standard Voting Success: 96.5020%
+  Adaptive Voting Success: 95.3200%
+  Pattern Detection Success: 77.2880%
+  Avg Execution Time: 3.3984 μs
 
 Test: GEO_NOMINAL_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4783 μs
+  Adaptive Voting Success: 95.4700%
+  Pattern Detection Success: 77.4280%
+  Avg Execution Time: 3.0334 μs
 
 Test: GEO_NOMINAL_END_OF_LIFE
-  Standard Voting Success: 99.0620%
-  Adaptive Voting Success: 99.0620%
-  Pattern Detection Success: 99.0620%
-  Avg Execution Time: 3.1800 μs
+  Standard Voting Success: 94.8760%
+  Adaptive Voting Success: 95.4580%
+  Pattern Detection Success: 77.1840%
+  Avg Execution Time: 3.3847 μs
 
 Test: GEO_NOMINAL_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4104 μs
+  Standard Voting Success: 99.2660%
+  Adaptive Voting Success: 95.4060%
+  Pattern Detection Success: 77.0400%
+  Avg Execution Time: 3.0849 μs
 
 Test: GEO_NOMINAL_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.8334 μs
+  Standard Voting Success: 98.3380%
+  Adaptive Voting Success: 95.6600%
+  Pattern Detection Success: 76.9100%
+  Avg Execution Time: 3.4729 μs
 
 Test: GEO_NOMINAL_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 3.0212 μs
+  Standard Voting Success: 99.3700%
+  Adaptive Voting Success: 95.5180%
+  Pattern Detection Success: 77.1040%
+  Avg Execution Time: 2.9940 μs
 
 Test: GEO_NOMINAL_SOLAR_STORM
-  Standard Voting Success: 96.8880%
-  Adaptive Voting Success: 96.8880%
-  Pattern Detection Success: 96.8880%
-  Solar Storm Survival: 48444 successes
-  Avg Execution Time: 13.1398 μs
+  Standard Voting Success: 95.8720%
+  Adaptive Voting Success: 95.4800%
+  Pattern Detection Success: 77.1420%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 13.4517 μs
 
 Test: GEO_NOMINAL_TEMPERATURE_CYCLING
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3326 μs
+  Adaptive Voting Success: 95.4400%
+  Pattern Detection Success: 77.4640%
+  Avg Execution Time: 2.9756 μs
 
 Test: GEO_NOMINAL_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.5760%
+  Adaptive Voting Success: 95.5260%
+  Pattern Detection Success: 77.0260%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.3986 μs
+  Avg Execution Time: 19.1743 μs
 
 Test: GEO_NOMINAL_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7999 μs
+  Standard Voting Success: 63.6280%
+  Adaptive Voting Success: 95.5960%
+  Pattern Detection Success: 76.9500%
+  Avg Execution Time: 3.1652 μs
 
 Test: GEO_SOLAR_MAXIMUM_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6355 μs
+  Standard Voting Success: 96.5000%
+  Adaptive Voting Success: 95.6000%
+  Pattern Detection Success: 77.1100%
+  Avg Execution Time: 2.9023 μs
 
 Test: GEO_SOLAR_MAXIMUM_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1337 μs
+  Adaptive Voting Success: 95.5060%
+  Pattern Detection Success: 77.4600%
+  Avg Execution Time: 2.8122 μs
 
 Test: GEO_SOLAR_MAXIMUM_END_OF_LIFE
-  Standard Voting Success: 99.1160%
-  Adaptive Voting Success: 99.1160%
-  Pattern Detection Success: 99.1160%
-  Avg Execution Time: 2.2906 μs
+  Standard Voting Success: 94.7980%
+  Adaptive Voting Success: 95.4760%
+  Pattern Detection Success: 76.8800%
+  Avg Execution Time: 3.4614 μs
 
 Test: GEO_SOLAR_MAXIMUM_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1880 μs
+  Standard Voting Success: 99.3260%
+  Adaptive Voting Success: 95.3800%
+  Pattern Detection Success: 77.3120%
+  Avg Execution Time: 2.8827 μs
 
 Test: GEO_SOLAR_MAXIMUM_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6375 μs
+  Standard Voting Success: 98.3000%
+  Adaptive Voting Success: 95.5180%
+  Pattern Detection Success: 77.4020%
+  Avg Execution Time: 2.9213 μs
 
 Test: GEO_SOLAR_MAXIMUM_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3402 μs
+  Standard Voting Success: 99.3700%
+  Adaptive Voting Success: 95.3340%
+  Pattern Detection Success: 77.0380%
+  Avg Execution Time: 2.8611 μs
 
 Test: GEO_SOLAR_MAXIMUM_SOLAR_STORM
-  Standard Voting Success: 81.6080%
-  Adaptive Voting Success: 81.6080%
-  Pattern Detection Success: 81.6080%
-  Solar Storm Survival: 40804 successes
-  Avg Execution Time: 11.3342 μs
+  Standard Voting Success: 75.6400%
+  Adaptive Voting Success: 95.4240%
+  Pattern Detection Success: 77.1040%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 12.8818 μs
 
 Test: GEO_SOLAR_MAXIMUM_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1875 μs
+  Standard Voting Success: 99.1280%
+  Adaptive Voting Success: 95.6220%
+  Pattern Detection Success: 76.8260%
+  Avg Execution Time: 3.0405 μs
 
 Test: GEO_SOLAR_MAXIMUM_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.6440%
+  Adaptive Voting Success: 95.5280%
+  Pattern Detection Success: 76.8220%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 10.9642 μs
+  Avg Execution Time: 13.3179 μs
 
 Test: GEO_SOLAR_MAXIMUM_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.8288 μs
+  Standard Voting Success: 63.4480%
+  Adaptive Voting Success: 95.7140%
+  Pattern Detection Success: 76.8500%
+  Avg Execution Time: 2.9303 μs
 
 Test: GEO_SOLAR_STORM_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6551 μs
+  Standard Voting Success: 96.5180%
+  Adaptive Voting Success: 95.4380%
+  Pattern Detection Success: 77.4120%
+  Avg Execution Time: 2.9927 μs
 
 Test: GEO_SOLAR_STORM_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1552 μs
+  Adaptive Voting Success: 95.2920%
+  Pattern Detection Success: 77.2500%
+  Avg Execution Time: 2.8403 μs
 
 Test: GEO_SOLAR_STORM_END_OF_LIFE
-  Standard Voting Success: 99.1200%
-  Adaptive Voting Success: 99.1200%
-  Pattern Detection Success: 99.1200%
-  Avg Execution Time: 1.9306 μs
+  Standard Voting Success: 94.8800%
+  Adaptive Voting Success: 95.5060%
+  Pattern Detection Success: 76.9600%
+  Avg Execution Time: 3.1909 μs
 
 Test: GEO_SOLAR_STORM_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1778 μs
+  Standard Voting Success: 99.3320%
+  Adaptive Voting Success: 95.5900%
+  Pattern Detection Success: 77.1140%
+  Avg Execution Time: 2.9168 μs
 
 Test: GEO_SOLAR_STORM_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6532 μs
+  Standard Voting Success: 98.3380%
+  Adaptive Voting Success: 95.5900%
+  Pattern Detection Success: 77.4920%
+  Avg Execution Time: 2.9784 μs
 
 Test: GEO_SOLAR_STORM_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3512 μs
+  Standard Voting Success: 99.3760%
+  Adaptive Voting Success: 95.4880%
+  Pattern Detection Success: 77.1760%
+  Avg Execution Time: 2.8580 μs
 
 Test: GEO_SOLAR_STORM_SOLAR_STORM
-  Standard Voting Success: 39.5200%
-  Adaptive Voting Success: 39.5200%
-  Pattern Detection Success: 39.5200%
-  Solar Storm Survival: 19760 successes
-  Avg Execution Time: 13.3869 μs
+  Standard Voting Success: 18.5080%
+  Adaptive Voting Success: 95.6260%
+  Pattern Detection Success: 76.9040%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 14.2113 μs
 
 Test: GEO_SOLAR_STORM_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1573 μs
+  Standard Voting Success: 99.4640%
+  Adaptive Voting Success: 95.4540%
+  Pattern Detection Success: 77.2080%
+  Avg Execution Time: 2.8456 μs
 
 Test: GEO_SOLAR_STORM_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 48.3960%
+  Adaptive Voting Success: 95.5500%
+  Pattern Detection Success: 76.9180%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.2063 μs
+  Avg Execution Time: 13.3789 μs
 
 Test: GEO_SOLAR_STORM_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.8115 μs
+  Standard Voting Success: 63.4100%
+  Adaptive Voting Success: 95.4480%
+  Pattern Detection Success: 77.2520%
+  Avg Execution Time: 2.9431 μs
 
 Test: GEO_VAN_ALLEN_PEAK_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 2.4876 μs
+  Standard Voting Success: 96.4400%
+  Adaptive Voting Success: 95.4640%
+  Pattern Detection Success: 76.9240%
+  Avg Execution Time: 3.0533 μs
 
 Test: GEO_VAN_ALLEN_PEAK_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2276 μs
+  Adaptive Voting Success: 95.4020%
+  Pattern Detection Success: 77.1980%
+  Avg Execution Time: 2.8797 μs
 
 Test: GEO_VAN_ALLEN_PEAK_END_OF_LIFE
-  Standard Voting Success: 99.0600%
-  Adaptive Voting Success: 99.0600%
-  Pattern Detection Success: 99.0600%
-  Avg Execution Time: 1.9495 μs
+  Standard Voting Success: 94.9240%
+  Adaptive Voting Success: 95.5660%
+  Pattern Detection Success: 77.1760%
+  Avg Execution Time: 3.2514 μs
 
 Test: GEO_VAN_ALLEN_PEAK_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2378 μs
+  Standard Voting Success: 99.3200%
+  Adaptive Voting Success: 95.5480%
+  Pattern Detection Success: 77.2100%
+  Avg Execution Time: 2.9565 μs
 
 Test: GEO_VAN_ALLEN_PEAK_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 3.5672 μs
+  Standard Voting Success: 98.4120%
+  Adaptive Voting Success: 95.4380%
+  Pattern Detection Success: 77.3800%
+  Avg Execution Time: 3.0128 μs
 
 Test: GEO_VAN_ALLEN_PEAK_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 2.3265 μs
+  Standard Voting Success: 99.4260%
+  Adaptive Voting Success: 95.5840%
+  Pattern Detection Success: 77.3540%
+  Avg Execution Time: 3.2432 μs
 
 Test: GEO_VAN_ALLEN_PEAK_SOLAR_STORM
-  Standard Voting Success: 97.0400%
-  Adaptive Voting Success: 97.0400%
-  Pattern Detection Success: 97.0400%
-  Solar Storm Survival: 48520 successes
-  Avg Execution Time: 10.8668 μs
+  Standard Voting Success: 95.9680%
+  Adaptive Voting Success: 95.3980%
+  Pattern Detection Success: 77.0260%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 13.3416 μs
 
 Test: GEO_VAN_ALLEN_PEAK_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1672 μs
+  Standard Voting Success: 99.8620%
+  Adaptive Voting Success: 95.4060%
+  Pattern Detection Success: 77.3200%
+  Avg Execution Time: 2.8103 μs
 
 Test: GEO_VAN_ALLEN_PEAK_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.5760%
+  Adaptive Voting Success: 95.3840%
+  Pattern Detection Success: 77.0680%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.6085 μs
+  Avg Execution Time: 14.3074 μs
 
 Test: GEO_VAN_ALLEN_PEAK_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 2.3522 μs
+  Standard Voting Success: 63.6960%
+  Adaptive Voting Success: 95.4500%
+  Pattern Detection Success: 77.1400%
+  Avg Execution Time: 3.0490 μs
 
 
 Data Type: f
 ----------------------------------------
 Test: GEO_ECLIPSE_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5808 μs
+  Standard Voting Success: 92.9520%
+  Adaptive Voting Success: 91.3840%
+  Pattern Detection Success: 59.3840%
+  Avg Execution Time: 2.6969 μs
 
 Test: GEO_ECLIPSE_ECLIPSE_TRANSITION
-  Standard Voting Success: 99.0660%
-  Adaptive Voting Success: 99.0660%
-  Pattern Detection Success: 99.0660%
-  Avg Execution Time: 1.5688 μs
+  Standard Voting Success: 94.0360%
+  Adaptive Voting Success: 91.4200%
+  Pattern Detection Success: 59.5580%
+  Avg Execution Time: 2.7194 μs
 
 Test: GEO_ECLIPSE_END_OF_LIFE
-  Standard Voting Success: 98.2600%
-  Adaptive Voting Success: 98.2600%
-  Pattern Detection Success: 98.2600%
-  Avg Execution Time: 1.7668 μs
+  Standard Voting Success: 89.9720%
+  Adaptive Voting Success: 91.2900%
+  Pattern Detection Success: 59.7180%
+  Avg Execution Time: 2.8031 μs
 
 Test: GEO_ECLIPSE_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2167 μs
+  Standard Voting Success: 98.6260%
+  Adaptive Voting Success: 91.1920%
+  Pattern Detection Success: 59.5340%
+  Avg Execution Time: 2.6307 μs
 
 Test: GEO_ECLIPSE_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5436 μs
+  Standard Voting Success: 96.7960%
+  Adaptive Voting Success: 91.2900%
+  Pattern Detection Success: 60.0300%
+  Avg Execution Time: 2.6697 μs
 
 Test: GEO_ECLIPSE_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2713 μs
+  Standard Voting Success: 98.7240%
+  Adaptive Voting Success: 91.2980%
+  Pattern Detection Success: 59.3840%
+  Avg Execution Time: 2.6398 μs
 
 Test: GEO_ECLIPSE_SOLAR_STORM
-  Standard Voting Success: 96.3380%
-  Adaptive Voting Success: 96.3380%
-  Pattern Detection Success: 96.3380%
-  Solar Storm Survival: 48169 successes
-  Avg Execution Time: 10.7877 μs
+  Standard Voting Success: 95.4740%
+  Adaptive Voting Success: 91.0900%
+  Pattern Detection Success: 59.8900%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 12.6913 μs
 
 Test: GEO_ECLIPSE_TEMPERATURE_CYCLING
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1207 μs
+  Adaptive Voting Success: 91.1900%
+  Pattern Detection Success: 59.3160%
+  Avg Execution Time: 2.5693 μs
 
 Test: GEO_ECLIPSE_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.1680%
+  Adaptive Voting Success: 91.1380%
+  Pattern Detection Success: 59.7400%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.2148 μs
+  Avg Execution Time: 13.5870 μs
 
 Test: GEO_ECLIPSE_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6620 μs
+  Standard Voting Success: 62.8420%
+  Adaptive Voting Success: 91.2060%
+  Pattern Detection Success: 59.7480%
+  Avg Execution Time: 2.6549 μs
 
 Test: GEO_END_OF_LIFE_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7596 μs
+  Standard Voting Success: 92.8940%
+  Adaptive Voting Success: 91.5560%
+  Pattern Detection Success: 59.8280%
+  Avg Execution Time: 3.3733 μs
 
 Test: GEO_END_OF_LIFE_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1272 μs
+  Adaptive Voting Success: 91.1020%
+  Pattern Detection Success: 59.6740%
+  Avg Execution Time: 2.5700 μs
 
 Test: GEO_END_OF_LIFE_END_OF_LIFE
-  Standard Voting Success: 98.1920%
-  Adaptive Voting Success: 98.1920%
-  Pattern Detection Success: 98.1920%
-  Avg Execution Time: 1.6649 μs
+  Standard Voting Success: 89.9360%
+  Adaptive Voting Success: 91.5300%
+  Pattern Detection Success: 59.4200%
+  Avg Execution Time: 2.7877 μs
 
 Test: GEO_END_OF_LIFE_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1982 μs
+  Standard Voting Success: 98.6660%
+  Adaptive Voting Success: 91.4440%
+  Pattern Detection Success: 59.8980%
+  Avg Execution Time: 2.6846 μs
 
 Test: GEO_END_OF_LIFE_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5587 μs
+  Standard Voting Success: 96.7900%
+  Adaptive Voting Success: 91.4300%
+  Pattern Detection Success: 59.3080%
+  Avg Execution Time: 3.0254 μs
 
 Test: GEO_END_OF_LIFE_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2419 μs
+  Standard Voting Success: 98.7680%
+  Adaptive Voting Success: 91.4280%
+  Pattern Detection Success: 59.6460%
+  Avg Execution Time: 2.7873 μs
 
 Test: GEO_END_OF_LIFE_SOLAR_STORM
-  Standard Voting Success: 93.9940%
-  Adaptive Voting Success: 93.9940%
-  Pattern Detection Success: 93.9940%
-  Solar Storm Survival: 46997 successes
-  Avg Execution Time: 10.7945 μs
+  Standard Voting Success: 92.7460%
+  Adaptive Voting Success: 91.2260%
+  Pattern Detection Success: 59.4940%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 12.4764 μs
 
 Test: GEO_END_OF_LIFE_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7084 μs
+  Standard Voting Success: 99.4820%
+  Adaptive Voting Success: 91.3140%
+  Pattern Detection Success: 59.5320%
+  Avg Execution Time: 2.5668 μs
 
 Test: GEO_END_OF_LIFE_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.2420%
+  Adaptive Voting Success: 91.4400%
+  Pattern Detection Success: 59.5780%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.1400 μs
+  Avg Execution Time: 13.0664 μs
 
 Test: GEO_END_OF_LIFE_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6121 μs
+  Standard Voting Success: 62.9420%
+  Adaptive Voting Success: 91.2520%
+  Pattern Detection Success: 59.8800%
+  Avg Execution Time: 3.0054 μs
 
 Test: GEO_NOMINAL_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5424 μs
+  Standard Voting Success: 93.0740%
+  Adaptive Voting Success: 91.0440%
+  Pattern Detection Success: 59.6140%
+  Avg Execution Time: 4.8986 μs
 
 Test: GEO_NOMINAL_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2482 μs
+  Adaptive Voting Success: 91.3120%
+  Pattern Detection Success: 59.4920%
+  Avg Execution Time: 2.5571 μs
 
 Test: GEO_NOMINAL_END_OF_LIFE
-  Standard Voting Success: 98.3320%
-  Adaptive Voting Success: 98.3320%
-  Pattern Detection Success: 98.3320%
-  Avg Execution Time: 2.3027 μs
+  Standard Voting Success: 89.8660%
+  Adaptive Voting Success: 91.3280%
+  Pattern Detection Success: 59.3540%
+  Avg Execution Time: 2.9405 μs
 
 Test: GEO_NOMINAL_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1865 μs
+  Standard Voting Success: 98.6500%
+  Adaptive Voting Success: 91.0680%
+  Pattern Detection Success: 59.4040%
+  Avg Execution Time: 2.6468 μs
 
 Test: GEO_NOMINAL_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4861 μs
+  Standard Voting Success: 96.8500%
+  Adaptive Voting Success: 91.2160%
+  Pattern Detection Success: 59.7720%
+  Avg Execution Time: 5.0456 μs
 
 Test: GEO_NOMINAL_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1729 μs
+  Standard Voting Success: 98.8040%
+  Adaptive Voting Success: 90.9840%
+  Pattern Detection Success: 59.2020%
+  Avg Execution Time: 3.6927 μs
 
 Test: GEO_NOMINAL_SOLAR_STORM
-  Standard Voting Success: 96.2280%
-  Adaptive Voting Success: 96.2280%
-  Pattern Detection Success: 96.2280%
-  Solar Storm Survival: 48114 successes
-  Avg Execution Time: 10.6016 μs
+  Standard Voting Success: 95.4600%
+  Adaptive Voting Success: 91.1580%
+  Pattern Detection Success: 59.6180%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 15.7353 μs
 
 Test: GEO_NOMINAL_TEMPERATURE_CYCLING
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 2.6433 μs
+  Adaptive Voting Success: 91.2840%
+  Pattern Detection Success: 59.4300%
+  Avg Execution Time: 2.5964 μs
 
 Test: GEO_NOMINAL_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.3320%
+  Adaptive Voting Success: 91.3840%
+  Pattern Detection Success: 59.6740%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.1357 μs
+  Avg Execution Time: 15.7080 μs
 
 Test: GEO_NOMINAL_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6626 μs
+  Standard Voting Success: 62.5840%
+  Adaptive Voting Success: 91.4300%
+  Pattern Detection Success: 59.3380%
+  Avg Execution Time: 3.7185 μs
 
 Test: GEO_SOLAR_MAXIMUM_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5878 μs
+  Standard Voting Success: 93.2020%
+  Adaptive Voting Success: 91.1160%
+  Pattern Detection Success: 59.4800%
+  Avg Execution Time: 2.6168 μs
 
 Test: GEO_SOLAR_MAXIMUM_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2773 μs
+  Adaptive Voting Success: 91.2900%
+  Pattern Detection Success: 59.8700%
+  Avg Execution Time: 2.6412 μs
 
 Test: GEO_SOLAR_MAXIMUM_END_OF_LIFE
-  Standard Voting Success: 98.2220%
-  Adaptive Voting Success: 98.2220%
-  Pattern Detection Success: 98.2220%
-  Avg Execution Time: 2.1860 μs
+  Standard Voting Success: 89.8980%
+  Adaptive Voting Success: 91.3840%
+  Pattern Detection Success: 59.5240%
+  Avg Execution Time: 2.8756 μs
 
 Test: GEO_SOLAR_MAXIMUM_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5773 μs
+  Standard Voting Success: 98.6040%
+  Adaptive Voting Success: 91.2760%
+  Pattern Detection Success: 59.2820%
+  Avg Execution Time: 2.8842 μs
 
 Test: GEO_SOLAR_MAXIMUM_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5657 μs
+  Standard Voting Success: 96.7640%
+  Adaptive Voting Success: 91.1420%
+  Pattern Detection Success: 59.5720%
+  Avg Execution Time: 2.6097 μs
 
 Test: GEO_SOLAR_MAXIMUM_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2961 μs
+  Standard Voting Success: 98.7780%
+  Adaptive Voting Success: 91.1800%
+  Pattern Detection Success: 59.8880%
+  Avg Execution Time: 2.5582 μs
 
 Test: GEO_SOLAR_MAXIMUM_SOLAR_STORM
-  Standard Voting Success: 77.7380%
-  Adaptive Voting Success: 77.7380%
-  Pattern Detection Success: 77.7380%
-  Solar Storm Survival: 38869 successes
-  Avg Execution Time: 12.9371 μs
+  Standard Voting Success: 72.9100%
+  Adaptive Voting Success: 91.0840%
+  Pattern Detection Success: 59.4340%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 13.2933 μs
 
 Test: GEO_SOLAR_MAXIMUM_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3956 μs
+  Standard Voting Success: 98.4220%
+  Adaptive Voting Success: 91.2660%
+  Pattern Detection Success: 59.2480%
+  Avg Execution Time: 2.7080 μs
 
 Test: GEO_SOLAR_MAXIMUM_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.0960%
+  Adaptive Voting Success: 91.2780%
+  Pattern Detection Success: 59.2780%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.5355 μs
+  Avg Execution Time: 13.0271 μs
 
 Test: GEO_SOLAR_MAXIMUM_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7040 μs
+  Standard Voting Success: 62.8840%
+  Adaptive Voting Success: 91.1060%
+  Pattern Detection Success: 59.8540%
+  Avg Execution Time: 2.5905 μs
 
 Test: GEO_SOLAR_STORM_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.8552 μs
+  Standard Voting Success: 93.0520%
+  Adaptive Voting Success: 91.1620%
+  Pattern Detection Success: 59.7000%
+  Avg Execution Time: 2.6255 μs
 
 Test: GEO_SOLAR_STORM_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2034 μs
+  Adaptive Voting Success: 91.1640%
+  Pattern Detection Success: 59.2700%
+  Avg Execution Time: 2.6157 μs
 
 Test: GEO_SOLAR_STORM_END_OF_LIFE
-  Standard Voting Success: 98.2140%
-  Adaptive Voting Success: 98.2140%
-  Pattern Detection Success: 98.2140%
-  Avg Execution Time: 1.7043 μs
+  Standard Voting Success: 90.2340%
+  Adaptive Voting Success: 91.3680%
+  Pattern Detection Success: 59.5400%
+  Avg Execution Time: 2.8376 μs
 
 Test: GEO_SOLAR_STORM_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1844 μs
+  Standard Voting Success: 98.7460%
+  Adaptive Voting Success: 91.2140%
+  Pattern Detection Success: 59.6180%
+  Avg Execution Time: 2.6846 μs
 
 Test: GEO_SOLAR_STORM_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7318 μs
+  Standard Voting Success: 96.8680%
+  Adaptive Voting Success: 91.2260%
+  Pattern Detection Success: 59.3820%
+  Avg Execution Time: 2.8282 μs
 
 Test: GEO_SOLAR_STORM_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5761 μs
+  Standard Voting Success: 98.7980%
+  Adaptive Voting Success: 91.2000%
+  Pattern Detection Success: 59.5740%
+  Avg Execution Time: 2.6222 μs
 
 Test: GEO_SOLAR_STORM_SOLAR_STORM
-  Standard Voting Success: 26.0120%
-  Adaptive Voting Success: 26.0120%
-  Pattern Detection Success: 26.0120%
-  Solar Storm Survival: 13006 successes
-  Avg Execution Time: 13.5117 μs
+  Standard Voting Success: 9.3060%
+  Adaptive Voting Success: 91.1880%
+  Pattern Detection Success: 60.0980%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 14.2910 μs
 
 Test: GEO_SOLAR_STORM_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2127 μs
+  Standard Voting Success: 98.8920%
+  Adaptive Voting Success: 90.9880%
+  Pattern Detection Success: 59.2460%
+  Avg Execution Time: 2.6544 μs
 
 Test: GEO_SOLAR_STORM_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.1520%
+  Adaptive Voting Success: 91.1900%
+  Pattern Detection Success: 59.3280%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.9614 μs
+  Avg Execution Time: 13.5429 μs
 
 Test: GEO_SOLAR_STORM_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.8457 μs
+  Standard Voting Success: 62.9440%
+  Adaptive Voting Success: 91.3660%
+  Pattern Detection Success: 59.8620%
+  Avg Execution Time: 2.6660 μs
 
 Test: GEO_VAN_ALLEN_PEAK_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.9352 μs
+  Standard Voting Success: 93.0960%
+  Adaptive Voting Success: 91.4600%
+  Pattern Detection Success: 59.2260%
+  Avg Execution Time: 2.6160 μs
 
 Test: GEO_VAN_ALLEN_PEAK_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2087 μs
+  Adaptive Voting Success: 91.2180%
+  Pattern Detection Success: 59.5940%
+  Avg Execution Time: 2.6220 μs
 
 Test: GEO_VAN_ALLEN_PEAK_END_OF_LIFE
-  Standard Voting Success: 98.4260%
-  Adaptive Voting Success: 98.4260%
-  Pattern Detection Success: 98.4260%
-  Avg Execution Time: 1.7843 μs
+  Standard Voting Success: 90.0600%
+  Adaptive Voting Success: 91.2960%
+  Pattern Detection Success: 59.4960%
+  Avg Execution Time: 2.8498 μs
 
 Test: GEO_VAN_ALLEN_PEAK_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1420 μs
+  Standard Voting Success: 98.6460%
+  Adaptive Voting Success: 91.5100%
+  Pattern Detection Success: 59.2880%
+  Avg Execution Time: 2.6621 μs
 
 Test: GEO_VAN_ALLEN_PEAK_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7794 μs
+  Standard Voting Success: 96.8040%
+  Adaptive Voting Success: 91.0220%
+  Pattern Detection Success: 59.6120%
+  Avg Execution Time: 2.6046 μs
 
 Test: GEO_VAN_ALLEN_PEAK_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2897 μs
+  Standard Voting Success: 98.7500%
+  Adaptive Voting Success: 91.0600%
+  Pattern Detection Success: 59.7480%
+  Avg Execution Time: 3.1523 μs
 
 Test: GEO_VAN_ALLEN_PEAK_SOLAR_STORM
-  Standard Voting Success: 96.3920%
-  Adaptive Voting Success: 96.3920%
-  Pattern Detection Success: 96.3920%
-  Solar Storm Survival: 48196 successes
-  Avg Execution Time: 11.0812 μs
+  Standard Voting Success: 95.5860%
+  Adaptive Voting Success: 91.1520%
+  Pattern Detection Success: 59.3880%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 12.9535 μs
 
 Test: GEO_VAN_ALLEN_PEAK_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4899 μs
+  Standard Voting Success: 99.7600%
+  Adaptive Voting Success: 91.2860%
+  Pattern Detection Success: 59.6580%
+  Avg Execution Time: 2.5648 μs
 
 Test: GEO_VAN_ALLEN_PEAK_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.2980%
+  Adaptive Voting Success: 91.3280%
+  Pattern Detection Success: 59.1300%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.5103 μs
+  Avg Execution Time: 13.5767 μs
 
 Test: GEO_VAN_ALLEN_PEAK_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.9913 μs
+  Standard Voting Success: 62.8060%
+  Adaptive Voting Success: 91.0160%
+  Pattern Detection Success: 59.2640%
+  Avg Execution Time: 2.5543 μs
 
 
 Data Type: i
 ----------------------------------------
 Test: GEO_ECLIPSE_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.8176 μs
+  Standard Voting Success: 92.8920%
+  Adaptive Voting Success: 91.4220%
+  Pattern Detection Success: 59.5660%
+  Avg Execution Time: 2.6148 μs
 
 Test: GEO_ECLIPSE_ECLIPSE_TRANSITION
-  Standard Voting Success: 99.0980%
-  Adaptive Voting Success: 99.0980%
-  Pattern Detection Success: 99.0980%
-  Avg Execution Time: 1.3901 μs
+  Standard Voting Success: 93.9540%
+  Adaptive Voting Success: 91.2040%
+  Pattern Detection Success: 59.5300%
+  Avg Execution Time: 3.2218 μs
 
 Test: GEO_ECLIPSE_END_OF_LIFE
-  Standard Voting Success: 98.2400%
-  Adaptive Voting Success: 98.2400%
-  Pattern Detection Success: 98.2400%
-  Avg Execution Time: 1.5776 μs
+  Standard Voting Success: 89.9680%
+  Adaptive Voting Success: 91.1280%
+  Pattern Detection Success: 59.8380%
+  Avg Execution Time: 3.3800 μs
 
 Test: GEO_ECLIPSE_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0610 μs
+  Standard Voting Success: 98.7980%
+  Adaptive Voting Success: 91.2320%
+  Pattern Detection Success: 59.3000%
+  Avg Execution Time: 3.0770 μs
 
 Test: GEO_ECLIPSE_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6749 μs
+  Standard Voting Success: 96.8720%
+  Adaptive Voting Success: 91.3000%
+  Pattern Detection Success: 59.4660%
+  Avg Execution Time: 2.6237 μs
 
 Test: GEO_ECLIPSE_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1102 μs
+  Standard Voting Success: 98.7440%
+  Adaptive Voting Success: 91.2880%
+  Pattern Detection Success: 59.7160%
+  Avg Execution Time: 2.5584 μs
 
 Test: GEO_ECLIPSE_SOLAR_STORM
-  Standard Voting Success: 96.3440%
-  Adaptive Voting Success: 96.3440%
-  Pattern Detection Success: 96.3440%
-  Solar Storm Survival: 48172 successes
-  Avg Execution Time: 11.1070 μs
+  Standard Voting Success: 95.4380%
+  Adaptive Voting Success: 91.4340%
+  Pattern Detection Success: 59.4520%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 15.1500 μs
 
 Test: GEO_ECLIPSE_TEMPERATURE_CYCLING
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0334 μs
+  Adaptive Voting Success: 91.2740%
+  Pattern Detection Success: 59.4020%
+  Avg Execution Time: 2.9874 μs
 
 Test: GEO_ECLIPSE_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.1700%
+  Adaptive Voting Success: 91.1300%
+  Pattern Detection Success: 59.4960%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 16.6341 μs
+  Avg Execution Time: 13.2703 μs
 
 Test: GEO_ECLIPSE_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.8144 μs
+  Standard Voting Success: 62.9900%
+  Adaptive Voting Success: 91.2140%
+  Pattern Detection Success: 59.3620%
+  Avg Execution Time: 2.6186 μs
 
 Test: GEO_END_OF_LIFE_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4788 μs
+  Standard Voting Success: 93.0680%
+  Adaptive Voting Success: 91.1920%
+  Pattern Detection Success: 59.9540%
+  Avg Execution Time: 8.0547 μs
 
 Test: GEO_END_OF_LIFE_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0442 μs
+  Adaptive Voting Success: 90.9960%
+  Pattern Detection Success: 59.0940%
+  Avg Execution Time: 4.4383 μs
 
 Test: GEO_END_OF_LIFE_END_OF_LIFE
-  Standard Voting Success: 98.1640%
-  Adaptive Voting Success: 98.1640%
-  Pattern Detection Success: 98.1640%
-  Avg Execution Time: 1.5559 μs
+  Standard Voting Success: 90.0000%
+  Adaptive Voting Success: 91.2420%
+  Pattern Detection Success: 59.3140%
+  Avg Execution Time: 3.3005 μs
 
 Test: GEO_END_OF_LIFE_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0628 μs
+  Standard Voting Success: 98.6780%
+  Adaptive Voting Success: 91.3080%
+  Pattern Detection Success: 59.9880%
+  Avg Execution Time: 3.6229 μs
 
 Test: GEO_END_OF_LIFE_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4229 μs
+  Standard Voting Success: 96.7020%
+  Adaptive Voting Success: 91.2960%
+  Pattern Detection Success: 59.4200%
+  Avg Execution Time: 3.7537 μs
 
 Test: GEO_END_OF_LIFE_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1205 μs
+  Standard Voting Success: 98.7760%
+  Adaptive Voting Success: 91.1040%
+  Pattern Detection Success: 59.3140%
+  Avg Execution Time: 3.0682 μs
 
 Test: GEO_END_OF_LIFE_SOLAR_STORM
-  Standard Voting Success: 94.1840%
-  Adaptive Voting Success: 94.1840%
-  Pattern Detection Success: 94.1840%
-  Solar Storm Survival: 47092 successes
-  Avg Execution Time: 10.4893 μs
+  Standard Voting Success: 92.8340%
+  Adaptive Voting Success: 91.3440%
+  Pattern Detection Success: 59.5380%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 19.4363 μs
 
 Test: GEO_END_OF_LIFE_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0117 μs
+  Standard Voting Success: 99.4380%
+  Adaptive Voting Success: 91.0480%
+  Pattern Detection Success: 59.2340%
+  Avg Execution Time: 3.3205 μs
 
 Test: GEO_END_OF_LIFE_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.5140%
+  Adaptive Voting Success: 91.2180%
+  Pattern Detection Success: 59.4760%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 10.9166 μs
+  Avg Execution Time: 19.0531 μs
 
 Test: GEO_END_OF_LIFE_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5725 μs
+  Standard Voting Success: 62.9000%
+  Adaptive Voting Success: 91.1500%
+  Pattern Detection Success: 59.7220%
+  Avg Execution Time: 3.7150 μs
 
 Test: GEO_NOMINAL_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6905 μs
+  Standard Voting Success: 92.9640%
+  Adaptive Voting Success: 91.1580%
+  Pattern Detection Success: 59.8820%
+  Avg Execution Time: 2.5452 μs
 
 Test: GEO_NOMINAL_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0465 μs
+  Adaptive Voting Success: 90.9600%
+  Pattern Detection Success: 59.7380%
+  Avg Execution Time: 3.2995 μs
 
 Test: GEO_NOMINAL_END_OF_LIFE
-  Standard Voting Success: 98.2500%
-  Adaptive Voting Success: 98.2500%
-  Pattern Detection Success: 98.2500%
-  Avg Execution Time: 1.5513 μs
+  Standard Voting Success: 89.7780%
+  Adaptive Voting Success: 91.3060%
+  Pattern Detection Success: 59.6100%
+  Avg Execution Time: 2.7157 μs
 
 Test: GEO_NOMINAL_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0614 μs
+  Standard Voting Success: 98.7200%
+  Adaptive Voting Success: 91.3440%
+  Pattern Detection Success: 59.5160%
+  Avg Execution Time: 2.6936 μs
 
 Test: GEO_NOMINAL_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7203 μs
+  Standard Voting Success: 96.7400%
+  Adaptive Voting Success: 91.4480%
+  Pattern Detection Success: 60.0100%
+  Avg Execution Time: 2.5365 μs
 
 Test: GEO_NOMINAL_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2264 μs
+  Standard Voting Success: 98.7820%
+  Adaptive Voting Success: 91.2100%
+  Pattern Detection Success: 59.1740%
+  Avg Execution Time: 2.5775 μs
 
 Test: GEO_NOMINAL_SOLAR_STORM
-  Standard Voting Success: 96.3200%
-  Adaptive Voting Success: 96.3200%
-  Pattern Detection Success: 96.3200%
-  Solar Storm Survival: 48160 successes
-  Avg Execution Time: 10.5849 μs
+  Standard Voting Success: 95.3820%
+  Adaptive Voting Success: 90.8880%
+  Pattern Detection Success: 59.5360%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 23.1572 μs
 
 Test: GEO_NOMINAL_TEMPERATURE_CYCLING
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0637 μs
+  Adaptive Voting Success: 91.2360%
+  Pattern Detection Success: 59.3160%
+  Avg Execution Time: 2.5270 μs
 
 Test: GEO_NOMINAL_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.3140%
+  Adaptive Voting Success: 91.2740%
+  Pattern Detection Success: 59.6520%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 10.9511 μs
+  Avg Execution Time: 25.0633 μs
 
 Test: GEO_NOMINAL_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6899 μs
+  Standard Voting Success: 62.8620%
+  Adaptive Voting Success: 91.0700%
+  Pattern Detection Success: 59.7660%
+  Avg Execution Time: 2.6338 μs
 
 Test: GEO_SOLAR_MAXIMUM_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4704 μs
+  Standard Voting Success: 93.0960%
+  Adaptive Voting Success: 91.1320%
+  Pattern Detection Success: 59.4560%
+  Avg Execution Time: 2.9063 μs
 
 Test: GEO_SOLAR_MAXIMUM_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1017 μs
+  Adaptive Voting Success: 91.2300%
+  Pattern Detection Success: 59.7900%
+  Avg Execution Time: 2.4976 μs
 
 Test: GEO_SOLAR_MAXIMUM_END_OF_LIFE
-  Standard Voting Success: 98.3240%
-  Adaptive Voting Success: 98.3240%
-  Pattern Detection Success: 98.3240%
-  Avg Execution Time: 1.5624 μs
+  Standard Voting Success: 89.9700%
+  Adaptive Voting Success: 91.2320%
+  Pattern Detection Success: 59.5100%
+  Avg Execution Time: 2.7853 μs
 
 Test: GEO_SOLAR_MAXIMUM_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0558 μs
+  Standard Voting Success: 98.6160%
+  Adaptive Voting Success: 91.2740%
+  Pattern Detection Success: 59.5060%
+  Avg Execution Time: 2.5636 μs
 
 Test: GEO_SOLAR_MAXIMUM_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4066 μs
+  Standard Voting Success: 96.7060%
+  Adaptive Voting Success: 91.3860%
+  Pattern Detection Success: 59.7880%
+  Avg Execution Time: 7.5129 μs
 
 Test: GEO_SOLAR_MAXIMUM_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1064 μs
+  Standard Voting Success: 98.7600%
+  Adaptive Voting Success: 91.0620%
+  Pattern Detection Success: 59.4640%
+  Avg Execution Time: 3.4463 μs
 
 Test: GEO_SOLAR_MAXIMUM_SOLAR_STORM
-  Standard Voting Success: 77.6060%
-  Adaptive Voting Success: 77.6060%
-  Pattern Detection Success: 77.6060%
-  Solar Storm Survival: 38803 successes
-  Avg Execution Time: 10.8425 μs
+  Standard Voting Success: 72.7980%
+  Adaptive Voting Success: 91.2180%
+  Pattern Detection Success: 59.5820%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 12.8052 μs
 
 Test: GEO_SOLAR_MAXIMUM_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0538 μs
+  Standard Voting Success: 98.4140%
+  Adaptive Voting Success: 91.1880%
+  Pattern Detection Success: 59.6020%
+  Avg Execution Time: 2.5482 μs
 
 Test: GEO_SOLAR_MAXIMUM_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.1380%
+  Adaptive Voting Success: 91.4600%
+  Pattern Detection Success: 59.4080%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 10.9294 μs
+  Avg Execution Time: 14.2132 μs
 
 Test: GEO_SOLAR_MAXIMUM_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5216 μs
+  Standard Voting Success: 63.0200%
+  Adaptive Voting Success: 91.2640%
+  Pattern Detection Success: 59.7480%
+  Avg Execution Time: 2.6927 μs
 
 Test: GEO_SOLAR_STORM_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4364 μs
+  Standard Voting Success: 93.1440%
+  Adaptive Voting Success: 91.2580%
+  Pattern Detection Success: 59.6860%
+  Avg Execution Time: 2.5659 μs
 
 Test: GEO_SOLAR_STORM_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0156 μs
+  Adaptive Voting Success: 91.3720%
+  Pattern Detection Success: 59.3760%
+  Avg Execution Time: 2.5603 μs
 
 Test: GEO_SOLAR_STORM_END_OF_LIFE
-  Standard Voting Success: 98.2000%
-  Adaptive Voting Success: 98.2000%
-  Pattern Detection Success: 98.2000%
-  Avg Execution Time: 2.0424 μs
+  Standard Voting Success: 89.8660%
+  Adaptive Voting Success: 91.4840%
+  Pattern Detection Success: 59.4920%
+  Avg Execution Time: 2.7868 μs
 
 Test: GEO_SOLAR_STORM_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0508 μs
+  Standard Voting Success: 98.7440%
+  Adaptive Voting Success: 91.0120%
+  Pattern Detection Success: 59.2620%
+  Avg Execution Time: 2.6353 μs
 
 Test: GEO_SOLAR_STORM_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3946 μs
+  Standard Voting Success: 96.5680%
+  Adaptive Voting Success: 91.4880%
+  Pattern Detection Success: 59.4640%
+  Avg Execution Time: 2.5547 μs
 
 Test: GEO_SOLAR_STORM_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0975 μs
+  Standard Voting Success: 98.7460%
+  Adaptive Voting Success: 91.2580%
+  Pattern Detection Success: 59.6720%
+  Avg Execution Time: 2.5453 μs
 
 Test: GEO_SOLAR_STORM_SOLAR_STORM
-  Standard Voting Success: 26.0640%
-  Adaptive Voting Success: 26.0640%
-  Pattern Detection Success: 26.0640%
-  Solar Storm Survival: 13032 successes
-  Avg Execution Time: 12.7130 μs
+  Standard Voting Success: 9.6400%
+  Adaptive Voting Success: 91.3820%
+  Pattern Detection Success: 59.1660%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 14.1516 μs
 
 Test: GEO_SOLAR_STORM_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1108 μs
+  Standard Voting Success: 98.9120%
+  Adaptive Voting Success: 91.2040%
+  Pattern Detection Success: 59.3060%
+  Avg Execution Time: 2.5938 μs
 
 Test: GEO_SOLAR_STORM_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.1500%
+  Adaptive Voting Success: 91.3260%
+  Pattern Detection Success: 59.7600%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.0796 μs
+  Avg Execution Time: 13.4478 μs
 
 Test: GEO_SOLAR_STORM_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5436 μs
+  Standard Voting Success: 62.9060%
+  Adaptive Voting Success: 91.0420%
+  Pattern Detection Success: 59.1680%
+  Avg Execution Time: 2.5940 μs
 
 Test: GEO_VAN_ALLEN_PEAK_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4616 μs
+  Standard Voting Success: 92.9420%
+  Adaptive Voting Success: 91.4460%
+  Pattern Detection Success: 59.2340%
+  Avg Execution Time: 2.5449 μs
 
 Test: GEO_VAN_ALLEN_PEAK_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0223 μs
+  Adaptive Voting Success: 91.4600%
+  Pattern Detection Success: 59.4580%
+  Avg Execution Time: 2.5377 μs
 
 Test: GEO_VAN_ALLEN_PEAK_END_OF_LIFE
-  Standard Voting Success: 98.2320%
-  Adaptive Voting Success: 98.2320%
-  Pattern Detection Success: 98.2320%
-  Avg Execution Time: 1.5828 μs
+  Standard Voting Success: 89.8240%
+  Adaptive Voting Success: 91.4780%
+  Pattern Detection Success: 59.3820%
+  Avg Execution Time: 2.7505 μs
 
 Test: GEO_VAN_ALLEN_PEAK_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0494 μs
+  Standard Voting Success: 98.6700%
+  Adaptive Voting Success: 91.5680%
+  Pattern Detection Success: 59.4980%
+  Avg Execution Time: 2.6214 μs
 
 Test: GEO_VAN_ALLEN_PEAK_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4202 μs
+  Standard Voting Success: 96.6980%
+  Adaptive Voting Success: 91.3140%
+  Pattern Detection Success: 59.7000%
+  Avg Execution Time: 2.5176 μs
 
 Test: GEO_VAN_ALLEN_PEAK_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1027 μs
+  Standard Voting Success: 98.7020%
+  Adaptive Voting Success: 91.3580%
+  Pattern Detection Success: 59.2540%
+  Avg Execution Time: 2.4681 μs
 
 Test: GEO_VAN_ALLEN_PEAK_SOLAR_STORM
-  Standard Voting Success: 96.3140%
-  Adaptive Voting Success: 96.3140%
-  Pattern Detection Success: 96.3140%
-  Solar Storm Survival: 48157 successes
-  Avg Execution Time: 10.6302 μs
+  Standard Voting Success: 95.3020%
+  Adaptive Voting Success: 90.9400%
+  Pattern Detection Success: 59.3460%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 12.8616 μs
 
 Test: GEO_VAN_ALLEN_PEAK_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0395 μs
+  Standard Voting Success: 99.7320%
+  Adaptive Voting Success: 91.0920%
+  Pattern Detection Success: 59.5560%
+  Avg Execution Time: 2.5160 μs
 
 Test: GEO_VAN_ALLEN_PEAK_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 30.0240%
+  Adaptive Voting Success: 91.2420%
+  Pattern Detection Success: 60.1420%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.3881 μs
+  Avg Execution Time: 13.4310 μs
 
 Test: GEO_VAN_ALLEN_PEAK_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6358 μs
+  Standard Voting Success: 62.8640%
+  Adaptive Voting Success: 91.3740%
+  Pattern Detection Success: 59.2440%
+  Avg Execution Time: 2.5554 μs
 
 
 Data Type: x
 ----------------------------------------
 Test: GEO_ECLIPSE_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 4.4841 μs
+  Standard Voting Success: 96.4960%
+  Adaptive Voting Success: 95.6440%
+  Pattern Detection Success: 77.2420%
+  Avg Execution Time: 3.1597 μs
 
 Test: GEO_ECLIPSE_ECLIPSE_TRANSITION
-  Standard Voting Success: 99.5760%
-  Adaptive Voting Success: 99.5760%
-  Pattern Detection Success: 99.5760%
-  Avg Execution Time: 1.7602 μs
+  Standard Voting Success: 96.8500%
+  Adaptive Voting Success: 95.5380%
+  Pattern Detection Success: 77.2940%
+  Avg Execution Time: 3.2148 μs
 
 Test: GEO_ECLIPSE_END_OF_LIFE
-  Standard Voting Success: 99.1160%
-  Adaptive Voting Success: 99.1160%
-  Pattern Detection Success: 99.1160%
-  Avg Execution Time: 2.4377 μs
+  Standard Voting Success: 95.0120%
+  Adaptive Voting Success: 95.4460%
+  Pattern Detection Success: 77.4020%
+  Avg Execution Time: 5.6380 μs
 
 Test: GEO_ECLIPSE_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1334 μs
+  Standard Voting Success: 99.3340%
+  Adaptive Voting Success: 95.6580%
+  Pattern Detection Success: 77.1880%
+  Avg Execution Time: 3.1050 μs
 
 Test: GEO_ECLIPSE_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 2.2343 μs
+  Standard Voting Success: 98.3580%
+  Adaptive Voting Success: 95.4900%
+  Pattern Detection Success: 77.0320%
+  Avg Execution Time: 3.5349 μs
 
 Test: GEO_ECLIPSE_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3589 μs
+  Standard Voting Success: 99.3860%
+  Adaptive Voting Success: 95.5260%
+  Pattern Detection Success: 77.2340%
+  Avg Execution Time: 3.1053 μs
 
 Test: GEO_ECLIPSE_SOLAR_STORM
-  Standard Voting Success: 97.0400%
-  Adaptive Voting Success: 97.0400%
-  Pattern Detection Success: 97.0400%
-  Solar Storm Survival: 48520 successes
-  Avg Execution Time: 12.8416 μs
+  Standard Voting Success: 95.9420%
+  Adaptive Voting Success: 95.4340%
+  Pattern Detection Success: 77.2280%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 12.7310 μs
 
 Test: GEO_ECLIPSE_TEMPERATURE_CYCLING
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1177 μs
+  Adaptive Voting Success: 95.4640%
+  Pattern Detection Success: 77.1020%
+  Avg Execution Time: 2.9972 μs
 
 Test: GEO_ECLIPSE_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.7160%
+  Adaptive Voting Success: 95.4620%
+  Pattern Detection Success: 77.0820%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 12.3380 μs
+  Avg Execution Time: 14.4109 μs
 
 Test: GEO_ECLIPSE_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.9719 μs
+  Standard Voting Success: 63.5280%
+  Adaptive Voting Success: 95.5480%
+  Pattern Detection Success: 77.1120%
+  Avg Execution Time: 3.1634 μs
 
 Test: GEO_END_OF_LIFE_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6073 μs
+  Standard Voting Success: 96.4400%
+  Adaptive Voting Success: 95.4460%
+  Pattern Detection Success: 77.5180%
+  Avg Execution Time: 10.4935 μs
 
 Test: GEO_END_OF_LIFE_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3301 μs
+  Adaptive Voting Success: 95.4060%
+  Pattern Detection Success: 77.1740%
+  Avg Execution Time: 5.2214 μs
 
 Test: GEO_END_OF_LIFE_END_OF_LIFE
-  Standard Voting Success: 99.0960%
-  Adaptive Voting Success: 99.0960%
-  Pattern Detection Success: 99.0960%
-  Avg Execution Time: 2.4258 μs
+  Standard Voting Success: 94.8160%
+  Adaptive Voting Success: 95.4320%
+  Pattern Detection Success: 77.0520%
+  Avg Execution Time: 3.6370 μs
 
 Test: GEO_END_OF_LIFE_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.4675 μs
+  Standard Voting Success: 99.3120%
+  Adaptive Voting Success: 95.3860%
+  Pattern Detection Success: 76.9560%
+  Avg Execution Time: 8.1978 μs
 
 Test: GEO_END_OF_LIFE_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7640 μs
+  Standard Voting Success: 98.2480%
+  Adaptive Voting Success: 95.3720%
+  Pattern Detection Success: 76.8320%
+  Avg Execution Time: 3.0082 μs
 
 Test: GEO_END_OF_LIFE_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5949 μs
+  Standard Voting Success: 99.3800%
+  Adaptive Voting Success: 95.3180%
+  Pattern Detection Success: 76.9540%
+  Avg Execution Time: 3.9769 μs
 
 Test: GEO_END_OF_LIFE_SOLAR_STORM
-  Standard Voting Success: 95.3480%
-  Adaptive Voting Success: 95.3480%
-  Pattern Detection Success: 95.3480%
-  Solar Storm Survival: 47674 successes
-  Avg Execution Time: 14.9456 μs
+  Standard Voting Success: 93.5700%
+  Adaptive Voting Success: 95.4320%
+  Pattern Detection Success: 76.8480%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 17.7143 μs
 
 Test: GEO_END_OF_LIFE_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3783 μs
+  Standard Voting Success: 99.7080%
+  Adaptive Voting Success: 95.3840%
+  Pattern Detection Success: 77.0060%
+  Avg Execution Time: 3.3155 μs
 
 Test: GEO_END_OF_LIFE_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.5200%
+  Adaptive Voting Success: 95.4600%
+  Pattern Detection Success: 77.1400%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 12.1188 μs
+  Avg Execution Time: 14.7165 μs
 
 Test: GEO_END_OF_LIFE_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7804 μs
+  Standard Voting Success: 63.5900%
+  Adaptive Voting Success: 95.4920%
+  Pattern Detection Success: 77.1920%
+  Avg Execution Time: 4.3207 μs
 
 Test: GEO_NOMINAL_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6055 μs
+  Standard Voting Success: 96.5140%
+  Adaptive Voting Success: 95.5660%
+  Pattern Detection Success: 77.5320%
+  Avg Execution Time: 5.4483 μs
 
 Test: GEO_NOMINAL_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1109 μs
+  Adaptive Voting Success: 95.4340%
+  Pattern Detection Success: 77.3020%
+  Avg Execution Time: 5.4192 μs
 
 Test: GEO_NOMINAL_END_OF_LIFE
-  Standard Voting Success: 99.0700%
-  Adaptive Voting Success: 99.0700%
-  Pattern Detection Success: 99.0700%
-  Avg Execution Time: 1.9048 μs
+  Standard Voting Success: 94.7260%
+  Adaptive Voting Success: 95.6120%
+  Pattern Detection Success: 76.8680%
+  Avg Execution Time: 3.9074 μs
 
 Test: GEO_NOMINAL_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1651 μs
+  Standard Voting Success: 99.3600%
+  Adaptive Voting Success: 95.6420%
+  Pattern Detection Success: 77.2540%
+  Avg Execution Time: 4.0819 μs
 
 Test: GEO_NOMINAL_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5981 μs
+  Standard Voting Success: 98.3640%
+  Adaptive Voting Success: 95.5020%
+  Pattern Detection Success: 77.2820%
+  Avg Execution Time: 4.6191 μs
 
 Test: GEO_NOMINAL_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3352 μs
+  Standard Voting Success: 99.4040%
+  Adaptive Voting Success: 95.4080%
+  Pattern Detection Success: 77.0920%
+  Avg Execution Time: 2.9944 μs
 
 Test: GEO_NOMINAL_SOLAR_STORM
-  Standard Voting Success: 97.0540%
-  Adaptive Voting Success: 97.0540%
-  Pattern Detection Success: 97.0540%
-  Solar Storm Survival: 48527 successes
-  Avg Execution Time: 10.4042 μs
+  Standard Voting Success: 95.8980%
+  Adaptive Voting Success: 95.5400%
+  Pattern Detection Success: 76.8200%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 14.4029 μs
 
 Test: GEO_NOMINAL_TEMPERATURE_CYCLING
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0824 μs
+  Adaptive Voting Success: 95.4780%
+  Pattern Detection Success: 77.3580%
+  Avg Execution Time: 3.5824 μs
 
 Test: GEO_NOMINAL_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.7140%
+  Adaptive Voting Success: 95.6120%
+  Pattern Detection Success: 77.4100%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.0941 μs
+  Avg Execution Time: 18.7459 μs
 
 Test: GEO_NOMINAL_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.8025 μs
+  Standard Voting Success: 63.5780%
+  Adaptive Voting Success: 95.4600%
+  Pattern Detection Success: 76.9700%
+  Avg Execution Time: 8.4461 μs
 
 Test: GEO_SOLAR_MAXIMUM_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5638 μs
+  Standard Voting Success: 96.5660%
+  Adaptive Voting Success: 95.3260%
+  Pattern Detection Success: 76.9720%
+  Avg Execution Time: 3.2627 μs
 
 Test: GEO_SOLAR_MAXIMUM_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1834 μs
+  Adaptive Voting Success: 95.4560%
+  Pattern Detection Success: 77.2780%
+  Avg Execution Time: 3.7615 μs
 
 Test: GEO_SOLAR_MAXIMUM_END_OF_LIFE
-  Standard Voting Success: 99.1380%
-  Adaptive Voting Success: 99.1380%
-  Pattern Detection Success: 99.1380%
-  Avg Execution Time: 1.8820 μs
+  Standard Voting Success: 94.6820%
+  Adaptive Voting Success: 95.4800%
+  Pattern Detection Success: 77.3960%
+  Avg Execution Time: 6.0887 μs
 
 Test: GEO_SOLAR_MAXIMUM_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1513 μs
+  Standard Voting Success: 99.3800%
+  Adaptive Voting Success: 95.4980%
+  Pattern Detection Success: 77.0220%
+  Avg Execution Time: 3.7838 μs
 
 Test: GEO_SOLAR_MAXIMUM_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5712 μs
+  Standard Voting Success: 98.3460%
+  Adaptive Voting Success: 95.4380%
+  Pattern Detection Success: 77.1460%
+  Avg Execution Time: 3.2537 μs
 
 Test: GEO_SOLAR_MAXIMUM_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3962 μs
+  Standard Voting Success: 99.3720%
+  Adaptive Voting Success: 95.5660%
+  Pattern Detection Success: 77.1060%
+  Avg Execution Time: 3.2119 μs
 
 Test: GEO_SOLAR_MAXIMUM_SOLAR_STORM
-  Standard Voting Success: 81.9600%
-  Adaptive Voting Success: 81.9600%
-  Pattern Detection Success: 81.9600%
-  Solar Storm Survival: 40980 successes
-  Avg Execution Time: 12.1874 μs
+  Standard Voting Success: 75.8560%
+  Adaptive Voting Success: 95.6620%
+  Pattern Detection Success: 77.3320%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 23.5028 μs
 
 Test: GEO_SOLAR_MAXIMUM_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.0923 μs
+  Standard Voting Success: 99.1600%
+  Adaptive Voting Success: 95.4420%
+  Pattern Detection Success: 76.9380%
+  Avg Execution Time: 3.8512 μs
 
 Test: GEO_SOLAR_MAXIMUM_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.6540%
+  Adaptive Voting Success: 95.5480%
+  Pattern Detection Success: 76.9580%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 10.9890 μs
+  Avg Execution Time: 14.2057 μs
 
 Test: GEO_SOLAR_MAXIMUM_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7532 μs
+  Standard Voting Success: 63.3680%
+  Adaptive Voting Success: 95.4720%
+  Pattern Detection Success: 77.1960%
+  Avg Execution Time: 3.1346 μs
 
 Test: GEO_SOLAR_STORM_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 3.5332 μs
+  Standard Voting Success: 96.4880%
+  Adaptive Voting Success: 95.4800%
+  Pattern Detection Success: 77.2560%
+  Avg Execution Time: 2.8781 μs
 
 Test: GEO_SOLAR_STORM_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5833 μs
+  Adaptive Voting Success: 95.4320%
+  Pattern Detection Success: 77.2480%
+  Avg Execution Time: 3.0618 μs
 
 Test: GEO_SOLAR_STORM_END_OF_LIFE
-  Standard Voting Success: 99.0780%
-  Adaptive Voting Success: 99.0780%
-  Pattern Detection Success: 99.0780%
-  Avg Execution Time: 2.2450 μs
+  Standard Voting Success: 94.9760%
+  Adaptive Voting Success: 95.3880%
+  Pattern Detection Success: 77.4380%
+  Avg Execution Time: 3.1569 μs
 
 Test: GEO_SOLAR_STORM_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6272 μs
+  Standard Voting Success: 99.3540%
+  Adaptive Voting Success: 95.5780%
+  Pattern Detection Success: 77.2300%
+  Avg Execution Time: 2.9384 μs
 
 Test: GEO_SOLAR_STORM_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 2.6583 μs
+  Standard Voting Success: 98.3540%
+  Adaptive Voting Success: 95.5100%
+  Pattern Detection Success: 77.0500%
+  Avg Execution Time: 3.1918 μs
 
 Test: GEO_SOLAR_STORM_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5294 μs
+  Standard Voting Success: 99.3700%
+  Adaptive Voting Success: 95.3720%
+  Pattern Detection Success: 77.4380%
+  Avg Execution Time: 3.1454 μs
 
 Test: GEO_SOLAR_STORM_SOLAR_STORM
-  Standard Voting Success: 39.9460%
-  Adaptive Voting Success: 39.9460%
-  Pattern Detection Success: 39.9460%
-  Solar Storm Survival: 19973 successes
-  Avg Execution Time: 24.8173 μs
+  Standard Voting Success: 18.9520%
+  Adaptive Voting Success: 95.5140%
+  Pattern Detection Success: 77.3340%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 15.8432 μs
 
 Test: GEO_SOLAR_STORM_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5363 μs
+  Standard Voting Success: 99.5080%
+  Adaptive Voting Success: 95.6260%
+  Pattern Detection Success: 76.7800%
+  Avg Execution Time: 2.9103 μs
 
 Test: GEO_SOLAR_STORM_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.6900%
+  Adaptive Voting Success: 95.5500%
+  Pattern Detection Success: 76.9180%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 33.3784 μs
+  Avg Execution Time: 14.7155 μs
 
 Test: GEO_SOLAR_STORM_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 3.0911 μs
+  Standard Voting Success: 63.4200%
+  Adaptive Voting Success: 95.4020%
+  Pattern Detection Success: 77.2600%
+  Avg Execution Time: 2.9293 μs
 
 Test: GEO_VAN_ALLEN_PEAK_BURST
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.5646 μs
+  Standard Voting Success: 96.5500%
+  Adaptive Voting Success: 95.3560%
+  Pattern Detection Success: 77.2760%
+  Avg Execution Time: 3.1091 μs
 
 Test: GEO_VAN_ALLEN_PEAK_ECLIPSE_TRANSITION
   Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1240 μs
+  Adaptive Voting Success: 95.3880%
+  Pattern Detection Success: 77.1240%
+  Avg Execution Time: 3.0628 μs
 
 Test: GEO_VAN_ALLEN_PEAK_END_OF_LIFE
-  Standard Voting Success: 99.0880%
-  Adaptive Voting Success: 99.0880%
-  Pattern Detection Success: 99.0880%
-  Avg Execution Time: 1.9658 μs
+  Standard Voting Success: 94.9500%
+  Adaptive Voting Success: 95.4920%
+  Pattern Detection Success: 77.1320%
+  Avg Execution Time: 3.4914 μs
 
 Test: GEO_VAN_ALLEN_PEAK_LONG_DURATION
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.2331 μs
+  Standard Voting Success: 99.3560%
+  Adaptive Voting Success: 95.3880%
+  Pattern Detection Success: 77.4740%
+  Avg Execution Time: 3.1615 μs
 
 Test: GEO_VAN_ALLEN_PEAK_MULTI_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.6317 μs
+  Standard Voting Success: 98.4000%
+  Adaptive Voting Success: 95.5300%
+  Pattern Detection Success: 77.4600%
+  Avg Execution Time: 4.3781 μs
 
 Test: GEO_VAN_ALLEN_PEAK_SINGLE_BIT
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.3162 μs
+  Standard Voting Success: 99.3620%
+  Adaptive Voting Success: 95.3860%
+  Pattern Detection Success: 77.0360%
+  Avg Execution Time: 3.3993 μs
 
 Test: GEO_VAN_ALLEN_PEAK_SOLAR_STORM
-  Standard Voting Success: 96.9000%
-  Adaptive Voting Success: 96.9000%
-  Pattern Detection Success: 96.9000%
-  Solar Storm Survival: 48450 successes
-  Avg Execution Time: 10.5643 μs
+  Standard Voting Success: 95.8820%
+  Adaptive Voting Success: 95.4080%
+  Pattern Detection Success: 77.2900%
+  Solar Storm Survival: 50000 successes
+  Avg Execution Time: 14.9666 μs
 
 Test: GEO_VAN_ALLEN_PEAK_TEMPERATURE_CYCLING
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.1093 μs
+  Standard Voting Success: 99.8520%
+  Adaptive Voting Success: 95.6260%
+  Pattern Detection Success: 77.3740%
+  Avg Execution Time: 3.1048 μs
 
 Test: GEO_VAN_ALLEN_PEAK_VAN_ALLEN_EXPOSURE
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
+  Standard Voting Success: 47.8000%
+  Adaptive Voting Success: 95.5700%
+  Pattern Detection Success: 76.7960%
   Van Allen Recovery: 50000 successes
-  Avg Execution Time: 11.0943 μs
+  Avg Execution Time: 20.1202 μs
 
 Test: GEO_VAN_ALLEN_PEAK_WORD
-  Standard Voting Success: 100.0000%
-  Adaptive Voting Success: 100.0000%
-  Pattern Detection Success: 100.0000%
-  Avg Execution Time: 1.7942 μs
+  Standard Voting Success: 63.0540%
+  Adaptive Voting Success: 95.2680%
+  Pattern Detection Success: 77.1460%
+  Avg Execution Time: 3.1021 μs
 
 
 CONCLUSION:

@@ -16,6 +16,12 @@ target_link_libraries(space_monte_carlo_validation rad_ml_tmr rad_ml_testing)
 target_compile_definitions(space_monte_carlo_validation PRIVATE ENABLE_TESTING=1)
 add_test(NAME space_monte_carlo_validation COMMAND space_monte_carlo_validation)
 
+# Add executable for GEO mission validation test
+add_executable(geo_mission_validation geo_mission_validation.cpp)
+target_link_libraries(geo_mission_validation rad_ml_tmr rad_ml_testing rad_ml_qft)
+target_compile_definitions(geo_mission_validation PRIVATE ENABLE_TESTING=1)
+add_test(NAME geo_mission_validation COMMAND geo_mission_validation)
+
 # Add executable for realistic space radiation validation
 add_executable(realistic_space_validation realistic_space_validation.cpp)
 target_link_libraries(realistic_space_validation rad_ml_tmr rad_ml_testing)
