@@ -288,6 +288,15 @@ target_link_libraries(space_monte_carlo_validation rad_ml_tmr rad_ml_testing)
 target_compile_definitions(space_monte_carlo_validation PRIVATE ENABLE_TESTING=1)
 add_test(NAME space_monte_carlo_validation COMMAND space_monte_carlo_validation)
 
+# Add executable for GEO mission validation test
+add_executable(geo_mission_validation test/verification/geo_mission_validation.cpp)
+target_link_libraries(geo_mission_validation rad_ml_tmr rad_ml_testing rad_ml_qft)
+if(ENABLE_PYTORCH AND PyTorch_FOUND)
+  target_link_libraries(geo_mission_validation rad_ml_pytorch)
+endif()
+target_compile_definitions(geo_mission_validation PRIVATE ENABLE_TESTING=1)
+add_test(NAME geo_mission_validation COMMAND geo_mission_validation)
+
 # Add the realistic space validation test
 add_executable(realistic_space_validation test/verification/realistic_space_validation.cpp)
 target_link_libraries(realistic_space_validation rad_ml_tmr rad_ml_testing)
