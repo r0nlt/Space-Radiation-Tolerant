@@ -69,16 +69,74 @@ int main(int argc, char** argv)
         size_t schedule_interval = 2;  // 0 = every gen
         size_t freeze_after_gen = 4;   // SIZE_MAX like behavior not needed here
 
-        // Parse super simple CLI: --trials N --schedule K --freeze G
-        for (int i = 1; i + 1 < argc; ++i) {
+        // Parse CLI: --trials N --schedule K --freeze G
+        bool trials_set = false, schedule_set = false, freeze_set = false;
+        for (int i = 1; i < argc; ++i) {
             if (std::strcmp(argv[i], "--trials") == 0) {
-                trials = static_cast<size_t>(std::stoul(argv[i + 1]));
+                if (trials_set) {
+                    std::cerr << "Error: --trials specified more than once.\n";
+                    std::exit(1);
+                }
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --trials requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    trials = static_cast<size_t>(std::stoul(argv[i + 1]));
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --trials: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                trials_set = true;
+                ++i;
             }
             else if (std::strcmp(argv[i], "--schedule") == 0) {
-                schedule_interval = static_cast<size_t>(std::stoul(argv[i + 1]));
+                if (schedule_set) {
+                    std::cerr << "Error: --schedule specified more than once.\n";
+                    std::exit(1);
+                }
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --schedule requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    schedule_interval = static_cast<size_t>(std::stoul(argv[i + 1]));
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --schedule: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                schedule_set = true;
+                ++i;
             }
             else if (std::strcmp(argv[i], "--freeze") == 0) {
-                freeze_after_gen = static_cast<size_t>(std::stoul(argv[i + 1]));
+                if (freeze_set) {
+                    std::cerr << "Error: --freeze specified more than once.\n";
+                    std::exit(1);
+                }
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --freeze requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    freeze_after_gen = static_cast<size_t>(std::stoul(argv[i + 1]));
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --freeze: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                freeze_set = true;
+                ++i;
+            }
+            else if (std::strcmp(argv[i], "--help") == 0 || std::strcmp(argv[i], "-h") == 0) {
+                std::cout << "Usage: " << argv[0] << " [--trials N] [--schedule K] [--freeze G]\n";
+                std::exit(0);
+            }
+            else {
+                std::cerr << "Unknown argument: " << argv[i] << "\n";
+                std::cout << "Usage: " << argv[0] << " [--trials N] [--schedule K] [--freeze G]\n";
+                std::exit(1);
             }
         }
 
@@ -159,6 +217,8 @@ int main(int argc, char** argv)
                 std::ifstream src("operator_stats.csv", std::ios::binary);
                 std::ofstream dst(out_name, std::ios::binary);
                 dst << src.rdbuf();
+                // Truncate original to avoid stale data on subsequent runs
+                std::ofstream trunc("operator_stats.csv", std::ios::trunc);
             }
         }
 
