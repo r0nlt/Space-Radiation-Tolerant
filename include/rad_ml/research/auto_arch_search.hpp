@@ -12,6 +12,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <rad_ml/neural/protected_neural_network.hpp>
 #include <rad_ml/research/architecture_tester.hpp>
 #include <rad_ml/sim/environment.hpp>
@@ -63,6 +64,8 @@ class AdaptiveMutationController {
     std::vector<MutationOperator> mutation_operators_;
     std::vector<double> operator_probabilities_;
     std::mt19937* random_generator_;
+    // Track last selected operator index for external accounting
+    size_t last_selected_operator_index_ = 0;
 
     // Learning parameters
     const double learning_rate_ = 0.1;
@@ -94,6 +97,11 @@ class AdaptiveMutationController {
     NetworkConfig adaptiveMutate(const NetworkConfig& config, double base_rate);
 
     /**
+     * @brief Get the index of the last mutation operator selected
+     */
+    size_t getLastSelectedOperatorIndex() const { return last_selected_operator_index_; }
+
+    /**
      * @brief Update operator credits based on fitness improvements
      * @param improvement_scores Vector of fitness improvements for recent mutations
      * @param used_operators Vector of operator indices used for those mutations
@@ -106,6 +114,16 @@ class AdaptiveMutationController {
      * @return Vector of operator statistics (name, applications, success_rate, credit_score)
      */
     std::vector<std::tuple<std::string, int, double, double>> getOperatorStatistics() const;
+
+    /**
+     * @brief Get current selection probabilities for mutation operators
+     */
+    std::vector<double> getOperatorProbabilities() const { return operator_probabilities_; }
+
+    /**
+     * @brief Get current exploration factor (epsilon) used for epsilon-greedy selection
+     */
+    double getExplorationFactor() const { return exploration_factor_; }
 
     /**
      * @brief Reset all operator statistics (useful for new evolutionary runs)
@@ -355,6 +373,22 @@ class AutoArchSearch {
                              double max_rate = 0.5, double min_rate = 0.01);
 
     /**
+     * @brief Decouple policy: compute mutation rate only every K generations (0 = every gen)
+     */
+    void setMutationRateSchedule(size_t schedule_interval)
+    {
+        mutation_rate_schedule_interval_ = schedule_interval;
+    }
+
+    /**
+     * @brief Decouple policy: freeze mutation rate after this generation index (SIZE_MAX = never)
+     */
+    void setMutationRateFreezeGeneration(size_t freeze_after_gen)
+    {
+        mutation_rate_freeze_after_gen_ = freeze_after_gen;
+    }
+
+    /**
      * @brief Get all tested configurations
      *
      * @return Map of configurations and their results
@@ -434,6 +468,11 @@ class AutoArchSearch {
 
     // Allow AdaptiveMutationController to access private members
     friend class AdaptiveMutationController;
+
+    // Decoupling controls
+    size_t mutation_rate_schedule_interval_ = 0;        // 0 = compute every generation
+    size_t mutation_rate_freeze_after_gen_ = SIZE_MAX;  // freeze never by default
+    std::optional<double> last_computed_mutation_rate_ = std::nullopt;  // cached rate
 
     /**
      * @brief Test a specific configuration
