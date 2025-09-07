@@ -40,9 +40,16 @@ August 26 2025
 - **Quality Assurance**: High bench mark and robust testing as we approach hardware-in-the-loop validation.
 - **Documentation**: Comprehensive documentation and on going updates
 
-### 🚀 Enhanced Evolutionary System Architecture (v1.0.2.1)
+### 🚀 Enhanced Evolutionary System Architecture (v1.0.2.2)
 
 **Multi-Operator Adaptive Genetic Algorithm with Real-Time Performance Tracking**
+
+Recent improvements:
+- Adaptive operator-credit learning wired into the GA loop (per-child operator tracking and credit updates each generation).
+- Per-generation analytics exported to CSV: operator applications, success, credit, selection probability, diversity, and mutation rate.
+- Decoupled mutation-rate policy: schedule-based updates and late-generation freeze; cached rate managed via `std::optional<double>`.
+- Operator introspection APIs: exposed last-selected operator, current operator probabilities, and exploration factor for transparency.
+- Example app upgrades: robust CLI (`--trials`, `--schedule`, `--freeze`) and per-run summary CSVs with run-specific operator stats.
 
 ### 📚 Documentation Links:
 - **[Auto Architecture Search Guide](AUTO_ARCH_SEARCH_GUIDE.md)**
@@ -108,6 +115,38 @@ graph TB
   - 📚 [GTest Troubleshooting & Usage Guide](FAQ/RADML_BUILD/GTEST_TROUBLESHOOTING.md) - Complete testing documentation, troubleshooting, and command reference
 
 - More things will be extended like this as well for more flexibility.
+
+#### 🔎 Detailed Evolutionary Search Flow
+
+```mermaid
+graph TD
+    A["Start generation g"] --> B{"Schedule hit and not frozen?"}
+    B -- Yes --> B1["Compute adaptive mutation rate"]
+    B -- No --> B2["Use cached rate (or base)"]
+    B1 --> C["Select parents (e.g., tournament)"]
+    B2 --> C
+    C --> D["Crossover -> children"]
+    D --> E["Mutate via AdaptiveMutationController"]
+    E --> E1["Epsilon-greedy operator selection\n(probabilities + exploration)"]
+    E1 --> E2["Apply chosen mutation operator"]
+    E2 --> F["Evaluate child fitness (Monte Carlo)"]
+    F --> G["Improvement vs best parent"]
+    G --> H["Record (operator_index, improvement)"]
+    H --> I["Survivor selection -> new population"]
+    I --> J["Update operator credits (per generation)"]
+    J --> K["Recompute operator probabilities"]
+    K --> L["Log metrics: operator_stats.csv, results.csv"]
+    L --> M{"Stop criterion met?"}
+    M -- No --> A
+    M -- Yes --> N["Report best config + confidence"]
+
+    %% Notes
+    subgraph Decoupled Mutation-Rate Controls
+      B1
+      B2
+      note1["Schedule: recompute every K generations\nFreeze: hold rate after cutoff"]
+    end
+```
 
 ## Building the Framework
 
