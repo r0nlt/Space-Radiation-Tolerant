@@ -23,40 +23,10 @@ option(BUILD_TESTING "Build with testing enabled" ON)
 option(USE_MINIMAL_PYTHON_BINDINGS "Use minimal Python bindings to avoid compilation errors" ON)
 option(ENABLE_IDE_INTEGRATION "Enable IDE integration features" ON)
 option(ENABLE_PYTORCH "Enable PyTorch integration" OFF)
-option(ENABLE_OPENMP "Enable OpenMP for parallel compilation and execution" ON)
 
 # Find required packages
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
-
-# Find OpenMP if enabled
-if(ENABLE_OPENMP)
-  # On macOS with Homebrew, OpenMP is installed as keg-only
-  if(APPLE)
-    # Add Homebrew OpenMP paths
-    list(APPEND CMAKE_PREFIX_PATH "/usr/local/opt/libomp")
-    list(APPEND CMAKE_LIBRARY_PATH "/usr/local/opt/libomp/lib")
-    list(APPEND CMAKE_INCLUDE_PATH "/usr/local/opt/libomp/include")
-  endif()
-
-  find_package(OpenMP)
-  if(OpenMP_CXX_FOUND)
-    message(STATUS "OpenMP found: ${OpenMP_CXX_VERSION}")
-    message(STATUS "OpenMP include directory: ${OpenMP_CXX_INCLUDE_DIRS}")
-    message(STATUS "OpenMP libraries: ${OpenMP_CXX_LIBRARIES}")
-    set(OpenMP_FOUND TRUE)
-  else()
-    message(WARNING "OpenMP not found. Parallel features will be disabled.")
-    message(WARNING "Install OpenMP (e.g., 'brew install libomp' on macOS) to enable parallel processing.")
-    if(APPLE)
-      message(WARNING "On macOS, you may need to set environment variables:")
-      message(WARNING "  export LDFLAGS=\"-L/usr/local/opt/libomp/lib\"")
-      message(WARNING "  export CPPFLAGS=\"-I/usr/local/opt/libomp/include\"")
-    endif()
-    set(OpenMP_FOUND FALSE)
-    set(ENABLE_OPENMP OFF)
-  endif()
-endif()
 
 # Find PyTorch if enabled
 if(ENABLE_PYTORCH)
@@ -278,9 +248,6 @@ target_link_libraries(rad_ml_qft
     ${CMAKE_THREAD_LIBS_INIT}
     Eigen3::Eigen
 )
-if(OpenMP_FOUND)
-  target_link_libraries(rad_ml_qft OpenMP::OpenMP_CXX)
-endif()
 
 # Define NASA/ESA Standard Test Runner
 add_executable(nasa_esa_standard_test
@@ -313,9 +280,6 @@ target_link_libraries(monte_carlo_validation rad_ml_tmr rad_ml_testing rad_ml_qf
 if(ENABLE_PYTORCH AND PyTorch_FOUND)
   target_link_libraries(monte_carlo_validation rad_ml_pytorch)
 endif()
-if(OpenMP_FOUND)
-  target_link_libraries(monte_carlo_validation OpenMP::OpenMP_CXX)
-endif()
 add_test(NAME monte_carlo_validation COMMAND monte_carlo_validation)
 
 # Add executable for space-optimized Monte Carlo validation
@@ -324,29 +288,14 @@ target_link_libraries(space_monte_carlo_validation rad_ml_tmr rad_ml_testing)
 target_compile_definitions(space_monte_carlo_validation PRIVATE ENABLE_TESTING=1)
 add_test(NAME space_monte_carlo_validation COMMAND space_monte_carlo_validation)
 
-# Add executable for GEO mission validation test (original - unshielded)
+# Add executable for GEO mission validation test
 add_executable(geo_mission_validation test/verification/geo_mission_validation.cpp)
 target_link_libraries(geo_mission_validation rad_ml_tmr rad_ml_testing rad_ml_qft)
 if(ENABLE_PYTORCH AND PyTorch_FOUND)
   target_link_libraries(geo_mission_validation rad_ml_pytorch)
 endif()
-if(OpenMP_FOUND)
-  target_link_libraries(geo_mission_validation OpenMP::OpenMP_CXX)
-endif()
 target_compile_definitions(geo_mission_validation PRIVATE ENABLE_TESTING=1)
 add_test(NAME geo_mission_validation COMMAND geo_mission_validation)
-
-# Add executable for GEO mission validation test with shielding
-add_executable(geo_mission_shield_validation test/verification/geo_mission_shield_validation.cpp)
-target_link_libraries(geo_mission_shield_validation rad_ml_tmr rad_ml_testing rad_ml_qft)
-if(ENABLE_PYTORCH AND PyTorch_FOUND)
-  target_link_libraries(geo_mission_shield_validation rad_ml_pytorch)
-endif()
-if(OpenMP_FOUND)
-  target_link_libraries(geo_mission_shield_validation OpenMP::OpenMP_CXX)
-endif()
-target_compile_definitions(geo_mission_shield_validation PRIVATE ENABLE_TESTING=1)
-add_test(NAME geo_mission_shield_validation COMMAND geo_mission_shield_validation)
 
 # Add the realistic space validation test
 add_executable(realistic_space_validation test/verification/realistic_space_validation.cpp)
@@ -372,9 +321,6 @@ target_link_libraries(scientific_validation_test
     rad_ml_research
     ${CMAKE_THREAD_LIBS_INIT}
 )
-if(OpenMP_FOUND)
-  target_link_libraries(scientific_validation_test OpenMP::OpenMP_CXX)
-endif()
 
 target_include_directories(scientific_validation_test PRIVATE
     ${CMAKE_SOURCE_DIR}/include
@@ -408,9 +354,6 @@ target_link_libraries(quantum_field_validation_test
     rad_ml_testing
     rad_ml_qft
 )
-if(OpenMP_FOUND)
-  target_link_libraries(quantum_field_validation_test OpenMP::OpenMP_CXX)
-endif()
 add_test(NAME quantum_field_validation_test COMMAND quantum_field_validation_test)
 
 # Add the realistic LEO mission test
@@ -420,9 +363,6 @@ target_link_libraries(realistic_leo_mission_test
     rad_ml_testing
     rad_ml_qft
 )
-if(OpenMP_FOUND)
-  target_link_libraries(realistic_leo_mission_test OpenMP::OpenMP_CXX)
-endif()
 add_test(NAME realistic_leo_mission_test COMMAND realistic_leo_mission_test)
 
 # Add the neural network validation test
@@ -813,10 +753,6 @@ message(STATUS "Python bindings:            ${BUILD_PYTHON_BINDINGS}")
 message(STATUS "PyTorch integration:        ${ENABLE_PYTORCH}")
 if(ENABLE_PYTORCH)
   message(STATUS "PyTorch found:              ${PyTorch_FOUND}")
-endif()
-message(STATUS "OpenMP support:             ${ENABLE_OPENMP}")
-if(ENABLE_OPENMP)
-  message(STATUS "OpenMP found:               ${OpenMP_FOUND}")
 endif()
 message(STATUS "IDE integration:            ${ENABLE_IDE_INTEGRATION}")
 message(STATUS "Testing enabled:            ${BUILD_TESTING}")
