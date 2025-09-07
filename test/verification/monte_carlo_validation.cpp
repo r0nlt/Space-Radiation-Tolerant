@@ -358,6 +358,7 @@ void runMonteCarloValidation(std::mt19937& gen,
             std::cout << "    Running " << error_type << " test (" << NUM_TRIALS_PER_TEST
                       << " trials)..." << std::flush;
             auto start_time = std::chrono::high_resolution_clock::now();
+            const int progress_step = std::max(1, NUM_TRIALS_PER_TEST / 100);
 
             // Physics-based metrics accumulators
             double total_charge_deposited = 0.0;
@@ -367,19 +368,26 @@ void runMonteCarloValidation(std::mt19937& gen,
 
             // Run trials
             for (int trial = 0; trial < NUM_TRIALS_PER_TEST; trial++) {
-                // Progress reporting every 10,000 trials for extended runs
-                if (NUM_TRIALS_PER_TEST >= 50000 && trial > 0 && trial % 10000 == 0) {
-                    auto current_time = std::chrono::high_resolution_clock::now();
-                    auto elapsed =
-                        std::chrono::duration_cast<std::chrono::seconds>(current_time - start_time)
-                            .count();
-                    double progress = static_cast<double>(trial) / NUM_TRIALS_PER_TEST;
-                    double estimated_total = elapsed / progress;
-                    double remaining = estimated_total - elapsed;
+                // Periodic progress output (~every 1%) with ETA
+                if ((trial + 1) % progress_step == 0) {
+                    auto now = std::chrono::high_resolution_clock::now();
+                    double elapsed_s = std::chrono::duration<double>(now - start_time).count();
+                    int done = trial + 1;
+                    double rate = done / std::max(1e-9, elapsed_s);
+                    int remaining = NUM_TRIALS_PER_TEST - done;
+                    double eta_s = remaining / std::max(1e-9, rate);
+                    int percent =
+                        static_cast<int>((static_cast<double>(done) / NUM_TRIALS_PER_TEST) * 100.0);
 
-                    std::cout << "\n      Progress: " << std::fixed << std::setprecision(1)
-                              << (progress * 100.0) << "% (" << trial << "/" << NUM_TRIALS_PER_TEST
-                              << ") - ETA: " << static_cast<int>(remaining) << "s" << std::flush;
+                    int eta_h = static_cast<int>(eta_s / 3600.0);
+                    int eta_m = static_cast<int>(std::fmod(eta_s, 3600.0) / 60.0);
+                    int eta_sec = static_cast<int>(std::fmod(eta_s, 60.0));
+
+                    std::cout << "\r      Progress: " << std::setw(3) << percent << "% (" << done
+                              << "/" << NUM_TRIALS_PER_TEST << "), rate " << std::fixed
+                              << std::setprecision(1) << rate << "/s, ETA " << std::setfill('0')
+                              << std::setw(2) << eta_h << ":" << std::setw(2) << eta_m << ":"
+                              << std::setw(2) << eta_sec << std::setfill(' ') << std::flush;
                 }
 
                 // Generate random original value
@@ -840,6 +848,9 @@ void runMonteCarloValidation(std::mt19937& gen,
                     }
                 }
             }
+
+            // Finish progress line before summary output
+            std::cout << std::endl;
 
             // Calculate physics-based metrics
             if (physics_events > 0) {

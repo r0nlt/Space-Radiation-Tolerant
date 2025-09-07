@@ -198,6 +198,11 @@ make -j$(nproc)
 | `USE_MINIMAL_PYTHON_BINDINGS` | ON | Use minimal Python bindings to avoid compilation errors |
 | `ENABLE_IDE_INTEGRATION` | ON | Enable IDE integration features |
 
+### Custom Build Configuration: Rishab
+```bash
+cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="-O3 -march=native -DNDEBUG -flto" -DEigen3_DIR=/usr/local/share/eigen3/cmake -DEIGEN3_INCLUDE_DIR=/usr/local/include/eigen3
+```
+
 ### PyTorch Integration Setup
 
 If you encounter PyTorch compilation issues (common with PyTorch 2.2.2), the framework includes fixes:
