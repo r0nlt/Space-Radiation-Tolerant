@@ -59,6 +59,27 @@ The implemented system follows a sophisticated **layered architecture**:
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### 7.2 Decoupled Mutation-Rate Policy Sep 7 2025
+
+We introduced an optional policy to decouple mutation-rate dynamics from operator learning:
+
+- Schedule-based updates: compute the mutation rate every K generations and reuse it between updates.
+- Freeze in late generations: hold the last computed mutation rate constant after a cutoff; mutation operators continue to adapt via credit updates.
+
+Practical usage (example app):
+- `--schedule 2 --freeze 4` updates at gens 1 and 3, then holds the rate steady.
+- Fully adaptive remains available with `--schedule 0 --freeze UINT64_MAX`.
+
+Observed behavior (20–30 trials):
+- Both policies routinely achieved ~99% preservation with tight confidence intervals (~0.6–0.7%).
+- Decoupling stabilized mutation-rate trajectories without degrading peak performance.
+
+### 7.3 Operator Analytics and Reproducibility Sep 7 2025
+
+- Per-generation operator stats are logged (applications, success rate, credit score, selection probability, diversity, adaptive rate).
+- A plotting utility (`tools/plot_operator_stats.py`) generates probability/credit/success trends and diversity vs. adaptive-rate plots.
+- The example writes per-run metadata to `run_summaries.csv` and copies operator stats to parameterized filenames for comparison.
+
 #### Adaptive Mutation System
 The framework implements a **multi-operator adaptive mutation controller** with five specialized genetic operators:
 

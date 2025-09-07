@@ -9,6 +9,8 @@
 #include <rad_ml/research/auto_arch_search.hpp>
 // Removing logger include that's causing build errors
 #include <cmath>
+#include <cstring>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <random>
@@ -56,11 +58,87 @@ createSyntheticDataset(size_t train_size, size_t test_size, size_t input_size, s
     return {train_data, train_labels, test_data, test_labels};
 }
 
-int main()
+int main(int argc, char** argv)
 {
     try {
         std::cout << "🚀 RadML Auto Architecture Search Example\n";
         std::cout << "==========================================\n\n";
+
+        // Defaults
+        size_t trials = 10;
+        size_t schedule_interval = 2;  // 0 = every gen
+        size_t freeze_after_gen = 4;   // SIZE_MAX like behavior not needed here
+
+        // Parse CLI: --trials N --schedule K --freeze G
+        bool trials_set = false, schedule_set = false, freeze_set = false;
+        for (int i = 1; i < argc; ++i) {
+            if (std::strcmp(argv[i], "--trials") == 0) {
+                if (trials_set) {
+                    std::cerr << "Error: --trials specified more than once.\n";
+                    std::exit(1);
+                }
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --trials requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    trials = static_cast<size_t>(std::stoul(argv[i + 1]));
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --trials: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                trials_set = true;
+                ++i;
+            }
+            else if (std::strcmp(argv[i], "--schedule") == 0) {
+                if (schedule_set) {
+                    std::cerr << "Error: --schedule specified more than once.\n";
+                    std::exit(1);
+                }
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --schedule requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    schedule_interval = static_cast<size_t>(std::stoul(argv[i + 1]));
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --schedule: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                schedule_set = true;
+                ++i;
+            }
+            else if (std::strcmp(argv[i], "--freeze") == 0) {
+                if (freeze_set) {
+                    std::cerr << "Error: --freeze specified more than once.\n";
+                    std::exit(1);
+                }
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --freeze requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    freeze_after_gen = static_cast<size_t>(std::stoul(argv[i + 1]));
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --freeze: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                freeze_set = true;
+                ++i;
+            }
+            else if (std::strcmp(argv[i], "--help") == 0 || std::strcmp(argv[i], "-h") == 0) {
+                std::cout << "Usage: " << argv[0] << " [--trials N] [--schedule K] [--freeze G]\n";
+                std::exit(0);
+            }
+            else {
+                std::cerr << "Unknown argument: " << argv[i] << "\n";
+                std::cout << "Usage: " << argv[0] << " [--trials N] [--schedule K] [--freeze G]\n";
+                std::exit(1);
+            }
+        }
 
         // Create synthetic dataset with consistent dimensions
         auto [train_data, train_labels, test_data, test_labels] =
@@ -92,21 +170,57 @@ int main()
 
         // Enable adaptive mutation based on population diversity
         searcher.setAdaptiveMutation(true, 0.1, 0.3, 0.5, 0.01);
+        // Decouple policy: configurable schedule and freeze
+        searcher.setMutationRateSchedule(schedule_interval);
+        searcher.setMutationRateFreezeGeneration(freeze_after_gen);
 
         std::cout << "🧬 Starting evolutionary architecture search...\n";
         std::cout << "   Population size: 10\n";
         std::cout << "   Generations: 5\n";
-        std::cout << "   Monte Carlo trials: 3\n";
+        std::cout << "   Monte Carlo trials: 10\n";
         std::cout << "   Adaptive mutation: ENABLED\n\n";
 
         std::cout << "📊 Adaptive Mutation Parameters:\n";
         std::cout << "   Base rate: 0.1\n";
         std::cout << "   Diversity threshold: 0.3\n";
         std::cout << "   Max rate: 0.5\n";
-        std::cout << "   Min rate: 0.01\n\n";
+        std::cout << "   Min rate: 0.01\n";
+        std::cout << "   Schedule interval: " << schedule_interval << " generations\n";
+        std::cout << "   Freeze after generation: " << freeze_after_gen << "\n\n";
 
         // Run ONLY evolutionary search (remove random search)
-        auto result = searcher.evolutionarySearch(10, 5, 0.1, 5, true, 3);
+        auto result = searcher.evolutionarySearch(10, 5, 0.1, 5, true, trials);
+
+        // Save a per-run summary CSV (append)
+        {
+            std::ofstream summary("run_summaries.csv", std::ios::app);
+            if (summary.tellp() == 0) {
+                summary << "trials,schedule,freeze,baseline_acc,radiation_acc,preservation,"
+                        << "preservation_stddev,iterations\n";
+            }
+            summary << trials << "," << schedule_interval << "," << freeze_after_gen << ","
+                    << std::fixed << std::setprecision(2) << result.baseline_accuracy << ","
+                    << result.radiation_accuracy << "," << result.accuracy_preservation << ","
+                    << std::setprecision(3) << result.accuracy_preservation_stddev << ","
+                    << result.iterations << "\n";
+        }
+
+        // Rename operator_stats.csv to include parameters for comparison
+        // (the exporter writes to CWD; move if present)
+        {
+            std::ifstream test("operator_stats.csv");
+            if (test.good()) {
+                std::ostringstream name;
+                name << "operator_stats_trials" << trials << "_sched" << schedule_interval
+                     << "_freeze" << freeze_after_gen << ".csv";
+                std::string out_name = name.str();
+                std::ifstream src("operator_stats.csv", std::ios::binary);
+                std::ofstream dst(out_name, std::ios::binary);
+                dst << src.rdbuf();
+                // Truncate original to avoid stale data on subsequent runs
+                std::ofstream trunc("operator_stats.csv", std::ios::trunc);
+            }
+        }
 
         std::cout << "\n🎯 Search Results:\n";
         std::cout << "==================\n";

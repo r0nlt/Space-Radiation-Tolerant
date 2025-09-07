@@ -12,6 +12,7 @@
 #include <numeric>
 #include <rad_ml/research/auto_arch_search.hpp>
 #include <set>
+#include <tuple>
 
 namespace rad_ml {
 namespace research {
@@ -301,9 +302,20 @@ SearchResult AutoArchSearch::evolutionarySearch(size_t population_size, size_t g
             }
         }
 
-        // Calculate adaptive mutation rate for this generation
-        double current_mutation_rate =
-            calculateAdaptiveMutationRate(population, fitness, gen, generations);
+        // Calculate adaptive mutation rate for this generation with decoupling controls
+        double current_mutation_rate;
+        const bool under_freeze = (gen >= mutation_rate_freeze_after_gen_);
+        const bool scheduled = (mutation_rate_schedule_interval_ == 0 ||
+                                (gen % mutation_rate_schedule_interval_ == 0));
+
+        if (!under_freeze && scheduled) {
+            current_mutation_rate =
+                calculateAdaptiveMutationRate(population, fitness, gen, generations);
+            last_computed_mutation_rate_ = current_mutation_rate;
+        }
+        else {
+            current_mutation_rate = last_computed_mutation_rate_.value_or(adaptive_base_rate_);
+        }
 
         if (adaptive_mutation_enabled_) {
             std::cout << "  Diversity: " << std::fixed << std::setprecision(3)
@@ -314,6 +326,9 @@ SearchResult AutoArchSearch::evolutionarySearch(size_t population_size, size_t g
 
         // Create new population through selection, crossover, and mutation
         std::vector<NetworkConfig> new_population;
+        // Track operator indices and improvements for adaptive credit updates
+        std::vector<size_t> used_operator_indices;
+        std::vector<double> operator_improvements;
 
         // Elitism: keep the best individual
         size_t best_idx =
@@ -337,8 +352,30 @@ SearchResult AutoArchSearch::evolutionarySearch(size_t population_size, size_t g
             // Crossover
             auto child = crossoverConfigs(population[parent1_idx], population[parent2_idx]);
 
+            // Record parent fitness for improvement calculation
+            double parent_fitness = std::max(fitness[parent1_idx], fitness[parent2_idx]);
+
             // Mutation with adaptive rate
             child = mutateConfig(child, current_mutation_rate);
+
+            // Track operator if adaptive controller used
+            if (adaptive_controller_ && adaptive_mutation_enabled_) {
+                used_operator_indices.push_back(
+                    adaptive_controller_->getLastSelectedOperatorIndex());
+            }
+            else {
+                // Use a sentinel index for basic mutation path
+                used_operator_indices.push_back(static_cast<size_t>(0));
+            }
+
+            // Evaluate child to compute improvement (cache-aware)
+            if (tested_configs_.count(child) == 0) {
+                auto result =
+                    testConfiguration(child, max_epochs, use_monte_carlo, monte_carlo_trials);
+                tested_configs_[child] = result;
+            }
+            double child_fitness = tested_configs_[child].accuracy_preservation;
+            operator_improvements.push_back(child_fitness - parent_fitness);
 
             // Add to new population
             new_population.push_back(child);
@@ -347,8 +384,60 @@ SearchResult AutoArchSearch::evolutionarySearch(size_t population_size, size_t g
         // Replace old population
         population = new_population;
 
+        // Update operator credits after generation
+        if (adaptive_controller_ && adaptive_mutation_enabled_ && !used_operator_indices.empty() &&
+            operator_improvements.size() == used_operator_indices.size()) {
+            adaptive_controller_->updateOperatorCredits(operator_improvements,
+                                                        used_operator_indices);
+
+            // Log operator learning progress per generation
+            auto stats = adaptive_controller_->getOperatorStatistics();
+            std::cout << "  Operator stats (gen " << (gen + 1) << "):" << std::endl;
+            std::cout << "    Name                Apps   Success   Credit" << std::endl;
+            for (const auto& entry : stats) {
+                const std::string& name = std::get<0>(entry);
+                int apps = static_cast<int>(std::get<1>(entry));
+                double success = std::get<2>(entry);
+                double credit = std::get<3>(entry);
+                std::cout << "    " << std::setw(18) << std::left << name << std::setw(7)
+                          << std::right << apps << "   " << std::fixed << std::setprecision(2)
+                          << std::setw(7) << success << "   " << std::fixed << std::setprecision(3)
+                          << std::setw(7) << credit << std::endl;
+            }
+        }
+
         // Save results for this generation
         saveResultsToFile();
+
+        // Append operator stats to CSV for analysis
+        if (adaptive_controller_ && adaptive_mutation_enabled_) {
+            static bool header_written = false;
+            std::ofstream op_out(
+                results_file_.empty() ? "operator_stats.csv" : "operator_stats.csv", std::ios::app);
+            if (op_out) {
+                if (!header_written) {
+                    op_out
+                        << "generation,operator,applications,success_rate,credit_score,probability,"
+                           "diversity,adaptive_rate\n";
+                    header_written = true;
+                }
+                auto stats = adaptive_controller_->getOperatorStatistics();
+                auto probs = adaptive_controller_->getOperatorProbabilities();
+                double diversity = calculatePopulationDiversity(population);
+                double adaptive_rate = current_mutation_rate;
+                for (size_t i = 0; i < stats.size(); ++i) {
+                    const auto& entry = stats[i];
+                    const std::string& name = std::get<0>(entry);
+                    int apps = static_cast<int>(std::get<1>(entry));
+                    double success = std::get<2>(entry);
+                    double credit = std::get<3>(entry);
+                    double prob = (i < probs.size()) ? probs[i] : 0.0;
+                    op_out << (gen + 1) << "," << name << "," << apps << "," << success << ","
+                           << credit << "," << prob << "," << diversity << "," << adaptive_rate
+                           << "\n";
+                }
+            }
+        }
     }
 
     // Return the best configuration found
@@ -1100,6 +1189,8 @@ NetworkConfig AdaptiveMutationController::adaptiveMutate(const NetworkConfig& co
     }
 
     size_t selected_operator = selectOperatorDynamically();
+    // Remember which operator was used for external accounting
+    last_selected_operator_index_ = selected_operator;
     NetworkConfig mutated = mutation_operators_[selected_operator].operator_func(config, base_rate);
 
     // Track operator usage

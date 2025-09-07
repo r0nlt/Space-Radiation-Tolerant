@@ -1008,3 +1008,21 @@ enum class Environment {
 | `examples/adaptive_mutation_demo.cpp` | Adaptive learning | Different configuration strategies |
 | `examples/adaptive_mutation_test.cpp` | System validation | Comprehensive testing suite |
 | `examples/simple_adaptive_test.cpp` | Quick validation | Core functionality verification |
+
+## Decoupled Mutation-Rate Policy (New)
+
+- Schedule-based updates: compute mutation rate every K generations; reuse cached value between updates.
+- Late-generation freeze: hold the last computed rate constant after a cutoff; operator selection continues to adapt.
+- Example CLI (example app):
+  - `--trials 20 --schedule 2 --freeze 4`
+  - `--trials 30 --schedule 0 --freeze 18446744073709551615` (every gen, no freeze)
+
+Observed behavior (quick summary):
+- With 20–30 trials, both fully-adaptive and decoupled policies reached ~99% preservation with tight CIs (~0.6–0.7%).
+- Decoupling stabilized mutation-rate trajectories while preserving operator learning.
+
+## Operator Analytics and Plots (New)
+
+- Each generation logs operator stats to `operator_stats.csv`: name, applications, success_rate, credit_score, probability, diversity, adaptive_rate.
+- Plotting script: `tools/plot_operator_stats.py` → outputs probability/credit/success trends and diversity vs. adaptive rate.
+- Per-run files: the example copies stats to `operator_stats_trials{N}_sched{K}_freeze{G}.csv` and appends a row to `run_summaries.csv`.
