@@ -40,11 +40,12 @@ August 26 2025
 - **Quality Assurance**: High bench mark and robust testing as we approach hardware-in-the-loop validation.
 - **Documentation**: Comprehensive documentation and on going updates
 
-### 🚀 Enhanced Evolutionary System Architecture (v1.0.2.2)
+### 🚀 Enhanced Evolutionary System Architecture (v1.0.2.3)
 
 **Multi-Operator Adaptive Genetic Algorithm with Real-Time Performance Tracking**
 
 Recent improvements:
+- Refactored Auto Arch Search
 - Adaptive operator-credit learning wired into the GA loop (per-child operator tracking and credit updates each generation).
 - Per-generation analytics exported to CSV: operator applications, success, credit, selection probability, diversity, and mutation rate.
 - Decoupled mutation-rate policy: schedule-based updates and late-generation freeze; cached rate managed via `std::optional<double>`.

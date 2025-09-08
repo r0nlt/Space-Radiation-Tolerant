@@ -15,6 +15,8 @@
 #include <optional>
 #include <rad_ml/neural/protected_neural_network.hpp>
 #include <rad_ml/research/architecture_tester.hpp>
+#include <rad_ml/research/auto_arch/genetic_operators.hpp>
+#include <rad_ml/research/auto_arch/types.hpp>
 #include <rad_ml/sim/environment.hpp>
 #include <random>
 #include <set>
@@ -24,239 +26,10 @@
 namespace rad_ml {
 namespace research {
 
-// Forward declarations
-struct NetworkConfig;
-class AutoArchSearch;
+// Forward declarations now in headers included above
 
-/**
- * @brief Advanced Multi-Operator Adaptive Strategy (MOAS) Controller
- *
- * This class implements an adaptive mutation system that uses multiple specialized
- * mutation operators and dynamically adjusts their usage based on historical performance.
- */
-class AdaptiveMutationController {
-   private:
-    // Reference to parent class for accessing data
-    AutoArchSearch* parent_;
-    /**
-     * @brief Individual mutation operator with performance tracking
-     */
-    struct MutationOperator {
-        std::function<NetworkConfig(const NetworkConfig&, double)> operator_func;
-        std::string name;
-        double success_rate;
-        double credit_score;
-        int applications;
-        double total_improvement;
-
-        MutationOperator(std::function<NetworkConfig(const NetworkConfig&, double)> func,
-                         const std::string& op_name)
-            : operator_func(func),
-              name(op_name),
-              success_rate(0.5),
-              credit_score(0.0),
-              applications(0),
-              total_improvement(0.0)
-        {
-        }
-    };
-
-    std::vector<MutationOperator> mutation_operators_;
-    std::vector<double> operator_probabilities_;
-    std::mt19937* random_generator_;
-    // Track last selected operator index for external accounting
-    size_t last_selected_operator_index_ = 0;
-
-    // Learning parameters
-    const double learning_rate_ = 0.1;
-    const double exploration_factor_ = 0.1;
-    const int min_applications_ = 5;  // Minimum trials before using performance data
-
-   public:
-    /**
-     * @brief Construct adaptive mutation controller
-     * @param parent Reference to parent AutoArchSearch instance
-     * @param rng Random number generator reference
-     */
-    AdaptiveMutationController(AutoArchSearch* parent, std::mt19937& rng);
-
-    /**
-     * @brief Add a new mutation operator to the adaptive system
-     * @param op Function implementing the mutation operator
-     * @param name Descriptive name for the operator
-     */
-    void addMutationOperator(std::function<NetworkConfig(const NetworkConfig&, double)> op,
-                             const std::string& name);
-
-    /**
-     * @brief Perform adaptive mutation using the best operator
-     * @param config Original configuration
-     * @param base_rate Base mutation rate
-     * @return Mutated configuration
-     */
-    NetworkConfig adaptiveMutate(const NetworkConfig& config, double base_rate);
-
-    /**
-     * @brief Get the index of the last mutation operator selected
-     */
-    size_t getLastSelectedOperatorIndex() const { return last_selected_operator_index_; }
-
-    /**
-     * @brief Update operator credits based on fitness improvements
-     * @param improvement_scores Vector of fitness improvements for recent mutations
-     * @param used_operators Vector of operator indices used for those mutations
-     */
-    void updateOperatorCredits(const std::vector<double>& improvement_scores,
-                               const std::vector<size_t>& used_operators);
-
-    /**
-     * @brief Get current operator statistics for monitoring
-     * @return Vector of operator statistics (name, applications, success_rate, credit_score)
-     */
-    std::vector<std::tuple<std::string, int, double, double>> getOperatorStatistics() const;
-
-    /**
-     * @brief Get current selection probabilities for mutation operators
-     */
-    std::vector<double> getOperatorProbabilities() const { return operator_probabilities_; }
-
-    /**
-     * @brief Get current exploration factor (epsilon) used for epsilon-greedy selection
-     */
-    double getExplorationFactor() const { return exploration_factor_; }
-
-    /**
-     * @brief Reset all operator statistics (useful for new evolutionary runs)
-     */
-    void resetStatistics();
-
-   private:
-    /**
-     * @brief Initialize default mutation operators
-     */
-    void initializeDefaultOperators();
-
-    /**
-     * @brief Select an operator using epsilon-greedy strategy
-     * @return Index of selected operator
-     */
-    size_t selectOperatorDynamically();
-
-    /**
-     * @brief Update operator probabilities based on credit scores
-     */
-    void updateProbabilities();
-
-    /**
-     * @brief Calculate softmax probabilities from credit scores
-     * @param credit_scores Vector of credit scores
-     * @return Vector of probabilities
-     */
-    std::vector<double> softmax(const std::vector<double>& credit_scores) const;
-
-    // Helper methods for random value generation
-    size_t getRandomLayerSize();
-    double getRandomDropoutRate();
-    neural::ProtectionLevel getRandomProtectionLevel();
-
-    // Specialized mutation operator implementations
-    NetworkConfig mutateArchitectureFocused(const NetworkConfig& config, double rate);
-    NetworkConfig mutateParameterFocused(const NetworkConfig& config, double rate);
-    NetworkConfig mutateProtectionFocused(const NetworkConfig& config, double rate);
-    NetworkConfig mutateBalanced(const NetworkConfig& config, double rate);
-    NetworkConfig mutateAggressive(const NetworkConfig& config, double rate);
-};
-
-/**
- * @brief Configuration of a neural network architecture
- */
-struct NetworkConfig {
-    std::vector<size_t> layer_sizes;           ///< Sizes of network layers
-    double dropout_rate;                       ///< Dropout rate
-    bool has_residual_connections;             ///< Whether architecture has residual connections
-    neural::ProtectionLevel protection_level;  ///< Protection level
-
-    // Constructor
-    NetworkConfig(const std::vector<size_t>& sizes = {}, double dropout = 0.5,
-                  bool residual = false,
-                  neural::ProtectionLevel protection = neural::ProtectionLevel::NONE)
-        : layer_sizes(sizes),
-          dropout_rate(dropout),
-          has_residual_connections(residual),
-          protection_level(protection)
-    {
-    }
-
-    // Equality operator for configs (needed for sets)
-    bool operator==(const NetworkConfig& other) const
-    {
-        return layer_sizes == other.layer_sizes &&
-               std::abs(dropout_rate - other.dropout_rate) < 1e-6 &&
-               has_residual_connections == other.has_residual_connections &&
-               protection_level == other.protection_level;
-    }
-
-    // Less than operator for configs (needed for maps)
-    bool operator<(const NetworkConfig& other) const
-    {
-        if (layer_sizes != other.layer_sizes) {
-            return layer_sizes < other.layer_sizes;
-        }
-        if (std::abs(dropout_rate - other.dropout_rate) >= 1e-6) {
-            return dropout_rate < other.dropout_rate;
-        }
-        if (has_residual_connections != other.has_residual_connections) {
-            return !has_residual_connections && other.has_residual_connections;
-        }
-        return protection_level < other.protection_level;
-    }
-};
-
-/**
- * @brief Search result containing the best architecture and its performance
- */
-struct SearchResult {
-    NetworkConfig config;          ///< Best network configuration
-    double baseline_accuracy;      ///< Accuracy without radiation
-    double radiation_accuracy;     ///< Accuracy under radiation
-    double accuracy_preservation;  ///< Preservation percentage
-    size_t iterations;             ///< Number of iterations to find
-
-    // Statistical data from Monte Carlo testing
-    double baseline_accuracy_stddev;      ///< Standard deviation of baseline accuracy
-    double radiation_accuracy_stddev;     ///< Standard deviation of radiation accuracy
-    double accuracy_preservation_stddev;  ///< Standard deviation of preservation
-    size_t monte_carlo_trials;            ///< Number of Monte Carlo trials
-
-    // Constructor
-    SearchResult()
-        : baseline_accuracy(0),
-          radiation_accuracy(0),
-          accuracy_preservation(0),
-          iterations(0),
-          baseline_accuracy_stddev(0),
-          radiation_accuracy_stddev(0),
-          accuracy_preservation_stddev(0),
-          monte_carlo_trials(1)
-    {
-    }
-
-    // Constructor with values
-    SearchResult(const NetworkConfig& cfg, double baseline, double radiation, double preservation,
-                 size_t iters, double baseline_stddev = 0.0, double radiation_stddev = 0.0,
-                 double preservation_stddev = 0.0, size_t num_trials = 1)
-        : config(cfg),
-          baseline_accuracy(baseline),
-          radiation_accuracy(radiation),
-          accuracy_preservation(preservation),
-          iterations(iters),
-          baseline_accuracy_stddev(baseline_stddev),
-          radiation_accuracy_stddev(radiation_stddev),
-          accuracy_preservation_stddev(preservation_stddev),
-          monte_carlo_trials(num_trials)
-    {
-    }
-};
+// NetworkConfig, SearchResult, and AdaptiveMutationController are provided by
+// headers in rad_ml/research/auto_arch/*
 
 /**
  * @brief Class for automatic search of optimal neural network architectures
@@ -373,6 +146,18 @@ class AutoArchSearch {
                              double max_rate = 0.5, double min_rate = 0.01);
 
     /**
+     * @brief Configure save intervals for results persistence
+     *
+     * @param generations Interval (in generations) to save during evolutionary search (0 = never)
+     * @param iterations Interval (in iterations) to save during grid/random search (0 = never)
+     */
+    void setSaveIntervals(size_t generations, size_t iterations)
+    {
+        save_interval_generations_ = generations;
+        save_interval_iterations_ = iterations;
+    }
+
+    /**
      * @brief Decouple policy: compute mutation rate only every K generations (0 = every gen)
      */
     void setMutationRateSchedule(size_t schedule_interval)
@@ -473,6 +258,10 @@ class AutoArchSearch {
     size_t mutation_rate_schedule_interval_ = 0;        // 0 = compute every generation
     size_t mutation_rate_freeze_after_gen_ = SIZE_MAX;  // freeze never by default
     std::optional<double> last_computed_mutation_rate_ = std::nullopt;  // cached rate
+
+    // Persistence controls
+    size_t save_interval_generations_ = 2;  // Save every N generations in evolutionary search
+    size_t save_interval_iterations_ = 10;  // Save every N iterations in grid/random search
 
     /**
      * @brief Test a specific configuration

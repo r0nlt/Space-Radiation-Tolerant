@@ -3,7 +3,14 @@
 # Set sources for research components
 set(RAD_ML_RESEARCH_SOURCES
     architecture_tester.cpp
-    auto_arch_search.cpp
+    auto_arch/io.cpp
+    auto_arch/generation.cpp
+    auto_arch/variation.cpp
+    auto_arch/grid.cpp
+    auto_arch/random.cpp
+    auto_arch/evolutionary.cpp
+    auto_arch/genetic_operators.cpp
+    auto_arch/auto_arch_search.cpp
     radiation_aware_training.cpp
     variational_autoencoder.cpp
     vae_auto_tuner.cpp
