@@ -175,13 +175,14 @@ SearchResult AutoArchSearch::evolutionarySearch(size_t population_size, size_t g
             double child_fitness = tested_configs_[child].accuracy_preservation;
             operator_improvements.push_back(child_fitness - parent_fitness);
 
-            // Optionally register with QD map (example key: width-depth signature)
+            // Optionally register with QD map (example key: full layer sizes signature)
             if (qd_enabled_ && qd_manager_) {
                 std::string key;
                 key.reserve(64);
-                key += std::to_string(child.layer_sizes.size());
-                key += "-";
-                if (child.layer_sizes.size() > 1) key += std::to_string(child.layer_sizes[1]);
+                for (size_t i = 0; i < child.layer_sizes.size(); ++i) {
+                    key += std::to_string(child.layer_sizes[i]);
+                    if (i + 1 < child.layer_sizes.size()) key += "-";
+                }
                 qd_manager_->emplaceArchitecture(std::move(key),
                                                  std::make_pair(child, child_fitness));
             }
@@ -198,14 +199,27 @@ SearchResult AutoArchSearch::evolutionarySearch(size_t population_size, size_t g
             auto elites =
                 advanced_qd_manager_->sampleDiverseElites(std::max<size_t>(1, population_size / 5));
             size_t injected = 0;
-            if (!elites.empty() && new_population.size() >= population_size) {
-                size_t to_replace = std::min(elites.size(), new_population.size());
-                new_population.erase(new_population.end() - to_replace, new_population.end());
-            }
-            for (const auto& e : elites) {
-                if (new_population.size() >= population_size) break;
-                new_population.push_back(e);
-                ++injected;
+            // Ensure final size == population_size.
+            const size_t desired = population_size;
+            if (!elites.empty()) {
+                const size_t available = new_population.size();
+                const size_t slots = available > desired ? available - desired : 0;
+                const size_t to_replace = std::min(slots + elites.size(), available) > 0
+                                              ? std::min(slots + elites.size(), available)
+                                              : 0;
+                if (to_replace > 0) {
+                    new_population.erase(new_population.end() - to_replace, new_population.end());
+                }
+                for (const auto& e : elites) {
+                    if (new_population.size() >= desired) break;
+                    new_population.push_back(e);
+                    ++injected;
+                }
+                // If still short (elites < needed), backfill with top survivors
+                while (new_population.size() < desired && !indices.empty()) {
+                    new_population.push_back(
+                        population[indices[new_population.size() % indices.size()]]);
+                }
             }
             auto analytics = advanced_qd_manager_->getAnalytics();
             std::cout << "QD coverage: " << std::fixed << std::setprecision(4)

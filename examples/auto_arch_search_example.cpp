@@ -94,6 +94,8 @@ int main(int argc, char** argv)
         size_t trials = 10;
         size_t schedule_interval = 2;  // 0 = every gen
         size_t freeze_after_gen = 4;   // SIZE_MAX like behavior not needed here
+        size_t gens = 5;               // evolutionary generations
+        size_t pop = 10;               // population size
 
         // Parse CLI: --trials N --schedule K --freeze G --qd --save-gen N --save-iter N
         bool trials_set = false, schedule_set = false, freeze_set = false;
@@ -165,6 +167,34 @@ int main(int argc, char** argv)
             else if (std::strcmp(argv[i], "--adv-qd") == 0) {
                 adv_qd_enabled_cli = true;
             }
+            else if (std::strcmp(argv[i], "--gens") == 0) {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --gens requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    gens = static_cast<size_t>(std::stoul(argv[i + 1]));
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --gens: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                ++i;
+            }
+            else if (std::strcmp(argv[i], "--pop") == 0) {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --pop requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    pop = static_cast<size_t>(std::stoul(argv[i + 1]));
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --pop: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                ++i;
+            }
             else if (std::strcmp(argv[i], "--save-gen") == 0) {
                 if (i + 1 >= argc) {
                     std::cerr << "Error: --save-gen requires a value.\n";
@@ -196,21 +226,19 @@ int main(int argc, char** argv)
             else if (std::strcmp(argv[i], "--help") == 0 || std::strcmp(argv[i], "-h") == 0) {
                 std::cout << "Usage: " << argv[0]
                           << " [--trials N] [--schedule K] [--freeze G] [--qd] [--adv-qd]"
-                          << " [--save-gen N] [--save-iter N]\n";
+                          << " [--gens N] [--pop N] [--save-gen N] [--save-iter N]\n";
                 std::exit(0);
             }
             else {
                 std::cerr << "Unknown argument: " << argv[i] << "\n";
                 std::cout << "Usage: " << argv[0]
                           << " [--trials N] [--schedule K] [--freeze G] [--qd] [--adv-qd]"
-                          << " [--save-gen N] [--save-iter N]\n";
+                          << " [--gens N] [--pop N] [--save-gen N] [--save-iter N]\n";
                 std::exit(1);
             }
         }
 
-        // Optional parse for save intervals
-        (void)parse_size_t_arg(argc, argv, "--save-gen", save_gen_interval);
-        (void)parse_size_t_arg(argc, argv, "--save-iter", save_iter_interval);
+        // Save intervals are parsed once above; avoid redundant reparsing to prevent overrides
 
         // Create synthetic dataset with consistent dimensions
         auto [train_data, train_labels, test_data, test_labels] =
@@ -252,8 +280,8 @@ int main(int argc, char** argv)
         searcher.enableAdvancedQualityDiversity(adv_qd_enabled_cli);
 
         std::cout << "🧬 Starting evolutionary architecture search...\n";
-        std::cout << "   Population size: 10\n";
-        std::cout << "   Generations: 5\n";
+        std::cout << "   Population size: " << pop << "\n";
+        std::cout << "   Generations: " << gens << "\n";
         std::cout << "   Monte Carlo trials: 10\n";
         std::cout << "   Adaptive mutation: ENABLED\n";
         std::cout << "   Quality Diversity: " << (qd_enabled_cli ? "ENABLED" : "disabled") << "\n";
@@ -271,7 +299,7 @@ int main(int argc, char** argv)
         std::cout << "   Freeze after generation: " << freeze_after_gen << "\n\n";
 
         // Run ONLY evolutionary search (remove random search)
-        auto result = searcher.evolutionarySearch(10, 5, 0.1, 5, true, trials);
+        auto result = searcher.evolutionarySearch(pop, gens, 0.1, 5, true, trials);
 
         // Save a per-run summary CSV (append)
         {

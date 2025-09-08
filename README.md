@@ -14,7 +14,7 @@
 
 **Email:** spacelabsai@gmail.com
 
-**Version:** v1.0.2.1
+**Version:** v1.0.2.4
 
 A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom library focused to engineer systems resilient to radiation effects in Space Environments. Currently the framework explores embedded databases using VAE neural network alongside LMDB (Lightning Memory Mapped Database).
 
@@ -40,7 +40,7 @@ August 26 2025
 - **Quality Assurance**: High bench mark and robust testing as we approach hardware-in-the-loop validation.
 - **Documentation**: Comprehensive documentation and on going updates
 
-### 🚀 Enhanced Evolutionary System Architecture (v1.0.2.3)
+### 🚀 Enhanced Evolutionary System Architecture (v1.0.2.4)
 
 **Multi-Operator Adaptive Genetic Algorithm with Real-Time Performance Tracking**
 
