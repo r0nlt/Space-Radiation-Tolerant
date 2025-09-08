@@ -3,10 +3,9 @@
  * @brief Configuration generation utilities for AutoArchSearch
  */
 
+#include <rad_ml/research/auto_arch_search.hpp>
 #include <random>
 #include <vector>
-
-#include <rad_ml/research/auto_arch_search.hpp>
 
 namespace rad_ml {
 namespace research {
@@ -25,15 +24,26 @@ NetworkConfig AutoArchSearch::generateRandomConfig()
     std::vector<size_t> layer_sizes;
     layer_sizes.push_back(input_size_);
 
-    std::uniform_int_distribution<size_t> width_idx_dist(0, width_options_.size() - 1);
-    for (size_t i = 0; i < num_hidden_layers; ++i) {
-        layer_sizes.push_back(width_options_[width_idx_dist(random_generator_)]);
+    if (!width_options_.empty()) {
+        std::uniform_int_distribution<size_t> width_idx_dist(0, width_options_.size() - 1);
+        for (size_t i = 0; i < num_hidden_layers; ++i) {
+            layer_sizes.push_back(width_options_[width_idx_dist(random_generator_)]);
+        }
+    }
+    else {
+        // Safe fallback: use a simple default hidden width if none provided
+        for (size_t i = 0; i < num_hidden_layers; ++i) {
+            layer_sizes.push_back(64);
+        }
     }
 
     layer_sizes.push_back(output_size_);
 
-    std::uniform_int_distribution<size_t> dropout_idx_dist(0, dropout_options_.size() - 1);
-    double dropout_rate = dropout_options_[dropout_idx_dist(random_generator_)];
+    double dropout_rate = 0.5;
+    if (!dropout_options_.empty()) {
+        std::uniform_int_distribution<size_t> dropout_idx_dist(0, dropout_options_.size() - 1);
+        dropout_rate = dropout_options_[dropout_idx_dist(random_generator_)];
+    }
 
     bool use_residual = false;
     if (test_residual_connections_) {
@@ -41,8 +51,11 @@ NetworkConfig AutoArchSearch::generateRandomConfig()
         use_residual = residual_dist(random_generator_) > 0;
     }
 
-    std::uniform_int_distribution<size_t> protection_idx_dist(0, protection_levels_.size() - 1);
-    auto protection_level = protection_levels_[protection_idx_dist(random_generator_)];
+    auto protection_level = neural::ProtectionLevel::NONE;
+    if (!protection_levels_.empty()) {
+        std::uniform_int_distribution<size_t> protection_idx_dist(0, protection_levels_.size() - 1);
+        protection_level = protection_levels_[protection_idx_dist(random_generator_)];
+    }
 
     return NetworkConfig(layer_sizes, dropout_rate, use_residual, protection_level);
 }
@@ -108,5 +121,3 @@ void AutoArchSearch::generateLayerSizeCombinations(std::vector<std::vector<size_
 
 }  // namespace research
 }  // namespace rad_ml
-
-

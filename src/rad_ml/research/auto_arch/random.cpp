@@ -22,11 +22,14 @@ SearchResult AutoArchSearch::randomSearch(size_t max_iterations, size_t max_epoc
     NetworkConfig best_config;
     ArchitectureTestResult best_result;
 
-    for (size_t i = 0; i < max_iterations; ++i) {
+    size_t completed = 0;
+    size_t attempts = 0;
+    const size_t max_attempts = max_iterations * 5;  // guard against infinite retries
+    while (completed < max_iterations && attempts < max_attempts) {
+        ++attempts;
         auto config = generateRandomConfig();
         if (tested_configs_.count(config) > 0) {
-            --i;
-            continue;
+            continue;  // skip duplicate without decrementing progress
         }
 
         auto result = testConfiguration(config, max_epochs, use_monte_carlo, monte_carlo_trials);
@@ -37,7 +40,8 @@ SearchResult AutoArchSearch::randomSearch(size_t max_iterations, size_t max_epoc
             best_config = config;
             best_result = result;
 
-            std::cout << "New best configuration found (iteration " << i << "):" << std::endl;
+            std::cout << "New best configuration found (iteration " << completed
+                      << "):" << std::endl;
             std::string arch_str = "Architecture: ";
             for (auto size : config.layer_sizes) {
                 arch_str += std::to_string(size) + "-";
@@ -58,14 +62,15 @@ SearchResult AutoArchSearch::randomSearch(size_t max_iterations, size_t max_epoc
             }
         }
 
-        if (i % 10 == 0) {
+        ++completed;
+        if (save_interval_iterations_ > 0 && completed % save_interval_iterations_ == 0) {
             saveResultsToFile();
         }
     }
 
     saveResultsToFile();
     return SearchResult(best_config, best_result.baseline_accuracy, best_result.radiation_accuracy,
-                        best_result.accuracy_preservation, max_iterations,
+                        best_result.accuracy_preservation, completed,
                         best_result.baseline_accuracy_stddev, best_result.radiation_accuracy_stddev,
                         best_result.accuracy_preservation_stddev, best_result.monte_carlo_trials);
 }

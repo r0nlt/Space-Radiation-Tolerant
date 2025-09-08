@@ -146,6 +146,18 @@ class AutoArchSearch {
                              double max_rate = 0.5, double min_rate = 0.01);
 
     /**
+     * @brief Configure save intervals for results persistence
+     *
+     * @param generations Interval (in generations) to save during evolutionary search (0 = never)
+     * @param iterations Interval (in iterations) to save during grid/random search (0 = never)
+     */
+    void setSaveIntervals(size_t generations, size_t iterations)
+    {
+        save_interval_generations_ = generations;
+        save_interval_iterations_ = iterations;
+    }
+
+    /**
      * @brief Decouple policy: compute mutation rate only every K generations (0 = every gen)
      */
     void setMutationRateSchedule(size_t schedule_interval)
@@ -246,6 +258,10 @@ class AutoArchSearch {
     size_t mutation_rate_schedule_interval_ = 0;        // 0 = compute every generation
     size_t mutation_rate_freeze_after_gen_ = SIZE_MAX;  // freeze never by default
     std::optional<double> last_computed_mutation_rate_ = std::nullopt;  // cached rate
+
+    // Persistence controls
+    size_t save_interval_generations_ = 2;  // Save every N generations in evolutionary search
+    size_t save_interval_iterations_ = 10;  // Save every N iterations in grid/random search
 
     /**
      * @brief Test a specific configuration

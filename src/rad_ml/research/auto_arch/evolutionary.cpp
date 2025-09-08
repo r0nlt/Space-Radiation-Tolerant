@@ -96,25 +96,78 @@ SearchResult AutoArchSearch::evolutionarySearch(size_t population_size, size_t g
             }
         }
 
-        // Fill rest with crossover and mutation
-        std::uniform_int_distribution<size_t> idx_dist(0, population_size - 1);
+        // Fill rest with crossover and mutation using tournament selection (k=3)
+        auto tournament_select = [&](size_t tournament_size) -> const NetworkConfig& {
+            std::uniform_int_distribution<size_t> idx_dist(0, population_size - 1);
+            size_t best_idx = idx_dist(random_generator_);
+            for (size_t t = 1; t < tournament_size; ++t) {
+                size_t cand_idx = idx_dist(random_generator_);
+                if (fitness[cand_idx] > fitness[best_idx]) best_idx = cand_idx;
+            }
+            return population[best_idx];
+        };
+
+        // Track operator indices and improvements for adaptive credit updates
+        std::vector<size_t> used_operator_indices;
+        std::vector<double> operator_improvements;
+
         while (new_population.size() < population_size) {
-            const NetworkConfig& parent1 = population[idx_dist(random_generator_)];
-            const NetworkConfig& parent2 = population[idx_dist(random_generator_)];
+            const NetworkConfig& parent1 = tournament_select(3);
+            const NetworkConfig& parent2 = tournament_select(3);
             NetworkConfig child = crossoverConfigs(parent1, parent2);
+
+            // Record best parent fitness to compute improvement
+            double parent_fitness = 0.0;
+            {
+                // get indices by scanning; small populations keep this cheap
+                for (size_t idx = 0; idx < population.size(); ++idx) {
+                    if (population[idx].layer_sizes == parent1.layer_sizes &&
+                        population[idx].dropout_rate == parent1.dropout_rate &&
+                        population[idx].has_residual_connections ==
+                            parent1.has_residual_connections &&
+                        population[idx].protection_level == parent1.protection_level) {
+                        parent_fitness = std::max(parent_fitness, fitness[idx]);
+                    }
+                    if (population[idx].layer_sizes == parent2.layer_sizes &&
+                        population[idx].dropout_rate == parent2.dropout_rate &&
+                        population[idx].has_residual_connections ==
+                            parent2.has_residual_connections &&
+                        population[idx].protection_level == parent2.protection_level) {
+                        parent_fitness = std::max(parent_fitness, fitness[idx]);
+                    }
+                }
+            }
 
             if (adaptive_mutation_enabled_ && adaptive_controller_) {
                 child = adaptive_controller_->adaptiveMutate(child, current_mutation_rate);
+                used_operator_indices.push_back(
+                    adaptive_controller_->getLastSelectedOperatorIndex());
             }
             else {
                 child = mutateConfig(child, current_mutation_rate);
             }
 
             new_population.push_back(child);
+
+            // Evaluate child to compute improvement (cache-aware)
+            if (tested_configs_.count(child) == 0) {
+                auto result =
+                    testConfiguration(child, max_epochs, use_monte_carlo, monte_carlo_trials);
+                tested_configs_[child] = result;
+            }
+            double child_fitness = tested_configs_[child].accuracy_preservation;
+            operator_improvements.push_back(child_fitness - parent_fitness);
         }
 
         population = std::move(new_population);
-        if (gen % 2 == 0) {
+        // Update adaptive credits if applicable
+        if (adaptive_mutation_enabled_ && adaptive_controller_ && !used_operator_indices.empty() &&
+            operator_improvements.size() == used_operator_indices.size()) {
+            adaptive_controller_->updateOperatorCredits(operator_improvements,
+                                                        used_operator_indices);
+        }
+
+        if (save_interval_generations_ > 0 && gen % save_interval_generations_ == 0) {
             saveResultsToFile();
         }
     }

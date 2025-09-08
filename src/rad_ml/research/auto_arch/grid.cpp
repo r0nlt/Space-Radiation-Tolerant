@@ -58,7 +58,7 @@ SearchResult AutoArchSearch::findOptimalArchitecture(size_t max_epochs, bool use
         }
 
         ++iteration;
-        if (iteration % 10 == 0) {
+        if (save_interval_iterations_ > 0 && iteration % save_interval_iterations_ == 0) {
             saveResultsToFile();
         }
     }

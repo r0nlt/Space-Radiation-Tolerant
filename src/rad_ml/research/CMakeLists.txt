@@ -19,17 +19,6 @@ set(RAD_ML_RESEARCH_SOURCES
 
 # Create research library
 add_library(rad_ml_research ${RAD_ML_RESEARCH_SOURCES})
-target_sources(rad_ml_research
-    PRIVATE
-        auto_arch/auto_arch_search.cpp
-        auto_arch/genetic_operators.cpp
-        auto_arch/generation.cpp
-        auto_arch/variation.cpp
-        auto_arch/grid.cpp
-        auto_arch/random.cpp
-        auto_arch/evolutionary.cpp
-        auto_arch/io.cpp
-)
 
 # Set include directories
 target_include_directories(rad_ml_research
