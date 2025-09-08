@@ -297,6 +297,18 @@ enum class ProtectionLevel {
 
 ## 5. Experimental Results and Validation
 
+### 5.0 Advanced Quality Diversity (MAP-Elites + Novelty) Findings (New)
+
+- Archive occupancy increased across generations in short runs (e.g., 7 → 9 → 14+ cells), confirming steady niche filling.
+- Replacing worst K individuals with sampled elites yielded consistent elite injection per generation (>0), improving the GA/QD hybrid’s ability to introduce diverse high-quality solutions.
+- Early percent coverage appears tiny due to a large archive (6D × 10 bins = 1,000,000 cells). Prefer absolute occupied cell count and elites injected as early-stage indicators.
+- Protection-level distribution in CSVs shows healthy diversity pressure (SpaceOptimized/AdaptiveTMR/FullTMR typically leading preservation), while “None” forms a low-preservation tail.
+
+Recommended settings for quick iterations:
+- Grid resolution: start at 6D × 5 for more visible coverage; scale up as runs lengthen
+- Fitness mix: keep novelty weight ≈ 0.2; increase if exploration stalls
+- Elite injection: ~20% of population per generation for balanced replacement
+
 ### 5.1 Performance Dataset Analysis
 
 The framework has been validated through extensive testing of **35 distinct neural network architectures** across multiple radiation environments and protection strategies.

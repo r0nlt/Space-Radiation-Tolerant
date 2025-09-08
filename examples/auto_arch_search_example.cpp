@@ -16,6 +16,32 @@
 #include <random>
 #include <vector>
 
+// simple helpers for CLI parsing
+static bool parse_bool_flag(int argc, char** argv, const char* name)
+{
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], name) == 0) return true;
+    }
+    return false;
+}
+
+static bool parse_size_t_arg(int argc, char** argv, const char* name, size_t& out)
+{
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], name) == 0) {
+            if (i + 1 >= argc) return false;
+            try {
+                out = static_cast<size_t>(std::stoul(argv[i + 1]));
+                return true;
+            }
+            catch (...) {
+                return false;
+            }
+        }
+    }
+    return false;
+}
+
 // Helper function to create a synthetic dataset for testing
 std::tuple<std::vector<float>, std::vector<float>, std::vector<float>, std::vector<float>>
 createSyntheticDataset(size_t train_size, size_t test_size, size_t input_size, size_t num_classes)
@@ -69,8 +95,12 @@ int main(int argc, char** argv)
         size_t schedule_interval = 2;  // 0 = every gen
         size_t freeze_after_gen = 4;   // SIZE_MAX like behavior not needed here
 
-        // Parse CLI: --trials N --schedule K --freeze G
+        // Parse CLI: --trials N --schedule K --freeze G --qd --save-gen N --save-iter N
         bool trials_set = false, schedule_set = false, freeze_set = false;
+        bool qd_enabled_cli = parse_bool_flag(argc, argv, "--qd");
+        bool adv_qd_enabled_cli = parse_bool_flag(argc, argv, "--adv-qd");
+        size_t save_gen_interval = 2;
+        size_t save_iter_interval = 10;
         for (int i = 1; i < argc; ++i) {
             if (std::strcmp(argv[i], "--trials") == 0) {
                 if (trials_set) {
@@ -129,16 +159,58 @@ int main(int argc, char** argv)
                 freeze_set = true;
                 ++i;
             }
+            else if (std::strcmp(argv[i], "--qd") == 0) {
+                qd_enabled_cli = true;
+            }
+            else if (std::strcmp(argv[i], "--adv-qd") == 0) {
+                adv_qd_enabled_cli = true;
+            }
+            else if (std::strcmp(argv[i], "--save-gen") == 0) {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --save-gen requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    save_gen_interval = static_cast<size_t>(std::stoul(argv[i + 1]));
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --save-gen: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                ++i;
+            }
+            else if (std::strcmp(argv[i], "--save-iter") == 0) {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --save-iter requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    save_iter_interval = static_cast<size_t>(std::stoul(argv[i + 1]));
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --save-iter: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                ++i;
+            }
             else if (std::strcmp(argv[i], "--help") == 0 || std::strcmp(argv[i], "-h") == 0) {
-                std::cout << "Usage: " << argv[0] << " [--trials N] [--schedule K] [--freeze G]\n";
+                std::cout << "Usage: " << argv[0]
+                          << " [--trials N] [--schedule K] [--freeze G] [--qd] [--adv-qd]"
+                          << " [--save-gen N] [--save-iter N]\n";
                 std::exit(0);
             }
             else {
                 std::cerr << "Unknown argument: " << argv[i] << "\n";
-                std::cout << "Usage: " << argv[0] << " [--trials N] [--schedule K] [--freeze G]\n";
+                std::cout << "Usage: " << argv[0]
+                          << " [--trials N] [--schedule K] [--freeze G] [--qd] [--adv-qd]"
+                          << " [--save-gen N] [--save-iter N]\n";
                 std::exit(1);
             }
         }
+
+        // Optional parse for save intervals
+        (void)parse_size_t_arg(argc, argv, "--save-gen", save_gen_interval);
+        (void)parse_size_t_arg(argc, argv, "--save-iter", save_iter_interval);
 
         // Create synthetic dataset with consistent dimensions
         auto [train_data, train_labels, test_data, test_labels] =
@@ -173,12 +245,22 @@ int main(int argc, char** argv)
         // Decouple policy: configurable schedule and freeze
         searcher.setMutationRateSchedule(schedule_interval);
         searcher.setMutationRateFreezeGeneration(freeze_after_gen);
+        // Configure save intervals
+        searcher.setSaveIntervals(save_gen_interval, save_iter_interval);
+        // Enable QD from CLI flag
+        searcher.enableQualityDiversity(qd_enabled_cli);
+        searcher.enableAdvancedQualityDiversity(adv_qd_enabled_cli);
 
         std::cout << "🧬 Starting evolutionary architecture search...\n";
         std::cout << "   Population size: 10\n";
         std::cout << "   Generations: 5\n";
         std::cout << "   Monte Carlo trials: 10\n";
-        std::cout << "   Adaptive mutation: ENABLED\n\n";
+        std::cout << "   Adaptive mutation: ENABLED\n";
+        std::cout << "   Quality Diversity: " << (qd_enabled_cli ? "ENABLED" : "disabled") << "\n";
+        std::cout << "   Advanced QD (MAP-Elites+Novelty): "
+                  << (adv_qd_enabled_cli ? "ENABLED" : "disabled") << "\n";
+        std::cout << "   Save every " << save_gen_interval << " gen(s), " << save_iter_interval
+                  << " iteration(s)\n\n";
 
         std::cout << "📊 Adaptive Mutation Parameters:\n";
         std::cout << "   Base rate: 0.1\n";

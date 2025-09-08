@@ -464,14 +464,27 @@ make -j$(nproc)
 ---
 
 ## Section 4: Results and Analysis
-make && ./examples/auto_arch_search_example
+### 4.1 Running with Advanced Quality Diversity (MAP-Elites + Novelty)
+
+```bash
+make && ./examples/auto_arch_search_example \
+  --qd \
+  --adv-qd \
+  --trials 5 \
+  --schedule 2 \
+  --freeze 4 \
+  --save-gen 1 \
+  --save-iter 5
 ```
 
-This comprehensive example demonstrates:
-- Evolutionary search with adaptive mutation
-- Multiple protection level testing
-- Monte Carlo validation
-- CSV result export
+What you will see:
+- Per-generation QD logs: coverage, occupied cells, and elites injected into the population
+- CSV (`examples/auto_arch_search_results.csv`) with preservation, errors, and timing
+- Diversity across protection levels and layer counts
+
+Interpreting early coverage:
+- The archive uses 6D × 10 bins (1,000,000 cells); short runs will show tiny percent coverage
+- Track “occupied cells” per generation (rising = good) and “elites injected” (>0 = archive influences GA)
 
 #### 2. Adaptive Mutation Demonstration
 ```bash

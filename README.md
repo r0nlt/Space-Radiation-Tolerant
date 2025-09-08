@@ -52,6 +52,44 @@ Recent improvements:
 - Operator introspection APIs: exposed last-selected operator, current operator probabilities, and exploration factor for transparency.
 - Example app upgrades: robust CLI (`--trials`, `--schedule`, `--freeze`) and per-run summary CSVs with run-specific operator stats.
 
+#### 🧭 Advanced Quality Diversity (MAP-Elites + Novelty)
+
+- **What it is**: A physics-informed MAP-Elites archive with novelty search that maintains diverse, high-quality architectures across a 6D behavioral space:
+  - Complexity, Protection efficiency, Computational cost, Radiation tolerance, Graceful degradation, Power efficiency.
+- **How it works**:
+  - Each evaluated config is mapped to a behavior cell; if its fitness (preservation + novelty) improves the cell, it becomes the elite.
+  - Novelty is computed via KNN (k=5) in behavioral space to reward exploration.
+  - Each generation, we replace the worst K individuals with diverse elites sampled from the archive to inject quality and diversity.
+- **Enable via CLI** (example):
+
+```bash
+./examples/auto_arch_search_example \
+  --qd \
+  --adv-qd \
+  --trials 5 \
+  --schedule 2 \
+  --freeze 4 \
+  --save-gen 1 \
+  --save-iter 5
+```
+
+- **Interpreting logs**:
+  - QD coverage: percentage of occupied cells; with 6D×10 bins (=1,000,000 cells), short runs show tiny percentages (expected). Track occupied cells rising per generation.
+  - Elites injected: should be >0 after the replacement policy; indicates archive is influencing the population.
+
+- **CSV outputs (examples/auto_arch_search_results.csv)**:
+  - Preservation distribution by protection level (e.g., SpaceOptimized/AdaptiveTMR scoring highest) indicates healthy diversity-pressure.
+  - Layer-count distribution confirms exploration across shapes.
+
+- **Tuning knobs**:
+  - Grid resolution: default 10 per dim; for quicker, more visible coverage in short runs, consider 5 per dim.
+  - Novelty weight: fitness = 0.8×preservation + 0.2×novelty; adjust to bias exploration vs exploitation.
+  - Elite sampling mix: sampled by fitness/novelty/uniform; adjust ratios for your search goals.
+
+- **When to adjust**:
+  - Occupied cells plateau early or elites injected remain 0 → lower resolution or increase novelty weight.
+  - Diversity collapses to a single protection strategy → increase novelty or sampling of diverse cells.
+
 ### 📚 Documentation Links:
 - **[Auto Architecture Search Guide](AUTO_ARCH_SEARCH_GUIDE.md)**
 - **[Scientific Validation Report](autoarchsearchwriteup.md)**
