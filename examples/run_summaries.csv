@@ -1,0 +1,6 @@
+trials,schedule,freeze,baseline_acc,radiation_acc,preservation,preservation_stddev,iterations
+5,2,4,82.54,82.26,99.66,0.575,50
+3,2,3,82.29,81.88,99.50,0.701,50
+3,2,3,82.19,82.18,99.99,0.016,50
+3,2,3,82.29,81.88,99.50,0.701,50
+5,2,6,86.72,86.21,99.41,0.253,144

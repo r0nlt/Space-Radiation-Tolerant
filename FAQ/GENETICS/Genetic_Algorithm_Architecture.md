@@ -2,6 +2,25 @@
 
 ## Overview
 
+### Integration with Advanced Quality Diversity (MAP-Elites + Novelty) (New)
+
+- The evolutionary loop now optionally integrates a MAP-Elites archive that:
+  - Computes a 6D physics-informed behavior descriptor per evaluated config
+  - Updates an elite per behavioral cell using composite fitness (preservation + novelty)
+  - Samples elites each generation and replaces the worst K individuals to inject diversity
+- Novelty search uses k-nearest neighbors (k=5) in behavioral space to reward exploration.
+- Per-generation logs include QD coverage, occupied cells, and elites injected.
+
+Configuration:
+```cpp
+// Enable in code or via example CLI flag --adv-qd
+searcher.enableAdvancedQualityDiversity(true);
+```
+
+Early-stage interpretation:
+- Tiny percent coverage is expected with large archives (6D×10=1e6 cells);
+  track rising occupied cells and non-zero elites injected per generation.
+
 This document provides a comprehensive visual and technical breakdown of the **Genetic Algorithm** implementation within the **Adaptive Mutation System** for radiation-tolerant machine learning architecture optimization.
 
 ---

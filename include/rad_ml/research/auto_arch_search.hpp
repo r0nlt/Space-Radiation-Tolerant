@@ -15,7 +15,9 @@
 #include <optional>
 #include <rad_ml/neural/protected_neural_network.hpp>
 #include <rad_ml/research/architecture_tester.hpp>
+#include <rad_ml/research/auto_arch/advanced_quality_diversity.hpp>
 #include <rad_ml/research/auto_arch/genetic_operators.hpp>
+#include <rad_ml/research/auto_arch/quality_diversity.hpp>
 #include <rad_ml/research/auto_arch/types.hpp>
 #include <rad_ml/sim/environment.hpp>
 #include <random>
@@ -174,6 +176,16 @@ class AutoArchSearch {
     }
 
     /**
+     * @brief Enable or disable Quality-Diversity (QD) assistance
+     */
+    void enableQualityDiversity(bool enable) { qd_enabled_ = enable; }
+
+    /**
+     * @brief Enable or disable Advanced Quality-Diversity (MAP-Elites + Novelty)
+     */
+    void enableAdvancedQualityDiversity(bool enable) { advanced_qd_enabled_ = enable; }
+
+    /**
      * @brief Get all tested configurations
      *
      * @return Map of configurations and their results
@@ -250,6 +262,8 @@ class AutoArchSearch {
 
     // Advanced adaptive mutation controller
     std::unique_ptr<AdaptiveMutationController> adaptive_controller_;
+    std::unique_ptr<QualityDiversityManager> qd_manager_;
+    std::unique_ptr<AdvancedQualityDiversityManager> advanced_qd_manager_;
 
     // Allow AdaptiveMutationController to access private members
     friend class AdaptiveMutationController;
@@ -262,6 +276,10 @@ class AutoArchSearch {
     // Persistence controls
     size_t save_interval_generations_ = 2;  // Save every N generations in evolutionary search
     size_t save_interval_iterations_ = 10;  // Save every N iterations in grid/random search
+
+    // Quality Diversity controls
+    bool qd_enabled_ = false;
+    bool advanced_qd_enabled_ = false;
 
     /**
      * @brief Test a specific configuration
