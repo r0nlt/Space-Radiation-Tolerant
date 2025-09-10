@@ -370,7 +370,13 @@ The framework provides built-in optimization:
 
 6. **Design Optimization:** Graded-Z multilayer approach provides superior mass efficiency compared to single-material designs, with polyethylene-tungsten alternation optimal for GEO's mixed radiation spectrum.
 
+```bash
+./geo_mission_shield_validation \
+  --shield-stack="Polyethylene:150,Tungsten:80,Polyethylene:120,Tungsten:50,Polyethylene:100" \
+  --limiting
+```
 
+```bash
 GEO mission validation completed in 122 seconds.
 
 ================================================================================
@@ -504,6 +510,43 @@ GEO_SOLAR_MAXIMUM                   0.000000        0.000000           0.00
 ----------------------------------------------------------------------------
 
 ------------------------------------------------------------
+```
+
+## Glossary (variables and terms)
+
+- **GEO**: Geostationary Earth Orbit; satellites orbit with Earth's rotation above the equator.
+- **Scenario time fraction (\(T_{\mathrm{fraction}}(s)\))**: Portion of mission time spent in scenario \(s\) (e.g., 0.80 for NOMINAL).
+- **Base upset probability (\(P_{\mathrm{base}}(s,k)\))**: Per-trial probability of error type \(k\) in scenario \(s\) before shielding/severity/time weighting.
+- **Effective upset probability (\(P_{\mathrm{eff}}(s,k)\))**: Weighted probability used in injection, defined as \(P_{\mathrm{base}}\cdot f_{\mathrm{shield}}\cdot S_{\mathrm{severity}}\cdot T_{\mathrm{fraction}}\).
+- **Shielding factor (\(f_{\mathrm{shield}}\))**: Net attenuation (0..1) of a material or multilayer stack; smaller means stronger protection.
+- **TID factor (\(f_{\mathrm{TID}}\))**: Total Ionizing Dose attenuation term \(\exp(-\rho t / \lambda)\).
+- **SEE factor (\(f_{\mathrm{SEE}}\))**: Single Event Effects composite term: \(0.4 f_p + 0.4 f_e + 0.2 f_h\).
+- **Proton/electron factors (\(f_p, f_e\))**: Parametric attenuations using reference coefficients \(\alpha_p, \alpha_e\) at 5 g/cm².
+- **Heavy-ion factor (\(f_h\))**: Parametric attenuation using the GCR reduction at 10 g/cm².
+- **\(\alpha_p, \alpha_e\)**: Proton/electron attenuation coefficients at 5 g/cm² from the material database.
+- **\(R_{\mathrm{GCR}}\)**: Percent galactic cosmic ray reduction at 10 g/cm² for a material.
+- **\(\rho\)**: Material density (g/cm³).
+- **\(t\)**: Layer thickness (cm).
+- **Radiation length (\(\lambda\))**: Material parameter (g/cm²) used in TID attenuation.
+- **Layer factor (\(f_{\mathrm{layer}}\))**: Combined factor per layer: \(0.3 f_{\mathrm{TID}} + 0.7 f_{\mathrm{SEE}}\).
+- **Stack factor (\(f_{\mathrm{stack}}\))**: Product of all layer factors in a multilayer shield.
+- **Event rate vector (\(\mathbf{R}_{\mathrm{physics}}\))**: Rates per Mbit per day for SEU/MBU/SET/SEFI from the physics simulator.
+- **Shielded rate (\(\mathbf{R}_{\mathrm{shielded}}\))**: Physics rates after multiplying by \(f_{\mathrm{shield}}\).
+- **Failure rate (\(\lambda_{s,k}\))**: Per-hour rate for type \(k\) in scenario \(s\): \(R_{\mathrm{shielded},k}/24 \cdot T_{\mathrm{fraction}}\).
+- **Total failure rate (\(\lambda_{\mathrm{total}}\))**: Sum over scenarios and types, adjusted by correction coverage: \(\sum \lambda_{s,k}(1-C_k)\).
+- **Correction coverage (\(C_k\))**: Fraction of injected errors of type \(k\) corrected by the algorithm(s).
+- **15-year reliability (\(R_{15\,\mathrm{yr}}\))**: Mission survival probability via Poisson model: \(\exp(-\lambda_{\mathrm{total}} t_{\mathrm{mission}})\).
+- **Mission time (\(t_{\mathrm{mission}}\))**: 15 years converted to hours (131,487 hours).
+- **PASS threshold (\(\lambda_{\mathrm{threshold}}\))**: Max allowable \(\lambda_{\mathrm{total}}\) to meet 95% reliability over 15 years.
+- **LET (Linear Energy Transfer)**: Energy deposited per unit path length; here used as an average per scenario.
+- **Charge deposition**: Estimated charge (fC) deposited in a device from radiation (via `QuantumEnhancedRadiation`).
+- **Critical charge**: Minimum collected charge to flip a bit; temperature-adjusted in the model.
+- **MBU (Multi-Bit Upset)**: Event flipping multiple bits; model estimates average upset size.
+- **SEU/SET/SEFI**: Single Event Upset/Transient/Functional Interrupt radiation effects.
+- **TMR (Triple Modular Redundancy)**: Using three copies with a voter to mask faults.
+- **Hamming distance**: Number of differing bits between two words; used for error severity.
+- **SDC (Silent Data Corruption)**: Wrong output not detected by the mechanism.
+- **MTBF**: Mean Time Between Failures; inverse of \(\lambda_{\mathrm{total}}\) (in hours).
 
 ## References
 
