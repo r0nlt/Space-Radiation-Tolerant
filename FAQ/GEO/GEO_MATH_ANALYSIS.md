@@ -174,7 +174,9 @@ Where:
 ### 4.1 Triple Modular Redundancy (TMR) Setup
 
 For each trial $j$, three identical copies are created:
-$$\{c_1, c_2, c_3\}_j = \{v_{orig}, v_{orig}, v_{orig}\}_j$$
+$$
+\{c_1, c_2, c_3\}_j = \{v_{\mathrm{orig}}, v_{\mathrm{orig}}, v_{\mathrm{orig}}\}_j
+$$
 
 ### 4.2 Error Pattern Injection
 
