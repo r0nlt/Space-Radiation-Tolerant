@@ -1,6 +1,11 @@
-# GEO Mission Validation: Deep Dive
+# GEO Mission Validation: Deep Dive With and Without Shielding
 
 ## Overview
+
+> Note: A glossary of acronyms and key terms is provided at the end of this document.
+
+Quick access: [GEO Mission Verification Report](../../geo_mission_verification_report.txt)
+Quick access: [Glossary](#glossary-acronyms-and-terms)
 
 In short, this test is a digital stress test for a virtual satellite computer, designed to ensure it can survive the harsh radiation of a 15-year mission in Geostationary Earth Orbit (GEO).
 
@@ -378,7 +383,54 @@ Scenario summaries are emitted to console and appended to `geo_mission_verificat
 - **Success recorded**: per method when the output equals the original uncorrupted value
 - **Additional metrics**: mean Hamming distance on disagreements, SDC rate (periodic known‑truth probes), per‑method success rates, and average time per trial
 
+### New: Per‑Type Corruption Tracking (Injected, Detected, Corrected)
+
+To make the results lab‑report friendly, the GEO validation now tracks three intuitive counters for each error type (e.g., `SINGLE_BIT`, `MULTI_BIT`, `BURST`, `WORD`, `VAN_ALLEN_EXPOSURE`, `SOLAR_STORM`, etc.):
+
+- **Injected**: How many trials actually applied a corruption of this type.
+  - We count it when any replica differs from the original value after injection.
+- **Detected**: How many of those trials showed replica disagreement.
+  - We count it when the three replicas (copies) do not all agree, which is the practical “alarm bell” for corruption.
+- **Corrected**: How many injected trials were fully repaired by the protection logic.
+  - We count it when standard voting reconstructs the original value despite the corruption.
+
+Where it appears:
+- **Console summary (aggregated across all scenarios and data types)**: A compact table with per‑type totals and rates.
+- **Verification report (per test block)**: Per‑type counts for that specific scenario/type test, suitable for inclusion in a lab report appendix.
+
+Example console output (illustrative):
+```
+CORRUPTION DETECTION/CORRECTION BY TYPE:
+  SINGLE_BIT      : injected=50000, detected=49873 (99.75%), corrected=49810 (99.62%)
+  MULTI_BIT       : injected=50000, detected=48201 (96.40%), corrected=47552 (95.10%)
+  BURST           : injected=50000, detected=48904 (97.81%), corrected=48325 (96.65%)
+  WORD            : injected=50000, detected=47102 (94.20%), corrected=46051 (92.10%)
+  VAN_ALLEN_EXPOSURE: injected=50000, detected=50000 (100.00%), corrected=49756 (99.51%)
+  SOLAR_STORM     : injected=50000, detected=49903 (99.81%), corrected=49454 (98.91%)
+```
+
+Example report entry (per‑test):
+```
+Test: GEO_NOMINAL_SINGLE_BIT
+  Standard Voting Success: 99.9500%
+  Adaptive Voting Success: 99.9400%
+  Pattern Detection Success: 99.9300%
+  Corruption SINGLE_BIT: injected=50000, detected=49873 (99.75%), corrected=49810 (99.62%)
+```
+
+How to read this:
+- **High detected%** shows the system recognizes the corruption reliably.
+- **High corrected%** shows the protection methods restore the original value effectively.
+- **Gap between detected% and corrected%** indicates scenarios where detection is possible but full recovery is harder (e.g., severe multi‑bit or word errors).
+
 ---
+## Standards
+
+Diagnostic coverage and correction coverage are core safety metrics in IEC 61508 and ISO 26262 fault-injection campaigns (faults applied → detected → mitigated).
+
+Radiation-effects testing (JEDEC JESD89/JESD89A soft error rate methods; NASA/ESA radiation test reports) separates error classes (SEU/MCU/burst/word) and reports counts/rates.
+
+ECC memory, storage, and comms routinely expose “errors detected” and “errors corrected” counters (EDAC/FEC) and report BER/FER with corrected vs uncorrected tallies.
 
 ## Physics Model Assumptions and Validation
 
@@ -618,3 +670,19 @@ For mean Hamming distance or runtime, use bootstrap CIs (percentile or BCa) over
 With N = 50,000 per test, report per‑method Wilson 95% CIs, paired McNemar p‑values vs a baseline (e.g., Standard Voting), and adjust across methods in each scenario (Holm).
 
 Optionally expose a flag to enable sequential stopping at a target precision (e.g., ±0.3 pp).
+
+---
+
+## Glossary (Acronyms and Terms)
+
+- **EN (Environment/Scenario)**: The operating context for a test run (e.g., `GEO_NOMINAL`, `GEO_SOLAR_STORM`). In tables, also seen as the column grouping scenarios.
+- **SEI (Single-Event Effects)**: Umbrella term for radiation-induced single-event phenomena (e.g., upsets, transients, latchup). Some literature abbreviates as SEE; this document uses SEI per request, equivalent in meaning.
+- **MBU (Multi-Bit Upset)**: A radiation event that flips multiple bits within a word or nearby cells, often appearing as clustered/burst errors due to charge sharing.
+- **LET (Linear Energy Transfer)**: Energy deposited by a particle per unit path length in a material, typically in MeV·cm²/mg; higher LET generally correlates with higher upset probability and larger MBUs.
+- **Qcrit (Critical Charge)**: Minimum collected charge required to change a stored logic state; varies with device/process and temperature (denoted here by a temperature-dependent critical charge `Qcrit(T)`).
+- **Time (Runtime/Exposure)**: Timing metrics reported by the harness, including average execution time per trial (μs) and total test runtime (s). In scenario physics, “exposure time” refers to accumulated time/weight under specific conditions (e.g., Van Allen exposure).
+- **SDC (Silent Data Corruption)**: A corruption that escapes detection and propagates incorrect data without an explicit error flag; we probe SDC rate via periodic known‑truth checks.
+
+- **C++ Standard Library**: The built-in set of reusable components that come with C++. It provides containers (like vectors and maps), algorithms (sort, search), utilities (random numbers, time), input/output streams, and more—so we don’t have to rewrite common building blocks.
+- **Eigen (C++ Library)**: A fast, header-only math library for working with vectors and matrices. We use it for linear algebra operations needed by physics models and neural components without adding heavy runtime dependencies.
+- **Namespace (C++)**: A way to group names (functions, classes, variables) under a label to avoid collisions. Example: `rad_ml::physics::QuantumEnhancedRadiation` means the `QuantumEnhancedRadiation` type lives inside the `physics` group, which is inside the `rad_ml` group. This keeps similarly named things from different parts of the code from clashing.
