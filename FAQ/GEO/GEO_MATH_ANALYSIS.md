@@ -220,7 +220,7 @@ Where:
 
 #### 4.4.1 What is being measured
 
-- **Trial index (j)**: Each Monte Carlo draw produces a triple (or more) of possibly corrupted copies \(\mathbf{c}_j = [c_{1,j}, c_{2,j}, c_{3,j}]\) derived from the same original value \(v_{orig,j}\) after injection (Section 4.2) and shielding reversion (Section 4.3).
+- **Trial index (\(j\))**: Each Monte Carlo draw produces a triple (or more) of possibly corrupted copies \(\mathbf{c}_j = [c_{1,j}, c_{2,j}, c_{3,j}]\) derived from the same original value \(v_{orig,j}\) after injection (Section 4.2) and shielding reversion (Section 4.3).
 - **Voting function (\(V_m\))**: The protection method \(m\) maps the set of copies to a single decided value, e.g., majority-of-three for standard TMR, bit-wise majority for bit-level voting, burst-aware strategies for burst-error voting, etc.
 - **Success criterion**: A trial counts as success if the algorithm’s decided value equals the original, uncorrupted value from before any injections, i.e., \(V_m(\mathbf{c}_j) = v_{orig,j}\). Otherwise it is a failure for that trial.
 - **Empirical probability**: \(R_{\mathrm{success}}(m,s)\) is the Monte Carlo estimate of the probability that method \(m\) perfectly corrects the corruption in scenario \(s\).
@@ -274,7 +274,14 @@ where \(\mathcal{J}_k\) is the subset of trials in which an error of class \(k\)
 
 The `PhysicsRadiationSimulator` generates error rates per Mbit per day:
 $$
-\mathbf{R}_{\mathrm{physics}} = [R_{\mathrm{SEU}}, R_{\mathrm{MBU}}, R_{\mathrm{SET}}, R_{\mathrm{SEFI}}]^T \, \text{[events/Mbit/day]}
+\mathbf{R}_{\mathrm{physics}} =
+\begin{bmatrix}
+R_{\mathrm{SEU}} \\
+R_{\mathrm{MBU}} \\
+R_{\mathrm{SET}} \\
+R_{\mathrm{SEFI}}
+\end{bmatrix}
+\; \text{[events/Mbit/day]}
 $$
 
 ### 5.2 Critical Bug Fix: Shielding Application
