@@ -17,6 +17,8 @@ Configuration:
 searcher.enableAdvancedQualityDiversity(true);
 ```
 
+For a deeper dive on the archive, novelty scoring, and GA integration details, see `FAQ/GENETICS/Quality_Diversity_AutoArch_Integration.md`.
+
 Early-stage interpretation:
 - Tiny percent coverage is expected with large archives (6D×10=1e6 cells);
   track rising occupied cells and non-zero elites injected per generation.

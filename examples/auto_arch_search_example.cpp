@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <sstream>
 #include <vector>
 
 // simple helpers for CLI parsing
@@ -33,6 +34,32 @@ static bool parse_size_t_arg(int argc, char** argv, const char* name, size_t& ou
             try {
                 out = static_cast<size_t>(std::stoul(argv[i + 1]));
                 return true;
+            }
+            catch (...) {
+                return false;
+            }
+        }
+    }
+    return false;
+}
+
+// Parse a comma-separated list of sizes into a vector<size_t>
+static bool parse_size_list(int argc, char** argv, const char* name, std::vector<size_t>& out)
+{
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], name) == 0) {
+            if (i + 1 >= argc) return false;
+            try {
+                out.clear();
+                std::stringstream ss(argv[i + 1]);
+                std::string item;
+                while (std::getline(ss, item, ',')) {
+                    if (!item.empty()) {
+                        size_t v = static_cast<size_t>(std::stoul(item));
+                        out.push_back(v);
+                    }
+                }
+                return !out.empty();
             }
             catch (...) {
                 return false;
@@ -96,6 +123,7 @@ int main(int argc, char** argv)
         size_t freeze_after_gen = 4;   // SIZE_MAX like behavior not needed here
         size_t gens = 5;               // evolutionary generations
         size_t pop = 10;               // population size
+        std::vector<size_t> width_options = {32, 64, 128, 256};
 
         // Parse CLI: --trials N --schedule K --freeze G --qd --save-gen N --save-iter N
         bool trials_set = false, schedule_set = false, freeze_set = false;
@@ -223,20 +251,53 @@ int main(int argc, char** argv)
                 }
                 ++i;
             }
+            else if (std::strcmp(argv[i], "--widths") == 0) {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --widths requires a value.\n";
+                    std::exit(1);
+                }
+                try {
+                    width_options.clear();
+                    std::stringstream ss(argv[i + 1]);
+                    std::string item;
+                    while (std::getline(ss, item, ',')) {
+                        if (!item.empty()) {
+                            size_t v = static_cast<size_t>(std::stoul(item));
+                            width_options.push_back(v);
+                        }
+                    }
+                    if (width_options.empty()) {
+                        std::cerr << "Error: --widths list is empty or invalid.\n";
+                        std::exit(1);
+                    }
+                }
+                catch (...) {
+                    std::cerr << "Error: Invalid value for --widths: " << argv[i + 1] << "\n";
+                    std::exit(1);
+                }
+                ++i;
+            }
             else if (std::strcmp(argv[i], "--help") == 0 || std::strcmp(argv[i], "-h") == 0) {
                 std::cout << "Usage: " << argv[0]
                           << " [--trials N] [--schedule K] [--freeze G] [--qd] [--adv-qd]"
-                          << " [--gens N] [--pop N] [--save-gen N] [--save-iter N]\n";
+                          << " [--gens N] [--pop N] [--save-gen N] [--save-iter N]"
+                          << " [--widths CSV]\n"
+                          << "  where --widths CSV is a comma-separated list like "
+                             "32,64,128,256,512,1024\n";
                 std::exit(0);
             }
             else {
                 std::cerr << "Unknown argument: " << argv[i] << "\n";
                 std::cout << "Usage: " << argv[0]
                           << " [--trials N] [--schedule K] [--freeze G] [--qd] [--adv-qd]"
-                          << " [--gens N] [--pop N] [--save-gen N] [--save-iter N]\n";
+                          << " [--gens N] [--pop N] [--save-gen N] [--save-iter N]"
+                          << " [--widths CSV]\n";
                 std::exit(1);
             }
         }
+
+        // Parse optional widths list
+        (void)parse_size_list(argc, argv, "--widths", width_options);
 
         // Save intervals are parsed once above; avoid redundant reparsing to prevent overrides
 
@@ -253,7 +314,7 @@ int main(int argc, char** argv)
         // Set up AutoArchSearch with consistent parameters
         rad_ml::research::AutoArchSearch searcher(train_data, train_labels, test_data, test_labels,
                                                   rad_ml::sim::Environment::EARTH_ORBIT,
-                                                  {32, 64, 128, 256},               // Width options
+                                                  width_options,  // Width options (CLI or default)
                                                   {0.3, 0.4, 0.5, 0.6},             // Dropout rates
                                                   "auto_arch_search_results.csv");  // Results file
 
@@ -283,6 +344,10 @@ int main(int argc, char** argv)
         std::cout << "   Population size: " << pop << "\n";
         std::cout << "   Generations: " << gens << "\n";
         std::cout << "   Monte Carlo trials: 10\n";
+        std::cout << "   Width options: ";
+        for (size_t i = 0; i < width_options.size(); ++i) {
+            std::cout << width_options[i] << (i + 1 < width_options.size() ? "," : "\n");
+        }
         std::cout << "   Adaptive mutation: ENABLED\n";
         std::cout << "   Quality Diversity: " << (qd_enabled_cli ? "ENABLED" : "disabled") << "\n";
         std::cout << "   Advanced QD (MAP-Elites+Novelty): "
