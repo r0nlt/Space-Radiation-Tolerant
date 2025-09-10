@@ -26,6 +26,7 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <numeric>
 #include <random>
@@ -62,10 +63,14 @@ using namespace rad_ml::mission;
 using namespace rad_ml::radiation;
 
 // GEO-specific test configuration
-constexpr int NUM_TRIALS_PER_TEST = 50000;  // Focused testing for GEO
-constexpr int NUM_GEO_SCENARIOS = 6;        // Different GEO mission phases/conditions
-constexpr int NUM_DATA_TYPES = 4;           // float, double, int32_t, int64_t
-constexpr double CONFIDENCE_LEVEL = 0.95;   // 95% confidence interval
+constexpr int NUM_TRIALS_PER_TEST = 50000;      // Focused testing for GEO
+constexpr int NUM_GEO_SCENARIOS = 6;            // Different GEO mission phases/conditions
+constexpr int NUM_DATA_TYPES = 4;               // float, double, int32_t, int64_t
+constexpr double CONFIDENCE_LEVEL = 0.95;       // 95% confidence interval
+constexpr double RELIABILITY_THRESHOLD = 0.95;  // Minimum acceptable 15-year reliability
+constexpr double COLLAPSE_SUCCESS_RATE = 0.01;  // <=1% success is considered collapse
+constexpr int BREAKPOINT_TRIALS = 2000;         // Trials per intensity point
+constexpr double INTENSITY_STEP = 0.1;          // Sweep step for intensity (0.0..1.0)
 
 // GEO mission radiation environment
 struct GEORadiationEnvironment {
@@ -178,6 +183,10 @@ struct GEOTestResults {
     int quantum_tunneling_events = 0;
 
     // Mission-specific metrics
+    double mtbf_hours = 0.0;
+    double expected_lifetime_years = 0.0;
+    double mission_reliability_30_days = 0.0;
+    double mission_reliability_1_year = 0.0;
     double mission_reliability_15_years = 0.0;
     double van_allen_cumulative_dose = 0.0;
     int eclipse_cycle_survivability = 0;
@@ -186,6 +195,16 @@ struct GEOTestResults {
     double avg_execution_time_us = 0.0;
     double memory_overhead_percent = 0.0;
     double power_consumption_mw = 0.0;
+
+    // Corruption tracking by type
+    std::map<std::string, int> corruptions_injected_by_type;
+    std::map<std::string, int> corruptions_detected_by_type;
+    std::map<std::string, int> corruptions_corrected_by_type;
+
+    // Reliability threshold analysis
+    double time_to_95pct_reliability_years = std::numeric_limits<double>::infinity();
+    double time_to_95pct_reliability_hours = std::numeric_limits<double>::infinity();
+    bool reliability_below_threshold_15_years = false;
 };
 
 // Error injection functions - specialized for GEO environments
@@ -253,6 +272,115 @@ T injectGEOWordError(T value, std::mt19937& gen)
     }
 
     return value;
+}
+
+// Breakpoint analysis helpers
+template <typename T>
+void applyErrorWithIntensity(const std::string& error_type, double intensity, const T& original,
+                             std::mt19937& gen, T& copy1, T& copy2, T& copy3)
+{
+    std::uniform_real_distribution<double> u01(0.0, 1.0);
+    copy1 = original;
+    copy2 = original;
+    copy3 = original;
+
+    auto maybe_corrupt_single = [&](T& v) { v = injectGEOSingleBitError(v, gen); };
+
+    auto corrupt_multi_severity = [&](T& v) {
+        int extra_bits = static_cast<int>(1 + std::floor(intensity * 4.0));
+        v = injectGEOSingleBitError(v, gen);
+        for (int i = 0; i < extra_bits; ++i) v = injectGEOSingleBitError(v, gen);
+    };
+
+    auto corrupt_burst_severity = [&](T& v) {
+        int burst_len = static_cast<int>(3 + std::floor(intensity * 5.0));
+        for (int i = 0; i < burst_len; ++i) v = injectGEOSingleBitError(v, gen);
+    };
+
+    if (error_type == "SINGLE_BIT") {
+        maybe_corrupt_single(copy1);
+        if (u01(gen) < intensity) maybe_corrupt_single(copy2);
+        if (u01(gen) < 0.5 * intensity) maybe_corrupt_single(copy3);
+    }
+    else if (error_type == "MULTI_BIT") {
+        corrupt_multi_severity(copy1);
+        if (u01(gen) < intensity) maybe_corrupt_single(copy2);
+        if (u01(gen) < 0.5 * intensity) maybe_corrupt_single(copy3);
+    }
+    else if (error_type == "BURST") {
+        corrupt_burst_severity(copy1);
+        if (u01(gen) < intensity) maybe_corrupt_single(copy2);
+        if (u01(gen) < 0.6 * intensity) maybe_corrupt_single(copy3);
+    }
+    else {  // WORD
+        corrupt_multi_severity(copy1);
+        if (u01(gen) < intensity) corrupt_multi_severity(copy2);
+        if (u01(gen) < 0.7 * intensity) corrupt_multi_severity(copy3);
+    }
+}
+
+template <typename T>
+double findCollapseIntensityForAlgorithm(const std::string& algorithm,
+                                         const std::string& error_type, std::mt19937& gen)
+{
+    std::uniform_real_distribution<double> val_dist(-1000.0, 1000.0);
+    for (double intensity = 0.0; intensity <= 1.0 + 1e-9; intensity += INTENSITY_STEP) {
+        int successes = 0;
+        for (int i = 0; i < BREAKPOINT_TRIALS; ++i) {
+            T original;
+            if constexpr (std::is_floating_point<T>::value)
+                original = static_cast<T>(val_dist(gen));
+            else
+                original = static_cast<T>(val_dist(gen));
+
+            T c1, c2, c3;
+            applyErrorWithIntensity<T>(error_type, intensity, original, gen, c1, c2, c3);
+
+            T result;
+            if (algorithm == "Standard")
+                result = EnhancedVoting::standardVote(c1, c2, c3);
+            else if (algorithm == "Bit-Level")
+                result = EnhancedVoting::bitLevelVote(c1, c2, c3);
+            else if (algorithm == "Burst-Error")
+                result = EnhancedVoting::burstErrorVote(c1, c2, c3);
+            else if (algorithm == "Word-Error")
+                result = EnhancedVoting::wordErrorVote(c1, c2, c3);
+            else if (algorithm == "Adaptive") {
+                auto pat = EnhancedVoting::detectFaultPattern(c1, c2, c3);
+                result = EnhancedVoting::adaptiveVote(c1, c2, c3, pat);
+            }
+            else if (algorithm == "Weighted")
+                result = EnhancedVoting::weightedVote(c1, c2, c3, 0.33f, 0.33f, 0.34f);
+            else
+                result = EnhancedVoting::fastBitCorrection(c1, c2, c3);
+
+            if (result == original) successes++;
+        }
+
+        double success_rate = static_cast<double>(successes) / BREAKPOINT_TRIALS;
+        // Convert per-operation success rate → 15-year reliability and compare to threshold
+        double operations_per_year = 24.0 * 365.25;
+        double annual_success_rate = std::pow(success_rate, operations_per_year);
+        double reliability_15y = std::pow(annual_success_rate, 15.0);
+        if (reliability_15y < RELIABILITY_THRESHOLD) return std::min(1.0, intensity);
+    }
+    return std::numeric_limits<double>::infinity();
+}
+
+template <typename T>
+std::map<std::string, std::map<std::string, double>> runBreakpointAnalysis(std::mt19937& gen)
+{
+    std::vector<std::string> algorithms = {"Standard", "Bit-Level", "Burst-Error", "Word-Error",
+                                           "Adaptive", "Weighted",  "Fast-Bit"};
+    std::vector<std::string> error_types = {"SINGLE_BIT", "MULTI_BIT", "BURST", "WORD"};
+    std::map<std::string, std::map<std::string, double>> collapse;
+    for (const auto& algo : algorithms) {
+        for (const auto& err : error_types) {
+            double thr = findCollapseIntensityForAlgorithm<T>(algo, err, gen);
+            collapse[algo][err] = thr;
+        }
+    }
+    return collapse;
 }
 
 // GEO-specific solar storm error injection
@@ -447,6 +575,11 @@ void runGEOMonteCarloValidation(
                       << " trials)..." << std::flush;
             auto start_time = std::chrono::high_resolution_clock::now();
 
+            // Progress bar setup (20 steps)
+            const int bar_width = 30;
+            const int checkpoint = std::max(1, NUM_TRIALS_PER_TEST / 20);
+            int next_checkpoint = checkpoint;
+
             // Physics-based metrics accumulators
             double total_charge_deposited = 0.0;
             double total_mbu_size = 0.0;
@@ -562,6 +695,22 @@ void runGEOMonteCarloValidation(
                     if (std::uniform_real_distribution<double>(0.0, 1.0)(gen) < 0.4) {
                         copy3 = injectGEOSingleBitError(original_value, gen);
                     }
+                }
+
+                // Track injected, detected, corrected for this error type using the copies above
+                bool any_corruption = (copy1 != original_value) || (copy2 != original_value) ||
+                                      (copy3 != original_value);
+                bool copies_disagree = (copy1 != copy2) || (copy1 != copy3) || (copy2 != copy3);
+                if (any_corruption) {
+                    test_results.corruptions_injected_by_type[error_type]++;
+                }
+                if (copies_disagree) {
+                    test_results.corruptions_detected_by_type[error_type]++;
+                }
+                // Baseline correction via standard voting on the injected copies
+                T baseline_vote = EnhancedVoting::standardVote(copy1, copy2, copy3);
+                if (baseline_vote == original_value && any_corruption) {
+                    test_results.corruptions_corrected_by_type[error_type]++;
                 }
 
                 // Test all protection methods using EnhancedVoting
@@ -1148,7 +1297,23 @@ void runGEOMonteCarloValidation(
                         // Fault injection simulation failed
                     }
                 }
+                // Progress bar update
+                if (trial + 1 >= next_checkpoint || trial + 1 == NUM_TRIALS_PER_TEST) {
+                    int completed = trial + 1;
+                    int percent = static_cast<int>((static_cast<double>(completed) /
+                                                    static_cast<double>(NUM_TRIALS_PER_TEST)) *
+                                                   100.0);
+                    int filled = (percent * bar_width) / 100;
+                    std::cout << "\r      [" << std::string(filled, '#')
+                              << std::string(bar_width - filled, '.') << "] " << std::setw(3)
+                              << percent << "% (" << completed << "/" << NUM_TRIALS_PER_TEST << ")"
+                              << std::flush;
+                    next_checkpoint += checkpoint;
+                }
             }
+
+            // End of progress bar line
+            std::cout << "\n";
 
             // Calculate averages and advanced metrics
             if (physics_events > 0) {
@@ -1181,9 +1346,47 @@ void runGEOMonteCarloValidation(
 
             // Calculate annual reliability first, then extrapolate to 15 years
             // This avoids numerical underflow while still providing a meaningful estimate
-            double annual_success_rate = std::pow(avg_success_rate, 24.0 * 365.25);  // 1 year
+            double operations_per_year = 24.0 * 365.25;
+            double annual_success_rate = std::pow(avg_success_rate, operations_per_year);  // 1 year
             test_results.mission_reliability_15_years =
                 std::pow(annual_success_rate, 15.0);  // 15 years
+            // Additional mission reliability metrics
+            double failure_rate = 1.0 - avg_success_rate;
+            if (failure_rate > 0.0) {
+                test_results.mtbf_hours = 1.0 / failure_rate;
+                test_results.expected_lifetime_years = test_results.mtbf_hours / (24.0 * 365.25);
+                double thirty_day_hours = 30.0 * 24.0;
+                test_results.mission_reliability_30_days =
+                    std::exp(-thirty_day_hours / test_results.mtbf_hours);
+                double one_year_hours = 365.25 * 24.0;
+                test_results.mission_reliability_1_year =
+                    std::exp(-one_year_hours / test_results.mtbf_hours);
+            }
+            else {
+                test_results.mtbf_hours = std::numeric_limits<double>::infinity();
+                test_results.expected_lifetime_years = std::numeric_limits<double>::infinity();
+                test_results.mission_reliability_30_days = 1.0;
+                test_results.mission_reliability_1_year = 1.0;
+            }
+            // Estimate time to reach 95% reliability under the same average success rate model
+            if (avg_success_rate > 0.0 && avg_success_rate < 1.0) {
+                double t_years = std::log(RELIABILITY_THRESHOLD) /
+                                 (operations_per_year * std::log(avg_success_rate));
+                test_results.time_to_95pct_reliability_years = (t_years >= 0.0 ? t_years : 0.0);
+                test_results.time_to_95pct_reliability_hours = t_years * 365.25 * 24.0;
+            }
+            else if (avg_success_rate == 1.0) {
+                test_results.time_to_95pct_reliability_years =
+                    std::numeric_limits<double>::infinity();
+                test_results.time_to_95pct_reliability_hours =
+                    std::numeric_limits<double>::infinity();
+            }
+            else {
+                test_results.time_to_95pct_reliability_years = 0.0;
+                test_results.time_to_95pct_reliability_hours = 0.0;
+            }
+            test_results.reliability_below_threshold_15_years =
+                (test_results.mission_reliability_15_years < RELIABILITY_THRESHOLD);
             test_results.van_allen_cumulative_dose =
                 total_van_allen_exposure * scenario.van_allen_factor;
 
@@ -1192,13 +1395,16 @@ void runGEOMonteCarloValidation(
             }
 
             auto end_time = std::chrono::high_resolution_clock::now();
-            auto duration =
+            auto duration_us =
                 std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+            auto duration_ns =
+                std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
             test_results.avg_execution_time_us =
-                duration.count() / static_cast<double>(NUM_TRIALS_PER_TEST);
+                duration_us.count() / static_cast<double>(NUM_TRIALS_PER_TEST);
 
-            std::cout << " Done (" << std::fixed << std::setprecision(1)
-                      << (duration.count() / 1000.0) << "ms)" << std::endl;
+            double duration_ms = static_cast<double>(duration_ns.count()) / 1e6;
+            std::cout << " Done (" << std::fixed << std::setprecision(1) << duration_ms << "ms, "
+                      << duration_ns.count() << "ns)" << std::endl;
         }
     }
 }
@@ -1334,6 +1540,10 @@ void printGEOSummaryResults(
     double total_hamming_distance = 0.0;
     double total_sdc_rate = 0.0;
     double total_mission_reliability = 0.0;
+    double total_mtbf_hours = 0.0;
+    double total_expected_lifetime = 0.0;
+    double total_reliability_30_days = 0.0;
+    double total_reliability_1_year = 0.0;
     int total_quantum_events = 0;
     int result_count = 0;
 
@@ -1343,6 +1553,10 @@ void printGEOSummaryResults(
             total_hamming_distance += result.mean_hamming_distance;
             total_sdc_rate += result.silent_data_corruption_rate;
             total_mission_reliability += result.mission_reliability_15_years;
+            total_mtbf_hours += result.mtbf_hours;
+            total_expected_lifetime += result.expected_lifetime_years;
+            total_reliability_30_days += result.mission_reliability_30_days;
+            total_reliability_1_year += result.mission_reliability_1_year;
             total_quantum_events += result.quantum_tunneling_events;
             result_count++;
         }
@@ -1355,7 +1569,127 @@ void printGEOSummaryResults(
                   << (total_sdc_rate / result_count) << "%\n";
         std::cout << "  15-Year Mission Reliability: " << std::fixed << std::setprecision(6)
                   << (total_mission_reliability / result_count) * 100.0 << "%\n";
+        std::cout << "  MTBF (hours)              : " << std::fixed << std::setprecision(1)
+                  << (total_mtbf_hours / result_count) << "\n";
+        std::cout << "  Expected Lifetime (years) : " << std::fixed << std::setprecision(2)
+                  << (total_expected_lifetime / result_count) << "\n";
+        std::cout << "  30-Day Reliability        : " << std::fixed << std::setprecision(4)
+                  << (total_reliability_30_days / result_count) * 100.0 << "%\n";
+        std::cout << "  1-Year Reliability        : " << std::fixed << std::setprecision(4)
+                  << (total_reliability_1_year / result_count) * 100.0 << "%\n";
         std::cout << "  Quantum Tunneling Events  : " << total_quantum_events << " total\n";
+    }
+
+    // Corruption detection/correction by type (aggregated across all tests)
+    std::map<std::string, long long> total_injected_by_type;
+    std::map<std::string, long long> total_detected_by_type;
+    std::map<std::string, long long> total_corrected_by_type;
+    for (const auto& data_type_results : results) {
+        for (const auto& test_results : data_type_results.second) {
+            const auto& r = test_results.second;
+            for (const auto& p : r.corruptions_injected_by_type) {
+                total_injected_by_type[p.first] += p.second;
+            }
+            for (const auto& p : r.corruptions_detected_by_type) {
+                total_detected_by_type[p.first] += p.second;
+            }
+            for (const auto& p : r.corruptions_corrected_by_type) {
+                total_corrected_by_type[p.first] += p.second;
+            }
+        }
+    }
+
+    if (!total_injected_by_type.empty()) {
+        std::cout << "\nCORRUPTION DETECTION/CORRECTION BY TYPE:\n";
+        for (const auto& p : total_injected_by_type) {
+            auto type = p.first;
+            long long injected = p.second;
+            long long detected = total_detected_by_type[type];
+            long long corrected = total_corrected_by_type[type];
+            double det_rate =
+                injected > 0 ? (static_cast<double>(detected) / injected) * 100.0 : 0.0;
+            double corr_rate =
+                injected > 0 ? (static_cast<double>(corrected) / injected) * 100.0 : 0.0;
+            std::cout << "  " << std::setw(16) << std::left << type << ": injected=" << injected
+                      << ", detected=" << detected << " (" << std::fixed << std::setprecision(2)
+                      << det_rate << "%)"
+                      << ", corrected=" << corrected << " (" << std::fixed << std::setprecision(2)
+                      << corr_rate << "%)\n";
+        }
+    }
+
+    // Breakpoint (cliff-edge) analysis
+    try {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        auto collapse = runBreakpointAnalysis<float>(gen);
+        std::cout << "\nBREAKPOINT ANALYSIS (collapse intensity; success ≤ " << std::fixed
+                  << std::setprecision(2) << (COLLAPSE_SUCCESS_RATE * 100.0) << "%):\n";
+        std::vector<std::string> algos = {"Standard", "Bit-Level", "Burst-Error", "Word-Error",
+                                          "Adaptive", "Weighted",  "Fast-Bit"};
+        std::vector<std::string> types = {"SINGLE_BIT", "MULTI_BIT", "BURST", "WORD"};
+        for (const auto& algo : algos) {
+            std::cout << "  " << std::setw(12) << std::left << algo << ": ";
+            for (size_t i = 0; i < types.size(); ++i) {
+                double thr = collapse[algo][types[i]];
+                if (std::isinf(thr)) {
+                    std::cout << types[i] << "=N/A";
+                }
+                else {
+                    std::cout << types[i] << "=" << std::fixed << std::setprecision(2) << thr;
+                }
+                if (i + 1 < types.size()) std::cout << ", ";
+            }
+            std::cout << "\n";
+        }
+    }
+    catch (...) {
+        std::cout << "\nBREAKPOINT ANALYSIS: skipped (runtime error)\n";
+    }
+
+    // Reliability threshold check summary across all tests
+    std::cout << "\nRELIABILITY THRESHOLD CHECK (" << std::fixed << std::setprecision(2)
+              << (RELIABILITY_THRESHOLD * 100.0) << "% over 15 years):\n";
+    int failures = 0;
+    double earliest_cross_years = std::numeric_limits<double>::infinity();
+    std::string earliest_label;
+    std::vector<std::string> failing_labels;
+    for (const auto& data_type_results : results) {
+        for (const auto& test_results : data_type_results.second) {
+            const auto& label = test_results.first;
+            const auto& r = test_results.second;
+            if (r.reliability_below_threshold_15_years) {
+                failures++;
+                failing_labels.push_back(label);
+                double t = r.time_to_95pct_reliability_years;
+                if (t < earliest_cross_years) {
+                    earliest_cross_years = t;
+                    earliest_label = label;
+                }
+            }
+        }
+    }
+    if (failures > 0) {
+        std::cout << "  FAIL: " << failures
+                  << " test(s) below threshold. Earliest 95% crossing (model): " << earliest_label
+                  << " at " << std::setprecision(3) << (earliest_cross_years * 365.25 * 24.0)
+                  << " hours (" << std::setprecision(3) << earliest_cross_years << " years)\n";
+        const size_t max_list = 15;
+        size_t to_show = std::min(max_list, failing_labels.size());
+        if (to_show > 0) {
+            std::cout << "  Failing tests (first " << to_show << "):\n";
+            for (size_t i = 0; i < to_show; ++i) {
+                std::cout << "    - " << failing_labels[i] << "\n";
+            }
+            if (failing_labels.size() > max_list) {
+                std::cout << "    ... (" << (failing_labels.size() - max_list)
+                          << " more not shown)\n";
+            }
+        }
+    }
+    else {
+        std::cout << "  PASS: All tests meet or exceed the 15-year "
+                  << (RELIABILITY_THRESHOLD * 100.0) << "% reliability threshold\n";
     }
 
     std::cout << "\n" << std::string(60, '-') << "\n";
@@ -1398,6 +1732,22 @@ void generateGEOVerificationReport(
     report << "- Radiation-Aware Allocation: TESTED\n";
     report << "- Static Memory Allocation: TESTED\n\n";
 
+    // PASS/FAIL summary for reliability threshold
+    int pass_count = 0;
+    int fail_count = 0;
+    for (const auto& data_type_results : results) {
+        for (const auto& test_results : data_type_results.second) {
+            const auto& r = test_results.second;
+            if (r.mission_reliability_15_years >= RELIABILITY_THRESHOLD)
+                pass_count++;
+            else
+                fail_count++;
+        }
+    }
+    report << "Reliability Threshold (" << std::fixed << std::setprecision(2)
+           << (RELIABILITY_THRESHOLD * 100.0) << "% over 15 years): PASS=" << pass_count
+           << ", FAIL=" << fail_count << "\n\n";
+
     // Detailed results by scenario
     for (const auto& data_type_results : results) {
         report << "Data Type: " << data_type_results.first << "\n";
@@ -1417,6 +1767,31 @@ void generateGEOVerificationReport(
                        100.0)
                    << "%\n";
 
+            // Per-type corruption counts for this test (usually a single type)
+            for (const auto& p : result.corruptions_injected_by_type) {
+                const std::string& type = p.first;
+                int injected = p.second;
+                int detected = 0;
+                int corrected = 0;
+                if (auto it = result.corruptions_detected_by_type.find(type);
+                    it != result.corruptions_detected_by_type.end()) {
+                    detected = it->second;
+                }
+                if (auto it = result.corruptions_corrected_by_type.find(type);
+                    it != result.corruptions_corrected_by_type.end()) {
+                    corrected = it->second;
+                }
+                double det_rate =
+                    injected > 0 ? (static_cast<double>(detected) / injected) * 100.0 : 0.0;
+                double corr_rate =
+                    injected > 0 ? (static_cast<double>(corrected) / injected) * 100.0 : 0.0;
+                report << "  Corruption " << type << ": injected=" << injected
+                       << ", detected=" << detected << " (" << std::fixed << std::setprecision(2)
+                       << det_rate << "%)"
+                       << ", corrected=" << corrected << " (" << std::fixed << std::setprecision(2)
+                       << corr_rate << "%)\n";
+            }
+
             if (result.van_allen_recovery_success > 0) {
                 report << "  Van Allen Recovery: " << result.van_allen_recovery_success
                        << " successes\n";
@@ -1428,6 +1803,22 @@ void generateGEOVerificationReport(
             if (result.avg_execution_time_us > 0) {
                 report << "  Avg Execution Time: " << result.avg_execution_time_us << " μs\n";
             }
+            // Reliability threshold details
+            report << "  15-Year Reliability        : " << std::fixed << std::setprecision(6)
+                   << (result.mission_reliability_15_years * 100.0) << "%\n";
+            report << "  Time to 95% Reliability    : ";
+            if (std::isinf(result.time_to_95pct_reliability_years)) {
+                report << "> 15 years (no crossing)\n";
+            }
+            else {
+                report << std::setprecision(3) << result.time_to_95pct_reliability_hours
+                       << " hours (" << std::setprecision(3)
+                       << result.time_to_95pct_reliability_years << " years)\n";
+            }
+            report << "  Threshold Status           : "
+                   << (result.reliability_below_threshold_15_years ? "FAIL (<95% over 15y)"
+                                                                   : "PASS (>=95% over 15y)")
+                   << "\n";
             report << "\n";
         }
         report << "\n";
