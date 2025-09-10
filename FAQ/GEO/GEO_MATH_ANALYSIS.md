@@ -344,7 +344,10 @@ The close agreement validates the composite shielding model implementation.
 - The correct mission reliability uses a Poisson aggregation of failure rates that are already time-weighted by scenario fractions and adjusted by correction coverage:
 
   $$
-  \lambda_{\mathrm{total}} = \sum_s \sum_k \lambda_{s,k}\,(1-C_k),\quad R_{15\,\mathrm{yr}} = \exp\big(-\lambda_{\mathrm{total}}\, t_{\mathrm{mission}}\big)
+  \lambda_{\mathrm{total}} = \sum_s \sum_k \lambda_{s,k}\,(1 - C_k)
+  $$
+  $$
+  R_{15\,\mathrm{yr}} = \exp\!\big(-\lambda_{\mathrm{total}}\, t_{\mathrm{mission}}\big)
   $$
 
   where \(\lambda_{s,k} = R_{\mathrm{shielded},k}/24\,\cdot T_{\mathrm{fraction}}(s)\). This de-duplicates repeated tests and ensures high time-fraction scenarios (e.g., GEO_NOMINAL) dominate as they should.
