@@ -174,7 +174,9 @@ Where:
 ### 4.1 Triple Modular Redundancy (TMR) Setup
 
 For each trial $j$, three identical copies are created:
-$$\{c_1, c_2, c_3\}_j = \{v_{orig}, v_{orig}, v_{orig}\}_j$$
+$$
+\{c_1, c_2, c_3\}_j = \{v_{\mathrm{orig}}, v_{\mathrm{orig}}, v_{\mathrm{orig}}\}_j
+$$
 
 ### 4.2 Error Pattern Injection
 
@@ -216,13 +218,70 @@ Where:
 - $V_m(\mathbf{c}_j)$ = result of voting algorithm $m$ on corrupted copies
 - $\mathbb{I}[\cdot]$ = indicator function (1 if true, 0 if false)
 
+#### 4.4.1 What is being measured
+
+- **Trial index (\(j\))**: Each Monte Carlo draw produces a triple (or more) of possibly corrupted copies \(\mathbf{c}_j = [c_{1,j}, c_{2,j}, c_{3,j}]\) derived from the same original value \(v_{orig,j}\) after injection (Section 4.2) and shielding reversion (Section 4.3).
+- **Voting function (\(V_m\))**: The protection method \(m\) maps the set of copies to a single decided value, e.g., majority-of-three for standard TMR, bit-wise majority for bit-level voting, burst-aware strategies for burst-error voting, etc.
+- **Success criterion**: A trial counts as success if the algorithm’s decided value equals the original, uncorrupted value from before any injections, i.e., \(V_m(\mathbf{c}_j) = v_{orig,j}\). Otherwise it is a failure for that trial.
+- **Empirical probability**: \(R_{\mathrm{success}}(m,s)\) is the Monte Carlo estimate of the probability that method \(m\) perfectly corrects the corruption in scenario \(s\).
+
+#### 4.4.2 Pseudocode
+
+```python
+# Inputs: method m, scenario s, number of trials N_trials
+num_success = 0
+for j in range(1, N_trials + 1):
+    # c_j is the set of replicated copies after injection + shielding reversion
+    c_j = generate_copies_after_injection_and_shielding(s)
+    v_orig_j = original_value_for_trial(j)
+
+    decided = V_m(c_j)  # apply protection/voting method m
+    if decided == v_orig_j:
+        num_success += 1
+
+R_success_m_s = num_success / N_trials
+```
+
+This procedure is run independently per scenario \(s\) (and typically per error type, data type, and configuration) so results can be analyzed granularly.
+
+#### 4.4.3 Edge cases and conventions
+
+- **Ties or three-way disagreement**: If all three copies differ (or a tie arises bit-wise), the method-specific tie-break rule applies. Unless the method reconstructs \(v_{orig,j}\), the outcome is counted as failure for that trial.
+- **Detection-only behavior**: If a method detects but does not correct an error, the trial is still counted as failure unless the final returned value equals \(v_{orig,j}\) after the method’s complete action set (e.g., retry, scrub, temporal vote) within the trial.
+- **Silent data corruption (SDC)**: If \(V_m(\mathbf{c}_j) \neq v_{orig,j}\) and the method does not flag it, the trial is a failure here and also contributes to SDC metrics (reported separately in Advanced Error Analysis).
+- **Data-type granularity**: Equality is evaluated at the value’s granularity appropriate to the method (e.g., word-level for standard TMR, bit-level for bit-wise voting). The success definition remains strict equality to the pre-injection value.
+
+#### 4.4.4 Connection to coverage \(C_k\) and mission reliability
+
+Per error class \(k\), we can derive empirical correction coverage used in the mission failure-rate aggregation (Section 6):
+
+$$
+C_k \;\approx\; \frac{\sum_{j \in \mathcal{J}_k} \mathbb{I}\big[ V_m(\mathbf{c}_j) = v_{orig,j} \big]}{|\mathcal{J}_k|}
+$$
+
+where \(\mathcal{J}_k\) is the subset of trials in which an error of class \(k\) was injected (after scenario/time weighting). These \(C_k\) values enter
+\(\lambda_{\mathrm{total}} = \sum_s \sum_k \lambda_{s,k}\,(1 - C_k)\). This is why high success rates against the dominant error classes in high time-fraction scenarios drive mission-level reliability the most.
+
+#### 4.4.5 Interpreting values and confidence
+
+- **Estimator**: \(R_{\mathrm{success}}(m,s)\) is an unbiased estimator of the true success probability in scenario \(s\).
+- **Sampling error**: With \(N_{\mathrm{trials}}\) independent trials and true success probability \(p\), the standard error is \(\sqrt{p(1-p)/N_{\mathrm{trials}}}\). Large \(N_{\mathrm{trials}}\) (e.g., 50,000) makes reported rates stable to the third or fourth decimal place.
+- **Aggregation caution**: A simple average of these per-test success rates is diagnostic but not a mission metric. The mission-level PASS/FAIL uses the Poisson aggregation with coverage-weighted failure rates (Section 6), not the naive average.
+
 ## 5. Physics-Based Error Rate Integration
 
 ### 5.1 Baseline Physics Simulation
 
 The `PhysicsRadiationSimulator` generates error rates per Mbit per day:
 $$
-\mathbf{R}_{\mathrm{physics}} = [R_{\mathrm{SEU}}, R_{\mathrm{MBU}}, R_{\mathrm{SET}}, R_{\mathrm{SEFI}}]^T\;\;\text{[events/Mbit/day]}
+\mathbf{R}_{\mathrm{physics}} =
+\begin{bmatrix}
+R_{\mathrm{SEU}} \\
+R_{\mathrm{MBU}} \\
+R_{\mathrm{SET}} \\
+R_{\mathrm{SEFI}}
+\end{bmatrix}
+\; \text{[events/Mbit/day]}
 $$
 
 ### 5.2 Critical Bug Fix: Shielding Application
@@ -243,7 +302,7 @@ This correction ensures multilayer shielding effectiveness propagates to mission
 
 Converting daily physics rates to hourly mission rates:
 $$
-\lambda_{s,k} = \frac{R_{\mathrm{shielded},k}}{24} \cdot T_{\mathrm{fraction}}(s)
+\lambda_{s,k} = \frac{R_{\mathrm{shielded},k}}{24} \, T_{\mathrm{fraction}}(s)
 $$
 
 Where:
@@ -275,11 +334,11 @@ $$
 
 ### 6.3 PASS/FAIL Threshold
 
-Mission requirement: $R_{15yr} \geq 0.95$
+Mission requirement: $R_{15\,\mathrm{yr}} \geq 0.95$
 
 Equivalent failure rate threshold:
 $$
-\lambda_{\mathrm{threshold}} = \frac{-\ln(0.95)}{131{,}487} = 3.90 \times 10^{-7}\;\text{failures/hour}
+\lambda_{\mathrm{threshold}} = \frac{-\ln(0.95)}{131{,}487} = 3.90 \times 10^{-7}\, \text{failures/hour}
 $$
 
 ## 7. Experimental Results and Analysis
@@ -329,11 +388,36 @@ $$f_{theoretical} = 5.10 \times 10^{-4}$$
 
 The close agreement validates the composite shielding model implementation.
 
+### 7.6 Interpreting Reliability Metrics (important)
+
+- What the console “15-Year Mission Reliability” often shows is a simple average of per-test reliabilities across data types, error types, and scenarios:
+
+  $$
+  \overline{R}_{\text{per-test}} \approx \frac{1}{N} \sum_{i=1}^{N} R_i
+  $$
+
+  This average is diagnostic, but it is NOT a valid mission-level metric.
+
+- The correct mission reliability uses a Poisson aggregation of failure rates that are already time-weighted by scenario fractions and adjusted by correction coverage:
+
+  $$
+  \lambda_{\mathrm{total}} = \sum_s \sum_k \lambda_{s,k}\,(1 - C_k)
+  $$
+  $$
+  R_{15\,\mathrm{yr}} = \exp\!\big(-\lambda_{\mathrm{total}}\, t_{\mathrm{mission}}\big)
+  $$
+
+  where \(\lambda_{s,k} = R_{\mathrm{shielded},k}/24\,\cdot T_{\mathrm{fraction}}(s)\). This de-duplicates repeated tests and ensures high time-fraction scenarios (e.g., GEO_NOMINAL) dominate as they should.
+
+- Consequence: \(\overline{R}_{\text{per-test}}\) can be near 95% while the Poisson mission reliability \(R_{15\,\mathrm{yr}}\) is different (often lower). Always use the Poisson-aggregated \(R_{15\,\mathrm{yr}}\) for PASS/FAIL.
+
+- Tip: run with `--limiting` to print the scenarios that contribute most to \(\lambda_{\mathrm{total}}\) and focus mitigations where they matter.
+
 ## 8. Path to Mission Success
 
 ### 8.1 Required Stack Enhancement
 
-To achieve PASS status, reduce $\lambda_{total}$ by factor of 105:
+To achieve PASS status, reduce $\lambda_{\mathrm{total}}$ by factor of 105:
 $$
 f_{\mathrm{required}} = \frac{5.06 \times 10^{-4}}{105} = 4.8 \times 10^{-6}
 $$
@@ -370,8 +454,14 @@ The framework provides built-in optimization:
 
 6. **Design Optimization:** Graded-Z multilayer approach provides superior mass efficiency compared to single-material designs, with polyethylene-tungsten alternation optimal for GEO's mixed radiation spectrum.
 
+```bash
+./geo_mission_shield_validation \
+  --shield-stack="Polyethylene:150,Tungsten:80,Polyethylene:120,Tungsten:50,Polyethylene:100" \
+  --limiting
+```
 
-GEO mission validation completed in 122 seconds.
+```bash
+GEO mission validation completed in 109 seconds.
 
 ================================================================================
                     GEO MISSION VALIDATION SUMMARY
@@ -380,17 +470,17 @@ GEO mission validation completed in 122 seconds.
 Average Success Rates Across All GEO Tests:
 ------------------------------------------------------------
 STANDARD PROTECTION METHODS:
-  Adaptive Voting     : 93.3595%
+  Adaptive Voting     : 93.3619%
   Bit-Level Voting    : 100.0000%
   Burst-Error Voting  : 100.0000%
   Fast Bit Correction : 100.0000%
-  Pattern Detection   : 68.3249%
-  Standard Voting     : 100.0000%
-  Weighted Voting     : 97.6571%
+  Pattern Detection   : 68.3460%
+  Standard Voting     : 99.9998%
+  Weighted Voting     : 97.6654%
   Word-Error Voting   : 100.0000%
 
 MEMORY PROTECTION:
-  Aligned Memory      : 25.0000% (1.0000/4.0000)
+  Aligned Memory      : 50.0000% (2.0000/4.0000)
   Protected Value     : 0.0000% (0.0000/4.0000)
 
 ADVANCED TMR METHODS:
@@ -416,19 +506,19 @@ GEO-SPECIFIC PROTECTION SCENARIOS:
 ADVANCED ERROR ANALYSIS:
   Mean Hamming Distance     : 0.00 bits
   Silent Data Corruption    : 0.0000%
-  15-Year Mission Reliability: 97.234957%
-  MTBF (hours)              : 23932388.1
-  Expected Lifetime (years) : 2730.14
-  30-Day Reliability        : 99.9840%
-  1-Year Reliability        : 99.8062%
+  15-Year Mission Reliability: 87.926662%
+  MTBF (hours)              : 4422638.8
+  Expected Lifetime (years) : 504.52
+  30-Day Reliability        : 99.9137%
+  1-Year Reliability        : 98.9679%
   Quantum Tunneling Events  : 400000 total
 
 CORRUPTION DETECTION/CORRECTION BY TYPE:
-  ECLIPSE_TRANSITION: injected=54, detected=54 (100.00%), corrected=54 (100.00%)
-  END_OF_LIFE     : injected=266, detected=266 (100.00%), corrected=266 (100.00%)
-  LONG_DURATION   : injected=114, detected=114 (100.00%), corrected=114 (100.00%)
-  SOLAR_STORM     : injected=5, detected=5 (100.00%), corrected=5 (100.00%)
-  TEMPERATURE_CYCLING: injected=18, detected=18 (100.00%), corrected=18 (100.00%)
+  ECLIPSE_TRANSITION: injected=238, detected=238 (100.00%), corrected=238 (100.00%)
+  END_OF_LIFE     : injected=1390, detected=1390 (100.00%), corrected=1390 (100.00%)
+  LONG_DURATION   : injected=507, detected=507 (100.00%), corrected=507 (100.00%)
+  SOLAR_STORM     : injected=37, detected=37 (100.00%), corrected=37 (100.00%)
+  TEMPERATURE_CYCLING: injected=69, detected=69 (100.00%), corrected=69 (100.00%)
 
 BREAKPOINT ANALYSIS (collapse intensity; success ≤ 1.00%):
   Standard    : SINGLE_BIT=0.10, MULTI_BIT=0.10, BURST=0.10, WORD=0.10
@@ -440,31 +530,31 @@ BREAKPOINT ANALYSIS (collapse intensity; success ≤ 1.00%):
   Fast-Bit    : SINGLE_BIT=0.10, MULTI_BIT=0.10, BURST=0.10, WORD=0.10
 
 RELIABILITY THRESHOLD CHECK (95.00% over 15 years):
-  Mission reliability (Poisson, aggregated): 36.628618% -> FAIL
-  λ_total (per hour): 0.000008
+  Mission reliability (Poisson, aggregated): 0.436200% -> FAIL
+  λ_total (per hour): 0.000041
 
 Top limiting scenarios (by λ contribution):
 ----------------------------------------------------------------------------
 Scenario                        λ_avg (1/h)      λ_contrib      % of total
 ----------------------------------------------------------------------------
-GEO_NOMINAL                         0.000001        0.000001          10.89
-GEO_NOMINAL_VAN_ALLEN               0.000001        0.000001          10.89
-GEO_NOMINAL_TEMPERATURE             0.000001        0.000001          10.89
-GEO_NOMINAL_SOLAR                   0.000001        0.000001          10.89
-GEO_NOMINAL_SINGLE                  0.000001        0.000001          10.89
-GEO_NOMINAL_MULTI                   0.000001        0.000001          10.89
-GEO_NOMINAL_LONG                    0.000001        0.000001          10.89
-GEO_NOMINAL_END_OF                  0.000001        0.000001          10.89
-GEO_NOMINAL_ECLIPSE                 0.000001        0.000001          10.89
-GEO_VAN_ALLEN_PEAK                  0.000000        0.000000           0.11
-GEO_VAN_ALLEN_PEAK_TEMPERATURE        0.000000        0.000000           0.11
-GEO_VAN_ALLEN_PEAK_SOLAR            0.000000        0.000000           0.11
-GEO_VAN_ALLEN_PEAK_SINGLE           0.000000        0.000000           0.11
-GEO_VAN_ALLEN_PEAK_MULTI            0.000000        0.000000           0.11
-GEO_VAN_ALLEN_PEAK_LONG             0.000000        0.000000           0.11
-GEO_VAN_ALLEN_PEAK_END_OF           0.000000        0.000000           0.11
-GEO_VAN_ALLEN_PEAK_ECLIPSE          0.000000        0.000000           0.11
-GEO_VAN_ALLEN_PEAK_VAN_ALLEN        0.000000        0.000000           0.11
+GEO_NOMINAL                         0.000006        0.000005          10.89
+GEO_NOMINAL_VAN_ALLEN               0.000006        0.000005          10.89
+GEO_NOMINAL_TEMPERATURE             0.000006        0.000005          10.89
+GEO_NOMINAL_SOLAR                   0.000006        0.000005          10.89
+GEO_NOMINAL_SINGLE                  0.000006        0.000005          10.89
+GEO_NOMINAL_MULTI                   0.000006        0.000005          10.89
+GEO_NOMINAL_LONG                    0.000006        0.000005          10.89
+GEO_NOMINAL_END_OF                  0.000006        0.000005          10.89
+GEO_NOMINAL_ECLIPSE                 0.000006        0.000005          10.89
+GEO_VAN_ALLEN_PEAK_TEMPERATURE        0.000001        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_SOLAR            0.000001        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_SINGLE           0.000001        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_MULTI            0.000001        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_LONG             0.000001        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_END_OF           0.000001        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_ECLIPSE          0.000001        0.000000           0.11
+GEO_VAN_ALLEN_PEAK                  0.000001        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_VAN_ALLEN        0.000001        0.000000           0.11
 GEO_ECLIPSE                         0.000000        0.000000           0.08
 GEO_ECLIPSE_ECLIPSE                 0.000000        0.000000           0.08
 GEO_ECLIPSE_END_OF                  0.000000        0.000000           0.08
@@ -474,7 +564,6 @@ GEO_ECLIPSE_SINGLE                  0.000000        0.000000           0.08
 GEO_ECLIPSE_SOLAR                   0.000000        0.000000           0.08
 GEO_ECLIPSE_TEMPERATURE             0.000000        0.000000           0.08
 GEO_ECLIPSE_VAN_ALLEN               0.000000        0.000000           0.08
-GEO_END_OF_LIFE                     0.000000        0.000000           0.02
 GEO_END_OF_LIFE_VAN_ALLEN           0.000000        0.000000           0.02
 GEO_END_OF_LIFE_TEMPERATURE         0.000000        0.000000           0.02
 GEO_END_OF_LIFE_SOLAR               0.000000        0.000000           0.02
@@ -483,6 +572,7 @@ GEO_END_OF_LIFE_MULTI               0.000000        0.000000           0.02
 GEO_END_OF_LIFE_LONG                0.000000        0.000000           0.02
 GEO_END_OF_LIFE_END_OF              0.000000        0.000000           0.02
 GEO_END_OF_LIFE_ECLIPSE             0.000000        0.000000           0.02
+GEO_END_OF_LIFE                     0.000000        0.000000           0.02
 GEO_SOLAR_STORM                     0.000000        0.000000           0.00
 GEO_SOLAR_STORM_ECLIPSE             0.000000        0.000000           0.00
 GEO_SOLAR_STORM_END_OF              0.000000        0.000000           0.00
@@ -504,6 +594,105 @@ GEO_SOLAR_MAXIMUM                   0.000000        0.000000           0.00
 ----------------------------------------------------------------------------
 
 ------------------------------------------------------------
+```
+
+## Glossary (variables and terms)
+
+- **GEO**: Geostationary Earth Orbit; satellites orbit with Earth's rotation above the equator.
+
+- **Scenario time fraction**: Portion of mission time spent in scenario \(s\) (e.g., 0.80 for NOMINAL).
+
+  $$T_{\mathrm{fraction}}(s)$$
+
+- **Base upset probability**: Per-trial probability of error type \(k\) in scenario \(s\) before weighting.
+
+  $$P_{\mathrm{base}}(s,k)$$
+
+- **Effective upset probability**: Probability used in injection after weighting.
+
+  $$P_{\mathrm{eff}}(s,k) = P_{\mathrm{base}}(s,k)\, f_{\mathrm{shield}}\, S_{\mathrm{severity}}(s)\, T_{\mathrm{fraction}}(s)$$
+
+- **Shielding factor**: Net attenuation (0..1) of a material or multilayer stack; smaller means stronger protection.
+
+  $$f_{\mathrm{shield}} \in [0,1]$$
+
+- **TID factor**: Total Ionizing Dose attenuation term.
+
+  $$f_{\mathrm{TID}} = \exp\!\left(-\frac{\rho\, t}{\lambda}\right)$$
+
+- **SEE factor**: Single Event Effects composite term.
+
+  $$f_{\mathrm{SEE}} = 0.4\, f_p + 0.4\, f_e + 0.2\, f_h$$
+
+- **Proton/electron factors**: Parametric attenuations using reference coefficients at 5 g/cm².
+
+  $$f_p = \alpha_p^{\rho t / 5}, \qquad f_e = \alpha_e^{\rho t / 5}$$
+
+- **Heavy-ion factor**: Uses the GCR reduction at 10 g/cm².
+
+  $$f_h = \left(1 - \frac{R_{\mathrm{GCR}}}{100}\right)^{\rho t / 10}$$
+
+- **\(\alpha_p, \alpha_e\)**: Proton/electron attenuation coefficients (material DB).
+
+- **\(R_{\mathrm{GCR}}\)**: Percent galactic cosmic ray reduction at 10 g/cm².
+
+- **\(\rho\)**: Material density (g/cm³); **\(t\)**: layer thickness (cm); **\(\lambda\)**: radiation length (g/cm²).
+
+- **Layer factor**: Combined factor per layer.
+
+  $$f_{\mathrm{layer}} = 0.3\, f_{\mathrm{TID}} + 0.7\, f_{\mathrm{SEE}}$$
+
+- **Stack factor**: Product of all layer factors in a multilayer shield.
+
+  $$f_{\mathrm{stack}} = \prod_i f_{\mathrm{layer},i}$$
+
+- **Event rate vector**: Rates per Mbit per day from the physics simulator.
+
+  $$\mathbf{R}_{\mathrm{physics}} = [R_{\mathrm{SEU}}, R_{\mathrm{MBU}}, R_{\mathrm{SET}}, R_{\mathrm{SEFI}}]^T$$
+
+- **Shielded rate**: Physics rates after multiplying by shielding.
+
+  $$\mathbf{R}_{\mathrm{shielded}} = f_{\mathrm{shield}}\, \mathbf{R}_{\mathrm{physics}}$$
+
+- **Failure rate (scenario/type)**: Per-hour rate for type \(k\) in scenario \(s\).
+
+  $$\lambda_{s,k} = \frac{R_{\mathrm{shielded},k}}{24}\, T_{\mathrm{fraction}}(s)$$
+
+- **Total failure rate**: Sum over scenarios and types, adjusted by correction coverage.
+
+  $$\lambda_{\mathrm{total}} = \sum_s \sum_k \lambda_{s,k}\, (1 - C_k)$$
+
+- **Correction coverage**: Fraction of injected errors of type \(k\) corrected by the algorithm(s).
+
+  $$C_k \in [0,1]$$
+
+- **15-year reliability**: Mission survival probability via Poisson model.
+
+  $$R_{15\,\mathrm{yr}} = \exp\!\left(-\lambda_{\mathrm{total}}\, t_{\mathrm{mission}}\right)$$
+
+- **Mission time**: 15 years converted to hours.
+
+  $$t_{\mathrm{mission}} = 15 \times 365.25 \times 24 = 131{,}487\;\text{hours}$$
+
+- **PASS threshold**: Max allowable total failure rate for 95% reliability.
+
+  $$\lambda_{\mathrm{threshold}} = \frac{-\ln(0.95)}{131{,}487} \approx 3.90 \times 10^{-7}\;\text{h}^{-1}$$
+
+- **LET (Linear Energy Transfer)**: Energy deposited per unit path length; here used as an average per scenario.
+
+- **Charge deposition / Critical charge**: Estimated deposited charge (fC) and device threshold for bit flip (temperature-adjusted).
+
+- **MBU (Multi-Bit Upset)** / **SEU/SET/SEFI**: Radiation-induced error classes (single-bit upset, transient, functional interrupt).
+
+- **TMR (Triple Modular Redundancy)**: Three replicated values with a voter to mask faults.
+
+- **Hamming distance**: Number of differing bits between two words; used for error severity.
+
+- **SDC (Silent Data Corruption)**: Wrong output that is not detected by the mechanism.
+
+- **MTBF**: Mean Time Between Failures (hours).
+
+  $$\mathrm{MTBF} = \frac{1}{\lambda_{\mathrm{total}}}$$
 
 ## References
 
