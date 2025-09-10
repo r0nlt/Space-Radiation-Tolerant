@@ -122,7 +122,7 @@ $$f_{stack} = 0.453 \times 0.0508 \times 0.506 \times 0.076 \times 0.575 \approx
 $$f_{TID,stack} = 0.809 \times 6.3 \times 10^{-7} \times 0.844 \times 1.9 \times 10^{-4} \times 0.881 = 7.6 \times 10^{-11}$$
 
 **Discrepancy Analysis:**
-$$\frac{f_{composite}}{f_{TID}} = \frac{5.11 \times 10^{-4}}{7.6 \times 10^{-11}} = 6.7 \times 10^{6}$$
+$$\frac{f_{composite}}{f_{TID}} = \frac{5.10 \times 10^{-4}}{7.6 \times 10^{-11}} = 6.7 \times 10^{6}$$
 
 The composite model prevents unrealistic attenuation predictions by accounting for single event effects that dominate thick shielding performance.
 
@@ -272,7 +272,7 @@ $$\lambda_{GEO\_NOMINAL} = 6 \times 10^{-6} \times 0.80 = 4.8 \times 10^{-6} \te
 $$f_{measured} = \frac{\lambda_{with\_shield}}{\lambda_{baseline}} \approx 5.06 \times 10^{-4}$$
 
 **Theoretical composite factor:**
-$$f_{theoretical} = 5.11 \times 10^{-4}$$
+$$f_{theoretical} = 5.10 \times 10^{-4}$$
 
 The close agreement validates the composite shielding model implementation.
 
