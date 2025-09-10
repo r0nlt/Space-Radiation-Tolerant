@@ -314,6 +314,140 @@ The framework provides built-in optimization:
 6. **Design Optimization:** Graded-Z multilayer approach provides superior mass efficiency compared to single-material designs, with polyethylene-tungsten alternation optimal for GEO's mixed radiation spectrum.
 
 
+GEO mission validation completed in 122 seconds.
+
+================================================================================
+                    GEO MISSION VALIDATION SUMMARY
+================================================================================
+
+Average Success Rates Across All GEO Tests:
+------------------------------------------------------------
+STANDARD PROTECTION METHODS:
+  Adaptive Voting     : 93.3595%
+  Bit-Level Voting    : 100.0000%
+  Burst-Error Voting  : 100.0000%
+  Fast Bit Correction : 100.0000%
+  Pattern Detection   : 68.3249%
+  Standard Voting     : 100.0000%
+  Weighted Voting     : 97.6571%
+  Word-Error Voting   : 100.0000%
+
+MEMORY PROTECTION:
+  Aligned Memory      : 25.0000% (1.0000/4.0000)
+  Protected Value     : 0.0000% (0.0000/4.0000)
+
+ADVANCED TMR METHODS:
+
+MEMORY MANAGEMENT FEATURES:
+  Enhanced TMR             : 100.0000%
+  Health-Weighted TMR      : 100.0000%
+  Physics-Driven Protection: 100.0000%
+  Temporal Redundancy      : 100.0000%
+  Memory Scrubber          : 100.0000%
+  Radiation Mapped Allocator: 100.0000%
+  Scrubbing Effectiveness  : 100.0000%
+  Static Allocator         : 100.0000%
+  Unified Memory Manager   : 0.0000%
+
+GEO-SPECIFIC PROTECTION SCENARIOS:
+  Eclipse Transition       : 100.0000%
+  Long Duration Stability  : 100.0000%
+  Solar Storm Survival     : 100.0000%
+  Temperature Cycling      : 100.0000%
+  Van Allen Recovery       : 100.0000%
+
+ADVANCED ERROR ANALYSIS:
+  Mean Hamming Distance     : 0.00 bits
+  Silent Data Corruption    : 0.0000%
+  15-Year Mission Reliability: 97.234957%
+  MTBF (hours)              : 23932388.1
+  Expected Lifetime (years) : 2730.14
+  30-Day Reliability        : 99.9840%
+  1-Year Reliability        : 99.8062%
+  Quantum Tunneling Events  : 400000 total
+
+CORRUPTION DETECTION/CORRECTION BY TYPE:
+  ECLIPSE_TRANSITION: injected=54, detected=54 (100.00%), corrected=54 (100.00%)
+  END_OF_LIFE     : injected=266, detected=266 (100.00%), corrected=266 (100.00%)
+  LONG_DURATION   : injected=114, detected=114 (100.00%), corrected=114 (100.00%)
+  SOLAR_STORM     : injected=5, detected=5 (100.00%), corrected=5 (100.00%)
+  TEMPERATURE_CYCLING: injected=18, detected=18 (100.00%), corrected=18 (100.00%)
+
+BREAKPOINT ANALYSIS (collapse intensity; success ≤ 1.00%):
+  Standard    : SINGLE_BIT=0.10, MULTI_BIT=0.10, BURST=0.10, WORD=0.10
+  Bit-Level   : SINGLE_BIT=0.10, MULTI_BIT=0.10, BURST=0.10, WORD=0.10
+  Burst-Error : SINGLE_BIT=0.10, MULTI_BIT=0.10, BURST=0.10, WORD=0.10
+  Word-Error  : SINGLE_BIT=0.10, MULTI_BIT=0.10, BURST=0.10, WORD=0.10
+  Adaptive    : SINGLE_BIT=0.10, MULTI_BIT=0.10, BURST=0.10, WORD=0.10
+  Weighted    : SINGLE_BIT=0.10, MULTI_BIT=0.10, BURST=0.10, WORD=0.10
+  Fast-Bit    : SINGLE_BIT=0.10, MULTI_BIT=0.10, BURST=0.10, WORD=0.10
+
+RELIABILITY THRESHOLD CHECK (95.00% over 15 years):
+  Mission reliability (Poisson, aggregated): 36.628618% -> FAIL
+  λ_total (per hour): 0.000008
+
+Top limiting scenarios (by λ contribution):
+----------------------------------------------------------------------------
+Scenario                        λ_avg (1/h)      λ_contrib      % of total
+----------------------------------------------------------------------------
+GEO_NOMINAL                         0.000001        0.000001          10.89
+GEO_NOMINAL_VAN_ALLEN               0.000001        0.000001          10.89
+GEO_NOMINAL_TEMPERATURE             0.000001        0.000001          10.89
+GEO_NOMINAL_SOLAR                   0.000001        0.000001          10.89
+GEO_NOMINAL_SINGLE                  0.000001        0.000001          10.89
+GEO_NOMINAL_MULTI                   0.000001        0.000001          10.89
+GEO_NOMINAL_LONG                    0.000001        0.000001          10.89
+GEO_NOMINAL_END_OF                  0.000001        0.000001          10.89
+GEO_NOMINAL_ECLIPSE                 0.000001        0.000001          10.89
+GEO_VAN_ALLEN_PEAK                  0.000000        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_TEMPERATURE        0.000000        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_SOLAR            0.000000        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_SINGLE           0.000000        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_MULTI            0.000000        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_LONG             0.000000        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_END_OF           0.000000        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_ECLIPSE          0.000000        0.000000           0.11
+GEO_VAN_ALLEN_PEAK_VAN_ALLEN        0.000000        0.000000           0.11
+GEO_ECLIPSE                         0.000000        0.000000           0.08
+GEO_ECLIPSE_ECLIPSE                 0.000000        0.000000           0.08
+GEO_ECLIPSE_END_OF                  0.000000        0.000000           0.08
+GEO_ECLIPSE_LONG                    0.000000        0.000000           0.08
+GEO_ECLIPSE_MULTI                   0.000000        0.000000           0.08
+GEO_ECLIPSE_SINGLE                  0.000000        0.000000           0.08
+GEO_ECLIPSE_SOLAR                   0.000000        0.000000           0.08
+GEO_ECLIPSE_TEMPERATURE             0.000000        0.000000           0.08
+GEO_ECLIPSE_VAN_ALLEN               0.000000        0.000000           0.08
+GEO_END_OF_LIFE                     0.000000        0.000000           0.02
+GEO_END_OF_LIFE_VAN_ALLEN           0.000000        0.000000           0.02
+GEO_END_OF_LIFE_TEMPERATURE         0.000000        0.000000           0.02
+GEO_END_OF_LIFE_SOLAR               0.000000        0.000000           0.02
+GEO_END_OF_LIFE_SINGLE              0.000000        0.000000           0.02
+GEO_END_OF_LIFE_MULTI               0.000000        0.000000           0.02
+GEO_END_OF_LIFE_LONG                0.000000        0.000000           0.02
+GEO_END_OF_LIFE_END_OF              0.000000        0.000000           0.02
+GEO_END_OF_LIFE_ECLIPSE             0.000000        0.000000           0.02
+GEO_SOLAR_STORM                     0.000000        0.000000           0.00
+GEO_SOLAR_STORM_ECLIPSE             0.000000        0.000000           0.00
+GEO_SOLAR_STORM_END_OF              0.000000        0.000000           0.00
+GEO_SOLAR_STORM_LONG                0.000000        0.000000           0.00
+GEO_SOLAR_STORM_MULTI               0.000000        0.000000           0.00
+GEO_SOLAR_STORM_SINGLE              0.000000        0.000000           0.00
+GEO_SOLAR_STORM_SOLAR               0.000000        0.000000           0.00
+GEO_SOLAR_STORM_TEMPERATURE         0.000000        0.000000           0.00
+GEO_SOLAR_STORM_VAN_ALLEN           0.000000        0.000000           0.00
+GEO_SOLAR_MAXIMUM_VAN_ALLEN         0.000000        0.000000           0.00
+GEO_SOLAR_MAXIMUM_TEMPERATURE        0.000000        0.000000           0.00
+GEO_SOLAR_MAXIMUM_SOLAR             0.000000        0.000000           0.00
+GEO_SOLAR_MAXIMUM_SINGLE            0.000000        0.000000           0.00
+GEO_SOLAR_MAXIMUM_MULTI             0.000000        0.000000           0.00
+GEO_SOLAR_MAXIMUM_LONG              0.000000        0.000000           0.00
+GEO_SOLAR_MAXIMUM_END_OF            0.000000        0.000000           0.00
+GEO_SOLAR_MAXIMUM_ECLIPSE           0.000000        0.000000           0.00
+GEO_SOLAR_MAXIMUM                   0.000000        0.000000           0.00
+----------------------------------------------------------------------------
+
+------------------------------------------------------------
+
 ## References
 
 1. Aerospace Corporation TOR-2009(8506)-6018, "Space Electronics Radiation Effects"
