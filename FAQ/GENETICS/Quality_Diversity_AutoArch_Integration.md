@@ -446,93 +446,82 @@ Sampling alignment:
 - Elites injected per generation: consistent >0 shows QD is influencing the population.
 - 2D projections: quick visual of which niches have champions (dots) and which remain empty.
 
-## Mathematical Formulation (LaTeX)
+# Mathematical Formulation (LaTeX)
 
-### Behavior Descriptor
-Let the 6D behavior descriptor be \(\mathbf{x} = (x_{ac}, x_{pe}, x_{cc}, x_{rt}, x_{gd}, x_{pw})\).
-- Architectural complexity (from layer sizes \(s_1,\dots,s_m\)):
-$$
-\mathrm{params} = \sum_{i=1}^{m-1} s_i s_{i+1}, \quad x_{ac} = \frac{\ln(\mathrm{params}+1)}{\ln(10^6)}\,.
-$$
-- Protection efficiency (errors detected \(E_d\), corrected \(E_c\)):
-$$
-x_{pe} = \begin{cases}
-\dfrac{E_c}{E_d}, & E_d > 0, \\
-1, & E_d = 0.\end{cases}
-$$
-- Computational cost (execution time in ms \(t_{ms}\)):
-$$
-x_{cc} = \min\left\{1, \; \frac{t_{ms}}{1000}\,\bigl(1 + x_{ac}\bigr)\right\}.
-$$
-- Radiation tolerance (accuracy preservation \(P\) in \%):
-$$
-x_{rt} = \frac{P}{100}.
-$$
-- Graceful degradation (baseline \(A_b\), radiation \(A_r\)):
-$$
-\delta = \max\left\{0, \; \frac{A_b - A_r}{\max(10^{-9},\,A_b)}\right\}, \quad x_{gd} = 1 - \delta.
-$$
-- Power efficiency (protection overhead \(o\) by level):
-$$
-x_{pw} = \frac{1}{1 + o + x_{ac}}\,.
-$$
-Typical overhead mapping: NONE\(\to 0.0\), CHECKSUM\(\to 0.1\), SELECTIVE\_TMR\(\to 0.5\), FULL\_TMR\(\to 1.0\), ADAPTIVE\_TMR\(\to 0.7\), SPACE\_OPTIMIZED\(\to 0.3\).
+## Behavior Descriptor
 
-### Discretization and Indexing (MAP grid)
-For grid resolution \(R\) per dimension, clamp and discretize each component:
-$$
-\tilde x_i = \min\{1,\max\{0, x_i\}\}, \quad c_i = \left\lfloor \tilde x_i\,(R-1) \right\rfloor, \quad i=1,\dots,6.
-$$
-Flatten 6D coordinates to a 1D index (row-major with base \(R\)):
-$$
-\mathrm{index}(\mathbf{c}) = \sum_{i=1}^{6} c_i\,R^{\,i-1}.
-$$
+Let the 6D behavior descriptor be $\mathbf{x} = (x_{ac}, x_{pe}, x_{cc}, x_{rt}, x_{gd}, x_{pw})$.
 
-### Novelty (K-Nearest Neighbors in behavior space)
-With Euclidean distance \(d(\mathbf{x},\mathbf{y}) = \sqrt{\sum_{i=1}^6 (x_i - y_i)^2}\) and behavior archive \(\mathcal{A}\), define novelty:
-$$
-\eta(\mathbf{x}) =
-\begin{cases}
-1, & |\mathcal{A}| < K, \\
-\dfrac{1}{K}\sum_{\mathbf{y} \in \mathcal{N}_K(\mathbf{x})} d(\mathbf{x},\mathbf{y}), & \text{otherwise.}
-\end{cases}
-$$
-Here \(\mathcal{N}_K(\mathbf{x})\) are the \(K\) nearest neighbors to \(\mathbf{x}\) in \(\mathcal{A}\).
+- **Architectural complexity** (from layer sizes $s_1,\dots,s_m$):
+$$\text{params} = \sum_{i=1}^{m-1} s_i s_{i+1}, \quad x_{ac} = \frac{\ln(\text{params}+1)}{\ln(10^6)}$$
 
-### Combined Fitness and Archive Update Rule
-Combined fitness used to compare candidates within a cell (\(\alpha=0.8\)):
-$$
-F(\mathbf{x}, P) = \alpha\,P + (1-\alpha)\,100\,\eta(\mathbf{x}).
-$$
-Cell replacement policy for cell \(\mathbf{c}\):
-$$
-\text{if cell is empty or } F_{\text{candidate}} > F_{\text{cell}}\;\Rightarrow\; \text{replace elite with candidate.}
-$$
+- **Protection efficiency** (errors detected $E_d$, corrected $E_c$):
+$$x_{pe} = \begin{cases}
+\frac{E_c}{E_d}, & E_d > 0 \\
+1, & E_d = 0
+\end{cases}$$
 
-### Coverage and Diversity Metrics
-- Coverage (fraction of occupied cells):
-$$
-\mathrm{Coverage} = \frac{N_{\text{occupied}}}{R^6}.
-$$
-- Behavioral diversity (mean pairwise distance among occupied cells with behaviors \(\{\mathbf{x}^{(1)},\dots,\mathbf{x}^{(n)}\}\)):
-$$
-\Delta = \frac{2}{n(n-1)} \sum_{1 \le i < j \le n} d\bigl(\mathbf{x}^{(i)},\mathbf{x}^{(j)}\bigr).
-$$
+- **Computational cost** (execution time in ms $t_{ms}$):
+$$x_{cc} = \min\left\{1, \frac{t_{ms}}{1000}(1 + x_{ac})\right\}$$
 
-### Elite Sampling Mix (for GA Injection)
+- **Radiation tolerance** (accuracy preservation $P$ in %):
+$$x_{rt} = \frac{P}{100}$$
+
+- **Graceful degradation** (baseline $A_b$, radiation $A_r$):
+$$\delta = \max\left\{0, \frac{A_b - A_r}{\max(10^{-9}, A_b)}\right\}, \quad x_{gd} = 1 - \delta$$
+
+- **Power efficiency** (protection overhead $o$ by level):
+$$x_{pw} = \frac{1}{1 + o + x_{ac}}$$
+
+**Typical overhead mapping:** NONE $\to 0.0$, CHECKSUM $\to 0.1$, SELECTIVE_TMR $\to 0.5$, FULL_TMR $\to 1.0$, ADAPTIVE_TMR $\to 0.7$, SPACE_OPTIMIZED $\to 0.3$.
+
+## Discretization and Indexing (MAP grid)
+
+For grid resolution $R$ per dimension, clamp and discretize each component:
+$$\tilde{x}_i = \min\{1,\max\{0, x_i\}\}, \quad c_i = \left\lfloor \tilde{x}_i(R-1) \right\rfloor, \quad i=1,\dots,6$$
+
+Flatten 6D coordinates to a 1D index (row-major with base $R$):
+$$\text{index}(\mathbf{c}) = \sum_{i=1}^{6} c_i R^{i-1}$$
+
+## Novelty (K-Nearest Neighbors in behavior space)
+
+With Euclidean distance $d(\mathbf{x},\mathbf{y}) = \sqrt{\sum_{i=1}^6 (x_i - y_i)^2}$ and behavior archive $\mathcal{A}$, define novelty:
+$$\eta(\mathbf{x}) = \begin{cases}
+1, & |\mathcal{A}| < K \\
+\frac{1}{K}\sum_{\mathbf{y} \in \mathcal{N}_K(\mathbf{x})} d(\mathbf{x},\mathbf{y}), & \text{otherwise}
+\end{cases}$$
+
+Here $\mathcal{N}_K(\mathbf{x})$ are the $K$ nearest neighbors to $\mathbf{x}$ in $\mathcal{A}$.
+
+## Combined Fitness and Archive Update Rule
+
+Combined fitness used to compare candidates within a cell ($\alpha=0.8$):
+$$F(\mathbf{x}, P) = \alpha P + (1-\alpha) \cdot 100 \cdot \eta(\mathbf{x})$$
+
+Cell replacement policy for cell $\mathbf{c}$:
+$$\text{if cell is empty or } F_{\text{candidate}} > F_{\text{cell}} \Rightarrow \text{replace elite with candidate}$$
+
+## Coverage and Diversity Metrics
+
+- **Coverage** (fraction of occupied cells):
+$$\text{Coverage} = \frac{N_{\text{occupied}}}{R^6}$$
+
+- **Behavioral diversity** (mean pairwise distance among occupied cells with behaviors $\{\mathbf{x}^{(1)},\dots,\mathbf{x}^{(n)}\}$):
+$$\Delta = \frac{2}{n(n-1)} \sum_{1 \leq i < j \leq n} d(\mathbf{x}^{(i)},\mathbf{x}^{(j)})$$
+
+## Elite Sampling Mix (for GA Injection)
+
 Each generation, sample elites for injection with proportions:
-$$
-40\%\ \text{highest}\ F,\quad 30\%\ \text{highest}\ \eta,\quad 30\%\ \text{uniform over occupied cells}.
-$$
+$$40\% \text{ highest } F, \quad 30\% \text{ highest } \eta, \quad 30\% \text{ uniform over occupied cells}$$
 
-### 2D Projection for Visualization
-Given dimensions \(p,q \in \{1,\dots,6\}\), define 2D occupancy matrix \(A \in \{0,1\}^{R \times R}\):
-$$
-A_{c_p, c_q} = \begin{cases}
-1, & \exists\ \text{occupied cell with } (c_p, c_q) \text{ on dims } (p,q), \\
-0, & \text{otherwise.}
-\end{cases}
-$$
+## 2D Projection for Visualization
+
+Given dimensions $p,q \in \{1,\dots,6\}$, define 2D occupancy matrix $A \in \{0,1\}^{R \times R}$:
+$$A_{c_p, c_q} = \begin{cases}
+1, & \exists \text{ occupied cell with } (c_p, c_q) \text{ on dims } (p,q) \\
+0, & \text{otherwise}
+\end{cases}$$
+
 This projection aids visualizing coverage growth along two intuitive axes (e.g., tolerance vs cost).
 
 ## Variable Glossary and Code Cross-References
