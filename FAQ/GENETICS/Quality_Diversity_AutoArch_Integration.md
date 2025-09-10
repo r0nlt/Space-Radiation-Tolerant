@@ -426,7 +426,7 @@ Function alignment:
 - Those elites are injected by replacing the worst-K population members, keeping the search from collapsing onto a single niche.
 
 Sampling alignment:
-- `sampleDiverseElites(sample_size)` returns a mixed set: ~40% best fitness, ~30% highest novelty, ~30% random among occupied cells.
+- `sampleDiverseElites(sample_size)` returns a mixed set: ~40% best `fitness_score`, ~30% best `novelty_score`, ~30% uniform occupied.
 
 ### Minimal numeric example (3D slice for clarity)
 - Let R=5, and consider dims: tolerance, cost, power.
@@ -700,3 +700,19 @@ Edge cases and clamping:
 7) Analytics update: `updateArchiveStatistics()`, `getAnalytics()`.
 8) Sampling for injection: `sampleDiverseElites(...)` → replace worst-K in population in the GA step.
 9) Persist results: `exportResults(...)` and example CSV/plot utilities.
+
+
+## Wide Networks (Wider Layer Options)
+
+You can test wider architectures via the example’s `--widths` flag (comma-separated list):
+
+```bash
+./examples/auto_arch_search_example --qd --adv-qd \
+  --trials 100 \
+  --widths 32,64,128,256,512,1024
+```
+
+Notes:
+- Wider layers increase parameter count → raises `x_ac` (architectural complexity), and may increase `x_cc` (computational cost) via execution time.
+- QD will naturally place these in higher-complexity, potentially higher-cost cells; elites will reflect preservation vs cost trade-offs.
+- If exploration collapses to very wide models, increase novelty weight slightly (e.g., 0.25) or include more mid-range widths to keep multiple niches competitive.
