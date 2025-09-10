@@ -71,7 +71,10 @@ Where:
 $$f_{SEE} = 0.4 \cdot f_p + 0.4 \cdot f_e + 0.2 \cdot f_h$$
 
 Where:
-$$f_p = \alpha_p^{\rho t / 5}, \quad f_e = \alpha_e^{\rho t / 5}, \quad f_h = \left(1 - \frac{R_{GCR}}{100}\right)^{\rho t / 10}$$
+
+$$
+f_p = \alpha_p^{\rho t / 5}, \quad f_e = \alpha_e^{\rho t / 5}, \quad f_h = \left(1 - \frac{R_{GCR}}{100}\right)^{\rho t / 10}
+$$
 
 Variables:
 - $\alpha_p$ = proton attenuation coefficient at 5 g/cm²
@@ -114,15 +117,24 @@ Continuing similarly for remaining layers:
 - $f_5 = 0.575$ (Polyethylene 60mm)
 
 **Total Stack Factor:**
-$$f_{stack} = 0.453 \times 0.0508 \times 0.506 \times 0.076 \times 0.575 \approx 5.10 \times 10^{-4}$$
+
+$$
+f_{stack} = 0.453 \times 0.0508 \times 0.506 \times 0.076 \times 0.575 \approx 5.10 \times 10^{-4}
+$$
 
 ### 2.3 Comparison: TID-Only vs Composite Model
 
 **TID-Only Calculation:**
-$$f_{TID,stack} = 0.809 \times 6.3 \times 10^{-7} \times 0.844 \times 1.9 \times 10^{-4} \times 0.881 = 7.6 \times 10^{-11}$$
+
+$$
+f_{TID,stack} = 0.809 \times 6.3 \times 10^{-7} \times 0.844 \times 1.9 \times 10^{-4} \times 0.881 = 7.6 \times 10^{-11}
+$$
 
 **Discrepancy Analysis:**
-$$\frac{f_{composite}}{f_{TID}} = \frac{5.10 \times 10^{-4}}{7.6 \times 10^{-11}} = 6.7 \times 10^{6}$$
+
+$$
+\frac{f_{composite}}{f_{TID}} = \frac{5.10 \times 10^{-4}}{7.6 \times 10^{-11}} = 6.7 \times 10^{6}
+$$
 
 The composite model prevents unrealistic attenuation predictions by accounting for single event effects that dominate thick shielding performance.
 
@@ -135,7 +147,15 @@ Each scenario $s$ defines base upset probability vectors:
 $$\mathbf{P}_s = \begin{bmatrix} P_{single}(s) \\ P_{multi}(s) \\ P_{burst}(s) \\ P_{word}(s) \end{bmatrix}$$
 
 For GEO_NOMINAL:
-$$\mathbf{P}_{nominal} = \begin{bmatrix} 3.7 \times 10^{-5} \\ 1.1 \times 10^{-5} \\ 2.0 \times 10^{-6} \\ 8.0 \times 10^{-7} \end{bmatrix}$$
+
+$$
+\mathbf{P}_{nominal} = \begin{bmatrix}
+3.7 \times 10^{-5} \\
+1.1 \times 10^{-5} \\
+2.0 \times 10^{-6} \\
+8.0 \times 10^{-7}
+\end{bmatrix}
+$$
 
 ### 3.2 Effective Upset Probability
 
@@ -159,21 +179,38 @@ $$\{c_1, c_2, c_3\}_j = \{v_{orig}, v_{orig}, v_{orig}\}_j$$
 ### 4.2 Error Pattern Injection
 
 Corruption decision for error type $k$ in scenario $s$:
-$$\text{inject}_{s,k,j} = \begin{cases} 1 & \text{if } U(0,1) < P_{eff}(s,k) \\ 0 & \text{otherwise} \end{cases}$$
+
+$$
+\text{inject}_{s,k,j} =
+\begin{cases}
+1 & \text{if } U(0,1) < P_{\mathrm{eff}}(s,k) \\
+0 & \text{otherwise}
+\end{cases}
+$$
 
 Where $U(0,1)$ is a uniform random variable on [0,1].
 
 ### 4.3 Shielding Attenuation Application
 
 Post-injection, each copy undergoes probabilistic reversion:
-$$c_i^{final} = \begin{cases} v_{orig} & \text{if } U(0,1) > f_{shield} \\ c_i^{corrupted} & \text{otherwise} \end{cases}$$
+
+$$
+c_i^{\mathrm{final}} =
+\begin{cases}
+v_{orig} & \text{if } U(0,1) > f_{\mathrm{shield}} \\
+c_i^{\mathrm{corrupted}} & \text{otherwise}
+\end{cases}
+$$
 
 This models the physical effect where shielding prevents some injected errors from manifesting.
 
 ### 4.4 Protection Algorithm Success Rate
 
 For protection method $m$ and scenario $s$:
-$$R_{success}(m,s) = \frac{1}{N_{trials}} \sum_{j=1}^{N_{trials}} \mathbb{I}[V_m(\mathbf{c}_j) = v_{orig,j}]$$
+
+$$
+R_{\mathrm{success}}(m,s) = \frac{1}{N_{\mathrm{trials}}} \sum_{j=1}^{N_{\mathrm{trials}}} \mathbb{I}\big[ V_m(\mathbf{c}_j) = v_{orig,j} \big]
+$$
 
 Where:
 - $V_m(\mathbf{c}_j)$ = result of voting algorithm $m$ on corrupted copies
@@ -184,22 +221,30 @@ Where:
 ### 5.1 Baseline Physics Simulation
 
 The `PhysicsRadiationSimulator` generates error rates per Mbit per day:
-$$\mathbf{R}_{physics} = [R_{SEU}, R_{MBU}, R_{SET}, R_{SEFI}]^T \text{ [events/Mbit/day]}$$
+$$
+\mathbf{R}_{\mathrm{physics}} = [R_{\mathrm{SEU}}, R_{\mathrm{MBU}}, R_{\mathrm{SET}}, R_{\mathrm{SEFI}}]^T\;\;\text{[events/Mbit/day]}
+$$
 
 ### 5.2 Critical Bug Fix: Shielding Application
 
 **Before Fix (Bug):**
-$$\mathbf{R}_{final} = \mathbf{R}_{physics}$$
+$$
+\mathbf{R}_{\mathrm{final}} = \mathbf{R}_{\mathrm{physics}}
+$$
 
 **After Fix (Corrected):**
-$$\mathbf{R}_{shielded} = f_{shield} \cdot \mathbf{R}_{physics}$$
+$$
+\mathbf{R}_{\mathrm{shielded}} = f_{\mathrm{shield}} \cdot \mathbf{R}_{\mathrm{physics}}
+$$
 
 This correction ensures multilayer shielding effectiveness propagates to mission reliability calculations.
 
 ### 5.3 Hourly Failure Rate Conversion
 
 Converting daily physics rates to hourly mission rates:
-$$\lambda_{s,k} = \frac{R_{shielded,k}}{24} \cdot T_{fraction}(s)$$
+$$
+\lambda_{s,k} = \frac{R_{\mathrm{shielded},k}}{24} \cdot T_{\mathrm{fraction}}(s)
+$$
 
 Where:
 - $\lambda_{s,k}$ = failure rate for error type $k$ in scenario $s$ (failures/hour)
@@ -210,24 +255,32 @@ Where:
 ### 6.1 Total Mission Failure Rate
 
 Aggregating across all scenarios and error types with correction coverage:
-$$\lambda_{total} = \sum_{s=1}^{6} \sum_{k=1}^{4} \lambda_{s,k} \cdot (1 - C_{k})$$
+$$
+\lambda_{\mathrm{total}} = \sum_{s=1}^{6} \sum_{k=1}^{4} \lambda_{s,k} \cdot (1 - C_{k})
+$$
 
 Where $C_k$ is the empirically measured correction coverage for error type $k$.
 
 ### 6.2 Poisson Reliability Model
 
 15-year mission reliability using Poisson statistics:
-$$R_{15yr} = \exp(-\lambda_{total} \cdot t_{mission})$$
+$$
+R_{15\,\mathrm{yr}} = \exp(-\lambda_{\mathrm{total}} \cdot t_{\mathrm{mission}})
+$$
 
 Where:
-$$t_{mission} = 15 \times 365.25 \times 24 = 131,487 \text{ hours}$$
+$$
+t_{\mathrm{mission}} = 15 \times 365.25 \times 24 = 131{,}487\;\text{hours}
+$$
 
 ### 6.3 PASS/FAIL Threshold
 
 Mission requirement: $R_{15yr} \geq 0.95$
 
 Equivalent failure rate threshold:
-$$\lambda_{threshold} = \frac{-\ln(0.95)}{131,487} = 3.90 \times 10^{-7} \text{ failures/hour}$$
+$$
+\lambda_{\mathrm{threshold}} = \frac{-\ln(0.95)}{131{,}487} = 3.90 \times 10^{-7}\;\text{failures/hour}
+$$
 
 ## 7. Experimental Results and Analysis
 
@@ -281,12 +334,16 @@ The close agreement validates the composite shielding model implementation.
 ### 8.1 Required Stack Enhancement
 
 To achieve PASS status, reduce $\lambda_{total}$ by factor of 105:
-$$f_{required} = \frac{5.06 \times 10^{-4}}{105} = 4.8 \times 10^{-6}$$
+$$
+f_{\mathrm{required}} = \frac{5.06 \times 10^{-4}}{105} = 4.8 \times 10^{-6}
+$$
 
 ### 8.2 Thickness Scaling Estimate
 
 Assuming exponential thickness dependence:
-$$\frac{t_{new}}{t_{current}} = \frac{\ln(f_{current})}{\ln(f_{required})} \approx 1.56$$
+$$
+\frac{t_{\mathrm{new}}}{t_{\mathrm{current}}} = \frac{\ln(f_{\mathrm{current}})}{\ln(f_{\mathrm{required}})} \approx 1.56
+$$
 
 **Recommended configuration:**
 - Stack thickness: ~500mm (56% increase from current 320mm)
