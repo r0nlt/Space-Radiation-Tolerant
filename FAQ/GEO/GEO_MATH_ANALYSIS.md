@@ -218,6 +218,56 @@ Where:
 - $V_m(\mathbf{c}_j)$ = result of voting algorithm $m$ on corrupted copies
 - $\mathbb{I}[\cdot]$ = indicator function (1 if true, 0 if false)
 
+#### 4.4.1 What is being measured
+
+- **Trial index (j)**: Each Monte Carlo draw produces a triple (or more) of possibly corrupted copies \(\mathbf{c}_j = [c_{1,j}, c_{2,j}, c_{3,j}]\) derived from the same original value \(v_{orig,j}\) after injection (Section 4.2) and shielding reversion (Section 4.3).
+- **Voting function (\(V_m\))**: The protection method \(m\) maps the set of copies to a single decided value, e.g., majority-of-three for standard TMR, bit-wise majority for bit-level voting, burst-aware strategies for burst-error voting, etc.
+- **Success criterion**: A trial counts as success if the algorithm’s decided value equals the original, uncorrupted value from before any injections, i.e., \(V_m(\mathbf{c}_j) = v_{orig,j}\). Otherwise it is a failure for that trial.
+- **Empirical probability**: \(R_{\mathrm{success}}(m,s)\) is the Monte Carlo estimate of the probability that method \(m\) perfectly corrects the corruption in scenario \(s\).
+
+#### 4.4.2 Pseudocode
+
+```python
+# Inputs: method m, scenario s, number of trials N_trials
+num_success = 0
+for j in range(1, N_trials + 1):
+    # c_j is the set of replicated copies after injection + shielding reversion
+    c_j = generate_copies_after_injection_and_shielding(s)
+    v_orig_j = original_value_for_trial(j)
+
+    decided = V_m(c_j)  # apply protection/voting method m
+    if decided == v_orig_j:
+        num_success += 1
+
+R_success_m_s = num_success / N_trials
+```
+
+This procedure is run independently per scenario \(s\) (and typically per error type, data type, and configuration) so results can be analyzed granularly.
+
+#### 4.4.3 Edge cases and conventions
+
+- **Ties or three-way disagreement**: If all three copies differ (or a tie arises bit-wise), the method-specific tie-break rule applies. Unless the method reconstructs \(v_{orig,j}\), the outcome is counted as failure for that trial.
+- **Detection-only behavior**: If a method detects but does not correct an error, the trial is still counted as failure unless the final returned value equals \(v_{orig,j}\) after the method’s complete action set (e.g., retry, scrub, temporal vote) within the trial.
+- **Silent data corruption (SDC)**: If \(V_m(\mathbf{c}_j) \neq v_{orig,j}\) and the method does not flag it, the trial is a failure here and also contributes to SDC metrics (reported separately in Advanced Error Analysis).
+- **Data-type granularity**: Equality is evaluated at the value’s granularity appropriate to the method (e.g., word-level for standard TMR, bit-level for bit-wise voting). The success definition remains strict equality to the pre-injection value.
+
+#### 4.4.4 Connection to coverage \(C_k\) and mission reliability
+
+Per error class \(k\), we can derive empirical correction coverage used in the mission failure-rate aggregation (Section 6):
+
+$$
+C_k \;\approx\; \frac{\sum_{j \in \mathcal{J}_k} \mathbb{I}\big[ V_m(\mathbf{c}_j) = v_{orig,j} \big]}{|\mathcal{J}_k|}
+$$
+
+where \(\mathcal{J}_k\) is the subset of trials in which an error of class \(k\) was injected (after scenario/time weighting). These \(C_k\) values enter
+\(\lambda_{\mathrm{total}} = \sum_s \sum_k \lambda_{s,k}\,(1 - C_k)\). This is why high success rates against the dominant error classes in high time-fraction scenarios drive mission-level reliability the most.
+
+#### 4.4.5 Interpreting values and confidence
+
+- **Estimator**: \(R_{\mathrm{success}}(m,s)\) is an unbiased estimator of the true success probability in scenario \(s\).
+- **Sampling error**: With \(N_{\mathrm{trials}}\) independent trials and true success probability \(p\), the standard error is \(\sqrt{p(1-p)/N_{\mathrm{trials}}}\). Large \(N_{\mathrm{trials}}\) (e.g., 50,000) makes reported rates stable to the third or fourth decimal place.
+- **Aggregation caution**: A simple average of these per-test success rates is diagnostic but not a mission metric. The mission-level PASS/FAIL uses the Poisson aggregation with coverage-weighted failure rates (Section 6), not the naive average.
+
 ## 5. Physics-Based Error Rate Integration
 
 ### 5.1 Baseline Physics Simulation
