@@ -500,9 +500,13 @@ double EnhancedPhysicsRadiationSimulator::calculateRadiationIntensity(
     const double proton_flux = std::max(0.0, env.trapped_proton_flux);      // protons/cm²/s
     const double electron_flux = std::max(0.0, env.trapped_electron_flux);  // electrons/cm²/s
 
-    // Solar Particle Events scale strongly with solar activity and inverse-square with distance
-    const double distance_factor =
-        (env.distance_from_sun > 0.0) ? 1.0 / (env.distance_from_sun * env.distance_from_sun) : 1.0;
+    // Solar Particle Events ~ 1/r^2; clamp r to a plausible range to avoid singularities
+    double r_au = env.distance_from_sun;
+    if (!std::isfinite(r_au) || r_au <= 0.0) {
+        r_au = 1.0;  // default to 1 AU if unspecified/invalid
+    }
+    r_au = std::clamp(r_au, 0.1, 50.0);
+    const double distance_factor = 1.0 / (r_au * r_au);
     const double spe_component = std::max(0.0, env.solar_activity) * 5.0e4 * distance_factor;
 
     // Galactic Cosmic Rays component (relative scale → convert to flux-like magnitude)
@@ -674,7 +678,13 @@ std::vector<std::vector<T>> QuantumEnhancedNeuralProtection::calculateQuantumErr
                         rad_ml::physics::DefectDistribution{}, lattice, time_steps);
 
                 // Apply correction based on quantum propagation analysis
-                double quantum_correction = error_propagation.back().interstitials.size() * 0.001;
+                // Sum total interstitial counts across all particle types
+                const auto& last = error_propagation.back().interstitials;
+                size_t total_interstitial_count = 0;
+                for (const auto& kv : last) {
+                    total_interstitial_count += kv.second.size();
+                }
+                double quantum_correction = static_cast<double>(total_interstitial_count) * 0.001;
                 corrected_weights[layer][neuron] =
                     static_cast<T>(original_weights[layer][neuron] * (1.0 - quantum_correction));
             }

@@ -2308,9 +2308,10 @@ class ProtectedNeuralNetwork : public NetworkModel {
             activations[layer + 1].resize(layer_sizes_[layer + 1]);
 
             // For better performance with SIMD, we can optimize matrix-vector multiplication
-            // for large layers when using float type
+            // for large layers when using float type. Prefer SIMD whenever available;
+            // protection logic runs orthogonally to compute path.
             if (layer_sizes_[layer] >= 8 && layer_sizes_[layer + 1] >= 8 &&
-                std::is_same_v<T, float> && enable_protection == false) {
+                std::is_same_v<T, float>) {
                 // Pre-load all weights for this layer into a contiguous matrix
                 std::vector<T> layer_weights(layer_sizes_[layer] * layer_sizes_[layer + 1]);
                 std::vector<T> layer_biases(layer_sizes_[layer + 1]);
@@ -2429,33 +2430,45 @@ class ProtectedNeuralNetwork : public NetworkModel {
     {
         static_assert(std::is_same_v<T, float>, "AVX implementation only for float");
 
-        const size_t simd_width = 8;  // AVX2 processes 8 floats at once
-
+#if !defined(__AVX2__)
+        // Fallback scalar implementation when AVX2 is unavailable
+        for (size_t row = 0; row < rows; ++row) {
+            float acc = 0.0f;
+            for (size_t col = 0; col < cols; ++col) {
+                acc += matrix[row * cols + col] * vector[col];
+            }
+            result[row] = acc;
+        }
+        return;
+#else
         for (size_t row = 0; row < rows; ++row) {
             __m256 sum = _mm256_setzero_ps();
             size_t col = 0;
 
-            // Process 8 elements at a time
+            // Process 8 elements at a time; loop condition prevents over-read
             for (; col + 7 < cols; col += 8) {
                 __m256 m_vals = _mm256_loadu_ps(&matrix[row * cols + col]);
                 __m256 v_vals = _mm256_loadu_ps(&vector[col]);
+#if defined(__FMA__)
                 sum = _mm256_fmadd_ps(m_vals, v_vals, sum);
+#else
+                sum = _mm256_add_ps(sum, _mm256_mul_ps(m_vals, v_vals));
+#endif
             }
 
-            // Horizontal sum of the 8-element vector
-            __m128 sum_high = _mm256_extractf128_ps(sum, 1);
-            __m128 sum_low = _mm256_castps256_ps128(sum);
-            __m128 sum_final = _mm_add_ps(sum_high, sum_low);
-            sum_final = _mm_hadd_ps(sum_final, sum_final);
-            sum_final = _mm_hadd_ps(sum_final, sum_final);
-
-            result[row] = _mm_cvtss_f32(sum_final);
+            // Reduce 8-wide sum safely via store
+            alignas(32) float tmp[8];
+            _mm256_store_ps(tmp, sum);
+            float acc = tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7];
 
             // Handle remaining elements
             for (; col < cols; ++col) {
-                result[row] += matrix[row * cols + col] * vector[col];
+                acc += matrix[row * cols + col] * vector[col];
             }
+
+            result[row] = acc;
         }
+#endif
     }
 #endif
 };

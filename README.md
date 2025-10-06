@@ -14,7 +14,7 @@
 
 **Email:** spacelabsai@gmail.com
 
-**Version:** v1.0.2.4
+**Version:** v1.0.2.4=5
 
 A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom library focused to engineer systems resilient to radiation effects in Space Environments. Currently the framework explores embedded databases using VAE neural network alongside LMDB (Lightning Memory Mapped Database).
 
@@ -23,14 +23,12 @@ A C++ software framework for implementing machine learning models that can opera
 Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help provide cost efficient solution for COTS processors as AI demand increases.
 
 Status:
-August 26 2025
-- Started refreshing and updating older documentation, tests, and optimizing foundational code
-- PyTorch has been integrated, there are a few tests but I will find time to explore that later
-- Cleaning up codebase and better documentation and become a priority in terms of making sure the repo becomes ready to integrate with a custom LLM.
-- increase in better documentation and visuals
-- Radiation Tolerant AI Native Embedded Database (in development, mostly looking to get through documentation and updating outdated things before I finish this)
-- CUDA is postponed until I get a better GPU
-- This is now just a project I do on the side.
+October 5 2025
+- Enhanced radiation sim (Dirac+BSE+Green’s), energy/material-aware cascade
+- New verification tests (intensity; cascade) + CTest
+- FAQ with math, mapping, code refs
+- AVX2 mat-vec fix; SIMD condition corrected
+- Thread-safe pool fix (no T::next; defined size_type)
 
 ### Approach
 
@@ -40,6 +38,33 @@ August 26 2025
 - **Quality Assurance**: High bench mark and robust testing as we approach hardware-in-the-loop validation.
 - **Documentation**: Comprehensive documentation and on going updates
 
+### Advanced Radiation Sim (v1.0.2.5)
+Smarter physics, tighter tests, clearer docs.
+
+- Simulator
+  - Dirac cascade (24 angles), cross-section–weighted secondaries
+  - Energy/material-aware yield (explicit-energy API)
+  - Composed Dirac + BSE + Green’s → `DefectDistribution`
+
+- Tests
+  - Intensity: SPE 1/r², SAA ~2.5×, atmosphere/magnetic ratios, combined exact, noise (multi-seed)
+  - Cascade: electron-only, size [3–24], material/energy checks
+  - Run:
+    ```bash
+    cmake -S /Users/rishabnuguru/space -B /Users/rishabnuguru/space/build-radiation -DCMAKE_BUILD_TYPE=Release
+    cmake --build /Users/rishabnuguru/space/build-radiation --target radiation_intensity_aggregation_test relativistic_cascade_test -j 8
+    ctest --test-dir /Users/rishabnuguru/space/build-radiation -R "radiation_intensity_aggregation_test|relativistic_cascade_test" --output-on-failure
+    ```
+
+- Docs
+  - `FAQ/Enhanced_Physics_Radiation_Simulator.md` (math, API mapping, code refs, test guide)
+
+- Fixes
+  - Neural: AVX2 mat-vec safe loads + correct reduction; SIMD not gated by protection
+  - Memory: lock-free pool with internal node; explicit `size_type`
+
+- Next
+  - Add stopping power/depth energy loss; calibrate BSE/Green’s; derive energy from particle/env
 ### 🚀 Enhanced Evolutionary System Architecture (v1.0.2.4)
 
 **Multi-Operator Adaptive Genetic Algorithm with Real-Time Performance Tracking**

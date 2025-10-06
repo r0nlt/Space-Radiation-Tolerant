@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -212,9 +213,10 @@ class SIMDMatrixAllocator {
  *
  * Reduces allocation overhead for small, frequently allocated objects
  */
-template <typename T, size_type PoolSize = 1024>
+template <typename T, std::size_t PoolSize = 1024>
 class SmallObjectPool {
    public:
+    using size_type = std::size_t;
     SmallObjectPool() : pool_(), free_list_()
     {
         // Pre-allocate memory blocks
@@ -255,7 +257,7 @@ class SmallObjectPool {
 /**
  * @brief Thread-safe memory pool with lock-free operations
  */
-template <typename T, size_type PoolSize = 1024>
+template <typename T, std::size_t PoolSize = 1024>
 class ThreadSafeMemoryPool {
    public:
     ThreadSafeMemoryPool() = default;
@@ -288,29 +290,37 @@ class ThreadSafeMemoryPool {
 
    private:
     struct alignas(64) FreeList {
-        std::atomic<T*> head{nullptr};
+        struct Node {
+            T* ptr;
+            Node* next;
+        };
+
+        std::atomic<Node*> head{nullptr};
         std::atomic<size_t> size{0};
 
         bool pop(T*& result)
         {
-            auto* current = head.load(std::memory_order_acquire);
+            Node* current = head.load(std::memory_order_acquire);
             if (!current) return false;
 
-            while (!head.compare_exchange_weak(current, current->next, std::memory_order_acquire)) {
+            while (!head.compare_exchange_weak(current, current ? current->next : nullptr,
+                                               std::memory_order_acquire)) {
                 if (!current) return false;
             }
 
-            result = current;
+            result = current->ptr;
+            delete current;
             size.fetch_sub(1, std::memory_order_relaxed);
             return true;
         }
 
         void push(T* ptr)
         {
-            auto* current = head.load(std::memory_order_acquire);
+            Node* node = new Node{ptr, nullptr};
+            Node* current = head.load(std::memory_order_acquire);
             do {
-                ptr->next = current;
-            } while (!head.compare_exchange_weak(current, ptr, std::memory_order_release));
+                node->next = current;
+            } while (!head.compare_exchange_weak(current, node, std::memory_order_release));
 
             size.fetch_add(1, std::memory_order_relaxed);
         }
