@@ -17,7 +17,7 @@ namespace sim {
  *
  * Based on NASA's AE9/AP9 model and ESA's SPENVIS for radiation modeling
  */
-enum class RadiationEnvironment {
+enum class SpaceEnvironment {
     LEO,             // Low Earth Orbit (400-600km)
     EARTH_ORBIT,     // Earth orbit (general)
     MEO,             // Medium Earth Orbit (like GPS satellites)
@@ -138,29 +138,28 @@ struct RadiationEffect {
  * @brief Model of spacecraft orbit or trajectory
  */
 struct SpacecraftTrajectory {
-    std::vector<RadiationEnvironment> environments;
+    std::vector<SpaceEnvironment> environments;
     std::vector<double> durations_days;  // Time spent in each environment
 
     // Common trajectory configurations based on NASA mission profiles
     static SpacecraftTrajectory Earth_LEO()
     {
-        return {{RadiationEnvironment::LEO}, {365.0}};  // One year mission
+        return {{SpaceEnvironment::LEO}, {365.0}};  // One year mission
     }
 
     static SpacecraftTrajectory Mars_Mission()
     {
-        return {{RadiationEnvironment::LEO, RadiationEnvironment::INTERPLANETARY,
-                 RadiationEnvironment::MARS_ORBIT, RadiationEnvironment::MARS_SURFACE,
-                 RadiationEnvironment::INTERPLANETARY, RadiationEnvironment::LEO},
+        return {{SpaceEnvironment::LEO, SpaceEnvironment::INTERPLANETARY,
+                 SpaceEnvironment::MARS_ORBIT, SpaceEnvironment::MARS_SURFACE,
+                 SpaceEnvironment::INTERPLANETARY, SpaceEnvironment::LEO},
                 {10.0, 180.0, 30.0, 365.0, 180.0, 10.0}};
     }
 
     static SpacecraftTrajectory Europa_Mission()
     {
-        return {{RadiationEnvironment::LEO, RadiationEnvironment::INTERPLANETARY,
-                 RadiationEnvironment::JUPITER, RadiationEnvironment::EUROPA,
-                 RadiationEnvironment::JUPITER, RadiationEnvironment::INTERPLANETARY,
-                 RadiationEnvironment::LEO},
+        return {{SpaceEnvironment::LEO, SpaceEnvironment::INTERPLANETARY, SpaceEnvironment::JUPITER,
+                 SpaceEnvironment::EUROPA, SpaceEnvironment::JUPITER,
+                 SpaceEnvironment::INTERPLANETARY, SpaceEnvironment::LEO},
                 {10.0, 730.0, 60.0, 30.0, 60.0, 730.0, 10.0}};
     }
 };
@@ -169,11 +168,11 @@ struct SpacecraftTrajectory {
  * @brief Environment parameters for radiation simulation
  */
 struct EnvironmentParams {
-    RadiationEnvironment environment;
+    SpaceEnvironment environment;
     double solar_activity;
     double shielding_thickness_mm;
 
-    EnvironmentParams(RadiationEnvironment env = RadiationEnvironment::LEO, double solar = 0.5,
+    EnvironmentParams(SpaceEnvironment env = SpaceEnvironment::LEO, double solar = 0.5,
                       double shielding = 2.0)
         : environment(env), solar_activity(solar), shielding_thickness_mm(shielding)
     {
@@ -200,16 +199,16 @@ class PhysicsRadiationSimulator {
     static EnvironmentParams getMissionEnvironment(const std::string& mission_profile)
     {
         if (mission_profile == "LEO") {
-            return EnvironmentParams(RadiationEnvironment::LEO, 0.5, 2.0);
+            return EnvironmentParams(SpaceEnvironment::LEO, 0.5, 2.0);
         }
         else if (mission_profile == "MARS") {
-            return EnvironmentParams(RadiationEnvironment::MARS_ORBIT, 0.3, 5.0);
+            return EnvironmentParams(SpaceEnvironment::MARS_ORBIT, 0.3, 5.0);
         }
         else if (mission_profile == "JUPITER") {
-            return EnvironmentParams(RadiationEnvironment::JUPITER, 0.2, 10.0);
+            return EnvironmentParams(SpaceEnvironment::JUPITER, 0.2, 10.0);
         }
         else {
-            return EnvironmentParams(RadiationEnvironment::LEO, 0.5, 2.0);
+            return EnvironmentParams(SpaceEnvironment::LEO, 0.5, 2.0);
         }
     }
 
@@ -238,7 +237,7 @@ class PhysicsRadiationSimulator {
      *
      * @param environment The radiation environment
      */
-    void set_environment(RadiationEnvironment environment) { current_environment_ = environment; }
+    void set_environment(SpaceEnvironment environment) { current_environment_ = environment; }
 
     /**
      * @brief Set solar activity level
@@ -266,14 +265,14 @@ class PhysicsRadiationSimulator {
      *
      * @param environment New environment
      */
-    void setEnvironment(RadiationEnvironment environment) { current_environment_ = environment; }
+    void setEnvironment(SpaceEnvironment environment) { current_environment_ = environment; }
 
     /**
      * @brief Get current environment
      *
      * @return Current environment
      */
-    RadiationEnvironment getEnvironment() const { return current_environment_; }
+    SpaceEnvironment getEnvironment() const { return current_environment_; }
 
     /**
      * @brief Simulate radiation effects
@@ -547,14 +546,14 @@ class PhysicsRadiationSimulator {
     size_t word_size_;
     double shielding_thickness_mm_;
     SpacecraftTrajectory trajectory_;
-    RadiationEnvironment current_environment_;
+    SpaceEnvironment current_environment_;
     double solar_activity_;
 
     // Radiation effect models
     std::map<RadiationEffectType, RadiationEffect> radiation_effects_;
 
     // Environment rate modifiers relative to baseline (LEO)
-    std::map<RadiationEnvironment, double> environment_modifiers_;
+    std::map<SpaceEnvironment, double> environment_modifiers_;
 
     // Random number generation
     std::default_random_engine random_engine_;
@@ -590,18 +589,18 @@ class PhysicsRadiationSimulator {
     void calculate_environment_modifiers()
     {
         // Rates relative to LEO (based on scientific space radiation models)
-        environment_modifiers_[RadiationEnvironment::LEO] = 1.0;           // Baseline
-        environment_modifiers_[RadiationEnvironment::MEO] = 10.0;          // South Atlantic Anomaly
-        environment_modifiers_[RadiationEnvironment::GEO] = 5.0;           // Outside magnetosphere
-        environment_modifiers_[RadiationEnvironment::LUNAR] = 4.0;         // No magnetic protection
-        environment_modifiers_[RadiationEnvironment::MARS_ORBIT] = 3.0;    // No strong field
-        environment_modifiers_[RadiationEnvironment::MARS_SURFACE] = 0.5;  // Atmosphere shields
-        environment_modifiers_[RadiationEnvironment::JUPITER] = 1000.0;    // Extreme environment
-        environment_modifiers_[RadiationEnvironment::EUROPA] = 2000.0;  // Europa mission estimates
-        environment_modifiers_[RadiationEnvironment::INTERPLANETARY] = 3.0;  // Deep space
-        environment_modifiers_[RadiationEnvironment::SOLAR_MINIMUM] = 2.0;   // Higher GCR
-        environment_modifiers_[RadiationEnvironment::SOLAR_MAXIMUM] = 0.8;   // Lower GCR
-        environment_modifiers_[RadiationEnvironment::SOLAR_STORM] = 100.0;   // Extreme conditions
+        environment_modifiers_[SpaceEnvironment::LEO] = 1.0;             // Baseline
+        environment_modifiers_[SpaceEnvironment::MEO] = 10.0;            // South Atlantic Anomaly
+        environment_modifiers_[SpaceEnvironment::GEO] = 5.0;             // Outside magnetosphere
+        environment_modifiers_[SpaceEnvironment::LUNAR] = 4.0;           // No magnetic protection
+        environment_modifiers_[SpaceEnvironment::MARS_ORBIT] = 3.0;      // No strong field
+        environment_modifiers_[SpaceEnvironment::MARS_SURFACE] = 0.5;    // Atmosphere shields
+        environment_modifiers_[SpaceEnvironment::JUPITER] = 1000.0;      // Extreme environment
+        environment_modifiers_[SpaceEnvironment::EUROPA] = 2000.0;       // Europa mission estimates
+        environment_modifiers_[SpaceEnvironment::INTERPLANETARY] = 3.0;  // Deep space
+        environment_modifiers_[SpaceEnvironment::SOLAR_MINIMUM] = 2.0;   // Higher GCR
+        environment_modifiers_[SpaceEnvironment::SOLAR_MAXIMUM] = 0.8;   // Lower GCR
+        environment_modifiers_[SpaceEnvironment::SOLAR_STORM] = 100.0;   // Extreme conditions
     }
 
     /**
@@ -612,7 +611,7 @@ class PhysicsRadiationSimulator {
     double calculate_solar_modifier() const
     {
         // Solar storm probability increases with activity
-        if (current_environment_ == RadiationEnvironment::SOLAR_STORM) {
+        if (current_environment_ == SpaceEnvironment::SOLAR_STORM) {
             return 1.0;  // Already factored into environment
         }
 
@@ -622,9 +621,9 @@ class PhysicsRadiationSimulator {
         double spe_component = solar_activity_ * solar_activity_ * 5.0;  // 0 at min, 5.0 at max
 
         // Combined effect depends on environment
-        if (current_environment_ == RadiationEnvironment::LEO ||
-            current_environment_ == RadiationEnvironment::MEO ||
-            current_environment_ == RadiationEnvironment::GEO) {
+        if (current_environment_ == SpaceEnvironment::LEO ||
+            current_environment_ == SpaceEnvironment::MEO ||
+            current_environment_ == SpaceEnvironment::GEO) {
             // Earth environments - more SPE protection
             return 0.7 * gcr_component + 0.3 * spe_component;
         }
@@ -669,34 +668,34 @@ class PhysicsRadiationSimulator {
      * @param env Environment
      * @return String name
      */
-    std::string get_environment_name(RadiationEnvironment env) const
+    std::string get_environment_name(SpaceEnvironment env) const
     {
         switch (env) {
-            case RadiationEnvironment::LEO:
+            case SpaceEnvironment::LEO:
                 return "Low Earth Orbit";
-            case RadiationEnvironment::EARTH_ORBIT:
+            case SpaceEnvironment::EARTH_ORBIT:
                 return "Earth Orbit";
-            case RadiationEnvironment::MEO:
+            case SpaceEnvironment::MEO:
                 return "Medium Earth Orbit";
-            case RadiationEnvironment::GEO:
+            case SpaceEnvironment::GEO:
                 return "Geosynchronous Earth Orbit";
-            case RadiationEnvironment::LUNAR:
+            case SpaceEnvironment::LUNAR:
                 return "Lunar Vicinity";
-            case RadiationEnvironment::MARS_ORBIT:
+            case SpaceEnvironment::MARS_ORBIT:
                 return "Mars Orbit";
-            case RadiationEnvironment::MARS_SURFACE:
+            case SpaceEnvironment::MARS_SURFACE:
                 return "Mars Surface";
-            case RadiationEnvironment::JUPITER:
+            case SpaceEnvironment::JUPITER:
                 return "Jupiter Radiation Belts";
-            case RadiationEnvironment::EUROPA:
+            case SpaceEnvironment::EUROPA:
                 return "Europa Vicinity";
-            case RadiationEnvironment::INTERPLANETARY:
+            case SpaceEnvironment::INTERPLANETARY:
                 return "Interplanetary Space";
-            case RadiationEnvironment::SOLAR_MINIMUM:
+            case SpaceEnvironment::SOLAR_MINIMUM:
                 return "Solar Minimum";
-            case RadiationEnvironment::SOLAR_MAXIMUM:
+            case SpaceEnvironment::SOLAR_MAXIMUM:
                 return "Solar Maximum";
-            case RadiationEnvironment::SOLAR_STORM:
+            case SpaceEnvironment::SOLAR_STORM:
                 return "Solar Storm";
             default:
                 return "Unknown";

@@ -285,6 +285,35 @@ class QuantumField {
      */
     const std::vector<int>& getDimensions() const { return dimensions_; }
 
+    /**
+     * @brief Optimized quantum field computation
+     *
+     * @param input_field Input field values
+     * @param output_field Output field values (will be computed)
+     */
+    void computeOptimized(const std::vector<std::complex<double>>& input_field,
+                          std::vector<std::complex<double>>& output_field) const;
+
+    /**
+     * @brief Compute Laplacian for a field at a specific index
+     */
+    std::complex<double> computeLaplacian(const std::vector<std::complex<double>>& field,
+                                          size_t index) const;
+
+    /**
+     * @brief Standard computation (fallback)
+     */
+    void computeStandard(const std::vector<std::complex<double>>& input_field,
+                         std::vector<std::complex<double>>& output_field) const;
+
+#ifdef __AVX2__
+    /**
+     * @brief SIMD-optimized computation using AVX2
+     */
+    void computeSIMD(const std::vector<std::complex<double>>& input_field,
+                     std::vector<std::complex<double>>& output_field) const;
+#endif
+
    private:
     ParticleType particle_type_;
     double lattice_spacing_;
@@ -295,7 +324,7 @@ class QuantumField {
     /**
      * Calculate 1D array index from multi-dimensional position
      */
-    int calculateIndex(const std::vector<int>& position) const;
+    std::size_t calculateIndex(const std::vector<int>& position) const;
 };
 
 /**
