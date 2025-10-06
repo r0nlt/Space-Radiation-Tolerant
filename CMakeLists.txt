@@ -23,6 +23,22 @@ option(BUILD_TESTING "Build with testing enabled" ON)
 option(USE_MINIMAL_PYTHON_BINDINGS "Use minimal Python bindings to avoid compilation errors" ON)
 option(ENABLE_IDE_INTEGRATION "Enable IDE integration features" ON)
 option(ENABLE_PYTORCH "Enable PyTorch integration" OFF)
+option(ENABLE_OPTIMIZATIONS "Enable aggressive optimizations" ON)
+option(BUILD_BENCHMARKS "Build performance benchmarks" OFF)
+option(ENABLE_PROFILING "Enable profiling and performance monitoring" OFF)
+
+# Set optimized compiler flags
+if(ENABLE_OPTIMIZATIONS)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -flto -DNDEBUG -ffast-math")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -march=native -flto -DNDEBUG -ffast-math")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -g -DDEBUG")
+  endif()
+
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvectorize -fslp-vectorize -ffast-math -funroll-loops")
+  endif()
+endif()
 
 # Find required packages
 find_package(Threads REQUIRED)
@@ -242,6 +258,8 @@ add_library(rad_ml_qft STATIC
     src/rad_ml/physics/quantum_field_theory.cpp
     src/rad_ml/physics/quantum_models.cpp
     src/rad_ml/physics/quantum_enhanced_radiation.cpp
+    src/rad_ml/physics/advanced_quantum_models.cpp
+    src/rad_ml/physics/enhanced_physics_radiation_simulator.cpp
 )
 
 target_link_libraries(rad_ml_qft
@@ -349,6 +367,29 @@ add_test(NAME systematic_fault_test COMMAND systematic_fault_test)
 add_executable(modern_features_test test/verification/modern_features_test.cpp)
 target_link_libraries(modern_features_test rad_ml_tmr rad_ml_testing)
 add_test(NAME modern_features_test COMMAND modern_features_test)
+
+# Add the enhanced quantum integration test
+add_executable(enhanced_quantum_integration_test test/verification/enhanced_quantum_integration_test.cpp)
+target_link_libraries(enhanced_quantum_integration_test rad_ml_tmr rad_ml_testing rad_ml_qft)
+target_compile_definitions(enhanced_quantum_integration_test PRIVATE ENABLE_TESTING=1)
+add_test(NAME enhanced_quantum_integration_test COMMAND enhanced_quantum_integration_test)
+
+# Add the radiation intensity aggregation test
+add_executable(radiation_intensity_aggregation_test test/verification/radiation_intensity_aggregation_test.cpp)
+target_link_libraries(radiation_intensity_aggregation_test rad_ml_tmr rad_ml_testing rad_ml_qft)
+target_compile_definitions(radiation_intensity_aggregation_test PRIVATE ENABLE_TESTING=1)
+add_test(NAME radiation_intensity_aggregation_test COMMAND radiation_intensity_aggregation_test)
+
+# Add the relativistic cascade test
+add_executable(relativistic_cascade_test test/verification/relativistic_cascade_test.cpp)
+target_link_libraries(relativistic_cascade_test rad_ml_tmr rad_ml_testing rad_ml_qft)
+target_compile_definitions(relativistic_cascade_test PRIVATE ENABLE_TESTING=1)
+add_test(NAME relativistic_cascade_test COMMAND relativistic_cascade_test)
+
+# Add simple enhanced test
+add_executable(simple_enhanced_test test/verification/simple_enhanced_test.cpp)
+target_link_libraries(simple_enhanced_test rad_ml_tmr rad_ml_testing)
+add_test(NAME simple_enhanced_test COMMAND simple_enhanced_test)
 
 # Add the IEEE-754 aware TMR voting test
 add_executable(ieee754_tmr_test test/verification/ieee754_tmr_test.cpp)

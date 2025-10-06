@@ -1538,10 +1538,10 @@ void runGEOMonteCarloValidation(
             // Calculate mission-specific reliability metrics using physics-derived rates
             // Build a physics simulator for this scenario and shielding
             rad_ml::sim::EnvironmentParams envp(
-                rad_ml::sim::RadiationEnvironment::GEO,
+                rad_ml::sim::SpaceEnvironment::GEO,
                 std::max(0.0, std::min(1.0, scenario.solar_storm_probability)), thickness_mm);
             rad_ml::sim::PhysicsRadiationSimulator sim(envp);
-            sim.set_environment(rad_ml::sim::RadiationEnvironment::GEO);
+            sim.set_environment(rad_ml::sim::SpaceEnvironment::GEO);
             // Aggregate expected error rates (per Mbit per day) and map to buckets
             auto rate_map = sim.get_error_rates();
             double rate_single = 0.0, rate_multi = 0.0, rate_burst = 0.0,

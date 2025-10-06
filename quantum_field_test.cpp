@@ -421,13 +421,13 @@ class QuantumField {
 
     std::complex<double> getFieldAt(const std::vector<int>& position) const
     {
-        int index = calculateIndex(position);
+        std::size_t index = calculateIndex(position);
         return field_data_[index];
     }
 
     void setFieldAt(const std::vector<int>& position, const std::complex<double>& value)
     {
-        int index = calculateIndex(position);
+        std::size_t index = calculateIndex(position);
         field_data_[index] = value;
     }
 
@@ -512,13 +512,18 @@ class QuantumField {
     std::vector<int> dimensions_;
     std::vector<std::complex<double>> field_data_;
 
-    int calculateIndex(const std::vector<int>& position) const
+    std::size_t calculateIndex(const std::vector<int>& position) const
     {
         // Validate position dimensions
         if (position.size() != dimensions_.size()) {
             std::cerr << "Error: Position vector dimension mismatch. Expected "
                       << dimensions_.size() << ", got " << position.size() << std::endl;
             return 0;  // Return index 0 for invalid positions
+        }
+
+        // Handle empty dimensions case
+        if (dimensions_.empty()) {
+            return 0;
         }
 
         // Check bounds
@@ -531,12 +536,13 @@ class QuantumField {
         }
 
         // Calculate linear index using row-major order
-        int index = 0;
-        int stride = 1;
+        std::size_t index = 0;
+        std::size_t stride = 1;
 
-        for (int i = dimensions_.size() - 1; i >= 0; --i) {
-            index += position[i] * stride;
-            stride *= dimensions_[i];
+        // Use safe arithmetic: start from highest dimension and go down
+        for (int i = static_cast<int>(dimensions_.size()) - 1; i >= 0; --i) {
+            index += static_cast<std::size_t>(position[i]) * stride;
+            stride *= static_cast<std::size_t>(dimensions_[i]);
         }
 
         return index;
