@@ -19,6 +19,23 @@ target_link_libraries(residual_network_test
     rad_ml_qft
 )
 
+# Differentiable QP example
+add_executable(diff_qp_example diff_qp_example.cpp)
+target_link_libraries(diff_qp_example PRIVATE rad_ml_opt)
+
+# Differentiable QP gradcheck
+add_executable(diff_qp_gradcheck diff_qp_gradcheck.cpp)
+target_link_libraries(diff_qp_gradcheck PRIVATE rad_ml_opt)
+add_test(NAME diff_qp_gradcheck_run COMMAND diff_qp_gradcheck)
+
+# Simplex projection examples
+add_executable(simplex_projection_example simplex_projection_example.cpp)
+target_link_libraries(simplex_projection_example PRIVATE rad_ml_opt)
+
+add_executable(simplex_projection_gradcheck simplex_projection_gradcheck.cpp)
+target_link_libraries(simplex_projection_gradcheck PRIVATE rad_ml_opt)
+add_test(NAME simplex_projection_gradcheck_run COMMAND simplex_projection_gradcheck)
+
 # Add auto_arch_search_example
 add_executable(auto_arch_search_example auto_arch_search_example.cpp)
 target_link_libraries(auto_arch_search_example rad_ml_research rad_ml_tmr)
