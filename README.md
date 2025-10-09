@@ -38,7 +38,7 @@ October 5 2025
 - **Quality Assurance**: High bench mark and robust testing as we approach hardware-in-the-loop validation.
 - **Documentation**: Comprehensive documentation and on going updates
 
-### Advanced Radiation Sim (v1.0.2.5)
+### Advanced Radiation Sim (v1.0.2.5.1)
 Smarter physics, tighter tests, clearer docs.
 
 - Simulator
@@ -58,6 +58,9 @@ Smarter physics, tighter tests, clearer docs.
 
 - Docs
   - `FAQ/Enhanced_Physics_Radiation_Simulator.md` (math, API mapping, code refs, test guide)
+  - `FAQ/Differentiable_Optimization_Layer.md` (optimization layer plan, build/run, progress)
+  - Gradient check: build `diff_qp_gradcheck` and run CTest target `diff_qp_gradcheck_run`.
+  - Simplex projection: see FAQ for enabling `setUseSimplexProjection(true)` and running `simplex_projection_*` tests.
 
 - Fixes
   - Neural: AVX2 mat-vec safe loads + correct reduction; SIMD not gated by protection

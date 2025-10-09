@@ -27,6 +27,16 @@
 #include "../core/redundancy/space_enhanced_tmr.hpp"
 #include "multi_bit_protection.hpp"
 
+// Optional optimization-layer projections
+#ifdef __has_include
+#if __has_include(<eigen3/Eigen/Dense>)
+#include <eigen3/Eigen/Dense>
+#elif __has_include(<Eigen/Dense>)
+#include <Eigen/Dense>
+#endif
+#endif
+#include <rad_ml/optimization/simplex_projection.hpp>
+
 // SIMD optimizations
 #ifdef __AVX2__
 #include <immintrin.h>
@@ -138,6 +148,7 @@ static constexpr bool should_use_adaptive_protection(ProtectionLevel level) noex
 template <typename T = float>
 class ProtectedNeuralNetwork : public NetworkModel {
    public:
+    void setUseSimplexProjection(bool enabled) { use_simplex_projection_ = enabled; }
     /**
      * @brief Layer structure containing weights and biases
      */
@@ -1726,17 +1737,65 @@ class ProtectedNeuralNetwork : public NetworkModel {
             // Forward pass with activation storage
             auto [activations, z_values] = forwardPassWithStorage(batch_inputs[sample]);
 
+            // Optionally project output onto simplex for loss/metrics
+            const std::vector<T>& raw_output = activations.back();
+            std::vector<T> projected_output;
+            if (use_simplex_projection_ && raw_output.size() > 1) {
+                Eigen::VectorXd x(raw_output.size());
+                for (size_t i = 0; i < raw_output.size(); ++i)
+                    x(static_cast<int>(i)) = raw_output[i];
+                Eigen::VectorXd z = rad_ml::optimization::SimplexProjection::forward(x);
+                projected_output.resize(raw_output.size());
+                for (size_t i = 0; i < raw_output.size(); ++i)
+                    projected_output[i] = static_cast<T>(z(static_cast<int>(i)));
+            }
+
+            std::vector<T> predictions_for_metrics =
+                (use_simplex_projection_ && raw_output.size() > 1) ? projected_output : raw_output;
+
             // Compute loss
-            T sample_loss = computeLoss(activations.back(), batch_targets[sample]);
+            T sample_loss = computeLoss(predictions_for_metrics, batch_targets[sample]);
             total_loss += sample_loss;
 
             // Compute accuracy
-            T sample_accuracy = computeAccuracy(activations.back(), batch_targets[sample]);
+            T sample_accuracy = computeAccuracy(predictions_for_metrics, batch_targets[sample]);
             total_accuracy += sample_accuracy;
 
             // Backward pass
-            backpropagation(activations, z_values, batch_targets[sample], weight_gradients,
-                            bias_gradients);
+            if (use_simplex_projection_ && raw_output.size() > 1) {
+                // Compose loss gradient through projection for output layer
+                Eigen::VectorXd a(raw_output.size());
+                for (size_t i = 0; i < raw_output.size(); ++i)
+                    a(static_cast<int>(i)) = raw_output[i];
+                Eigen::VectorXd a_proj(raw_output.size());
+                if (!projected_output.empty()) {
+                    for (size_t i = 0; i < raw_output.size(); ++i)
+                        a_proj(static_cast<int>(i)) = projected_output[i];
+                }
+                else {
+                    a_proj = rad_ml::optimization::SimplexProjection::forward(a);
+                }
+                // dL/da_proj = (a_proj - y)
+                Eigen::VectorXd g_up(a.size());
+                for (size_t i = 0; i < raw_output.size(); ++i)
+                    g_up(static_cast<int>(i)) =
+                        static_cast<double>(a_proj(static_cast<int>(i)) - batch_targets[sample][i]);
+                Eigen::VectorXd dL_da = rad_ml::optimization::SimplexProjection::backward(a, g_up);
+
+                // Create pseudo-target so that (a - pseudo) = dL/da
+                std::vector<T> adjusted_targets(raw_output.size());
+                for (size_t i = 0; i < raw_output.size(); ++i) {
+                    adjusted_targets[i] =
+                        static_cast<T>(raw_output[i] - dL_da(static_cast<int>(i)));
+                }
+
+                backpropagation(activations, z_values, adjusted_targets, weight_gradients,
+                                bias_gradients);
+            }
+            else {
+                backpropagation(activations, z_values, batch_targets[sample], weight_gradients,
+                                bias_gradients);
+            }
         }
 
         // Average gradients over batch
@@ -1808,6 +1867,7 @@ class ProtectedNeuralNetwork : public NetworkModel {
     }
 
    private:
+    bool use_simplex_projection_ = false;
     /**
      * @brief Optimized loss computation for small networks
      */

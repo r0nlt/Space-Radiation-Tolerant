@@ -267,6 +267,16 @@ target_link_libraries(rad_ml_qft
     Eigen3::Eigen
 )
 
+# Differentiable optimization module
+add_library(rad_ml_opt STATIC
+    src/rad_ml/optimization/diff_qp.cpp
+)
+target_link_libraries(rad_ml_opt
+    Eigen3::Eigen
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+target_include_directories(rad_ml_opt PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
 # Define NASA/ESA Standard Test Runner
 add_executable(nasa_esa_standard_test
     src/nasa_esa_standard_runner.cpp
@@ -580,6 +590,18 @@ target_include_directories(trivial_radiation_test PRIVATE
   ${CMAKE_SOURCE_DIR}/include
 )
 add_test(NAME trivial_radiation_test COMMAND trivial_radiation_test)
+
+# Simplex projection training integration test
+add_executable(simplex_projection_training_test
+  test/integration/simplex_projection_training_test.cpp
+)
+target_link_libraries(simplex_projection_training_test
+  PRIVATE
+  rad_ml_tmr
+  rad_ml_testing
+)
+target_include_directories(simplex_projection_training_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME simplex_projection_training_test COMMAND simplex_projection_training_test)
 
 # Add PyTorch integration test if enabled
 if(ENABLE_PYTORCH AND PyTorch_FOUND)
