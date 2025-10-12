@@ -49,6 +49,14 @@ QPSolution DifferentiableQPLayer::forward(const QPProblem &prob, QPContext *ctx,
 
     Eigen::LDLT<Eigen::MatrixXd> ldlt1;
     ldlt1.compute(KKT);
+    if (ldlt1.info() != Eigen::Success) {
+        // Fallback: add more regularization and retry
+        KKT.topLeftCorner(n, n).diagonal().array() += std::max(1e-8, prob.regularization_eps);
+        ldlt1.compute(KKT);
+    }
+    if (ldlt1.info() != Eigen::Success) {
+        throw std::runtime_error("KKT LDLT factorization failed in forward (eq-only solve)");
+    }
     Eigen::VectorXd sol = ldlt1.solve(rhs);
     QPSolution out;
     out.z = sol.head(n);
@@ -84,6 +92,14 @@ QPSolution DifferentiableQPLayer::forward(const QPProblem &prob, QPContext *ctx,
 
         Eigen::LDLT<Eigen::MatrixXd> ldlt2;
         ldlt2.compute(KKT2);
+        if (ldlt2.info() != Eigen::Success) {
+            // Fallback: bump Hessian regularization
+            KKT2.topLeftCorner(n, n).diagonal().array() += std::max(1e-8, prob.regularization_eps);
+            ldlt2.compute(KKT2);
+        }
+        if (ldlt2.info() != Eigen::Success) {
+            throw std::runtime_error("KKT LDLT factorization failed in forward (active-set solve)");
+        }
         Eigen::VectorXd sol2 = ldlt2.solve(rhs2);
         out.z = sol2.head(n);
         if (has_eq) out.nu = sol2.segment(n, meq);
@@ -135,11 +151,26 @@ DifferentiableQPLayer::BackwardGrads DifferentiableQPLayer::backward(const QPPro
 
     Eigen::VectorXd adj;
     if (ctx && ctx->valid && ctx->kkt_matrix.rows() == kkt_dim) {
+        if (ctx->kkt_ldlt.info() != Eigen::Success) {
+            // Recompute if cached factorization is invalid
+            ctx->kkt_ldlt.compute(ctx->kkt_matrix);
+        }
+        if (ctx->kkt_ldlt.info() != Eigen::Success) {
+            throw std::runtime_error("Cached KKT LDLT invalid in backward");
+        }
         adj = ctx->kkt_ldlt.transpose().solve(rhs);
     }
     else {
         Eigen::LDLT<Eigen::MatrixXd> ldlt;
         ldlt.compute(KKT.transpose());
+        if (ldlt.info() != Eigen::Success) {
+            // Try slight bump
+            KKT.topLeftCorner(n, n).diagonal().array() += std::max(1e-8, prob.regularization_eps);
+            ldlt.compute(KKT.transpose());
+        }
+        if (ldlt.info() != Eigen::Success) {
+            throw std::runtime_error("KKT LDLT factorization failed in backward");
+        }
         adj = ldlt.solve(rhs);
     }
 

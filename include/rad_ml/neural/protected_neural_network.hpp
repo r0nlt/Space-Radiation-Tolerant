@@ -21,6 +21,7 @@
 #include <random>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 #include "../core/logger.hpp"
@@ -148,6 +149,8 @@ static constexpr bool should_use_adaptive_protection(ProtectionLevel level) noex
 template <typename T = float>
 class ProtectedNeuralNetwork : public NetworkModel {
    public:
+    static_assert(std::is_floating_point<T>::value,
+                  "ProtectedNeuralNetwork requires floating-point T (float/double/long double)");
     void setUseSimplexProjection(bool enabled) { use_simplex_projection_ = enabled; }
     /**
      * @brief Layer structure containing weights and biases

@@ -39,6 +39,9 @@ struct SimplexProjection {
             }
         }
         Eigen::VectorXd z = Eigen::VectorXd::Zero(n);
+        // If rho == -1, all components are projected to zero; this is
+        // the correct Euclidean projection onto the simplex when sum(x_i)<=1 and x<=0.
+        // In that case, z remains the zero vector.
         for (int i = 0; i <= rho; ++i) z(a[i].second) = std::max(0.0, a[i].first - theta);
         return z;
     }
