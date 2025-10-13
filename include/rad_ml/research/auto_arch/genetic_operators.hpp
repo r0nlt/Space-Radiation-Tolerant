@@ -79,6 +79,7 @@ class AdaptiveMutationController {
     NetworkConfig mutateProtectionFocused(const NetworkConfig& config, double rate);
     NetworkConfig mutateBalanced(const NetworkConfig& config, double rate);
     NetworkConfig mutateAggressive(const NetworkConfig& config, double rate);
+    NetworkConfig mutateDiversityPreserving(const NetworkConfig& config, double rate);
 };
 
 }  // namespace research

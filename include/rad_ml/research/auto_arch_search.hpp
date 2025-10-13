@@ -42,6 +42,10 @@ namespace research {
 class AutoArchSearch {
    public:
     /**
+     * @brief Crossover strategy options
+     */
+    enum class CrossoverStrategy { UNIFORM, SINGLE_POINT };
+    /**
      * @brief Constructor with dataset and search parameters
      *
      * @param train_data Training data vector
@@ -146,6 +150,47 @@ class AutoArchSearch {
      */
     void setAdaptiveMutation(bool enable, double base_rate = 0.1, double diversity_threshold = 0.3,
                              double max_rate = 0.5, double min_rate = 0.01);
+
+    /**
+     * @brief Configure crossover behavior
+     *
+     * @param rate Probability of applying crossover when producing offspring
+     * @param strategy Strategy to use when crossing architecture genes
+     */
+    void setCrossoverSettings(double rate = 0.8,
+                              CrossoverStrategy strategy = CrossoverStrategy::UNIFORM)
+    {
+        crossover_rate_ = std::max(0.0, std::min(1.0, rate));
+        crossover_strategy_ = strategy;
+    }
+
+    /**
+     * @brief Enable random immigrants injection to preserve diversity
+     *
+     * @param enable Toggle injection
+     * @param fraction Fraction of population to replace when diversity collapses
+     */
+    void setRandomImmigrants(bool enable, double fraction = 0.1)
+    {
+        random_immigrants_enabled_ = enable;
+        random_immigrants_fraction_ = std::max(0.0, std::min(1.0, fraction));
+    }
+
+    /**
+     * @brief Enable genetics metrics CSV logging and set output filename
+     */
+    void setGeneticsMetricsFile(const std::string& filename)
+    {
+        // If a bare filename is provided, place it under results/genetic_algorithm/
+        if (filename.find('/') == std::string::npos && filename.find('\\') == std::string::npos) {
+            genetics_metrics_file_ = std::string("results/genetic_algorithm/") + filename;
+        }
+        else {
+            genetics_metrics_file_ = filename;
+        }
+        genetics_metrics_enabled_ = !genetics_metrics_file_.empty();
+        genetics_metrics_header_written_ = false;
+    }
 
     /**
      * @brief Configure save intervals for results persistence
@@ -280,6 +325,19 @@ class AutoArchSearch {
     // Quality Diversity controls
     bool qd_enabled_ = false;
     bool advanced_qd_enabled_ = false;
+
+    // Crossover controls
+    double crossover_rate_ = 0.8;
+    CrossoverStrategy crossover_strategy_ = CrossoverStrategy::UNIFORM;
+
+    // Random immigrants controls
+    bool random_immigrants_enabled_ = false;
+    double random_immigrants_fraction_ = 0.1;
+
+    // Genetics metrics logging
+    bool genetics_metrics_enabled_ = false;
+    bool genetics_metrics_header_written_ = false;
+    std::string genetics_metrics_file_;
 
     /**
      * @brief Test a specific configuration
