@@ -278,9 +278,21 @@ void testCrossoverOperators()
 
     // Test multiple crossovers
     std::cout << "\nGenerated offspring:\n";
-    for (int i = 0; i < 8; ++i) {
+    // Test both strategies
+    tester.setCrossoverSettings(1.0, AutoArchSearch::CrossoverStrategy::UNIFORM);
+    for (int i = 0; i < 4; ++i) {
         NetworkConfig child = tester.crossoverConfigs_PUBLIC(parent1, parent2);
         std::cout << "  Child " << (i + 1) << ": ";
+        for (auto size : child.layer_sizes) std::cout << size << "-";
+        std::cout << " Dropout: " << child.dropout_rate
+                  << " Residual: " << (child.has_residual_connections ? "Yes" : "No")
+                  << " Protection: " << static_cast<int>(child.protection_level) << "\n";
+    }
+
+    tester.setCrossoverSettings(1.0, AutoArchSearch::CrossoverStrategy::SINGLE_POINT);
+    for (int i = 0; i < 4; ++i) {
+        NetworkConfig child = tester.crossoverConfigs_PUBLIC(parent1, parent2);
+        std::cout << "  [SP] Child " << (i + 1) << ": ";
         for (auto size : child.layer_sizes) std::cout << size << "-";
         std::cout << " Dropout: " << child.dropout_rate
                   << " Residual: " << (child.has_residual_connections ? "Yes" : "No")

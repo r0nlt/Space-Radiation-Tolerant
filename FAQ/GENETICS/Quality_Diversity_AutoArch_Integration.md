@@ -62,6 +62,28 @@ Combined fitness used for archive updates:
 - Elite injection rate:
   - Replace ~20% of population each generation for balance.
 
+### New Logging for Analysis (Updated)
+
+- You can now export GA genetics metrics per generation for analysis and plotting.
+
+Enable and path:
+
+```cpp
+// Writes to results/genetic_algorithm/metrics_demo.csv
+searcher.setGeneticsMetricsFile("metrics_demo.csv");
+```
+
+Columns:
+
+```
+generation,best_preservation,mean_fitness,fitness_variance,diversity,crossover_rate,crossover_count,population_size
+```
+
+Tips:
+- Plot diversity vs generation to monitor exploration.
+- Compare `best_preservation` vs `crossover_count` under different `crossover_rate` settings.
+- Use alongside QD coverage logs for a full exploration/convergence picture.
+
 ## Metrics and Logs
 - Per-generation QD logs:
   - Coverage (%), occupied cells, count of elites injected into population.
@@ -669,6 +691,154 @@ Edge cases and clamping:
 - Flatten index: `coordsToIndex(...)` → maps 6D coords to 1D cell index.
 - Protection overhead mapping: `getProtectionOverhead(config.protection_level)`.
 
+#### Concrete Code References
+
+Behavior descriptor computation:
+```228:252:/Users/rishabnuguru/space/include/rad_ml/research/auto_arch/advanced_quality_diversity.hpp
+RadiationAwareBehaviorDescriptor calculateRadiationAwareBehavior(
+    const NetworkConfig& config, const ArchitectureTestResult& result) const
+{
+    RadiationAwareBehaviorDescriptor b{};
+    size_t total_params = 0;
+    for (size_t i = 1; i < config.layer_sizes.size(); ++i)
+        total_params += config.layer_sizes[i - 1] * config.layer_sizes[i];
+    b.architectural_complexity =
+        std::log(static_cast<double>(total_params) + 1.0) / std::log(1000000.0);
+    if (result.errors_detected > 0) {
+        b.protection_efficiency = static_cast<double>(result.errors_corrected) /
+                                  static_cast<double>(result.errors_detected);
+    } else {
+        b.protection_efficiency = 1.0;
+    }
+    b.computational_cost =
+        std::min(1.0, (result.execution_time_ms / 1000.0) * (1.0 + b.architectural_complexity));
+    b.radiation_tolerance = result.accuracy_preservation / 100.0;
+    double degradation_rate = (result.baseline_accuracy - result.radiation_accuracy) /
+                              std::max(1e-9, result.baseline_accuracy);
+    b.graceful_degradation = 1.0 - std::max(0.0, degradation_rate);
+    double protection_overhead = getProtectionOverhead(config.protection_level);
+    b.power_efficiency = 1.0 / (1.0 + protection_overhead + b.architectural_complexity);
+    return b;
+}
+```
+
+Discretization and indexing:
+```282:309:/Users/rishabnuguru/space/include/rad_ml/research/auto_arch/advanced_quality_diversity.hpp
+std::vector<size_t> discretizeBehavior(const RadiationAwareBehaviorDescriptor& behavior) const
+{
+    auto discretize = [this](double value) -> size_t {
+        double clamped = std::max(0.0, std::min(1.0, value));
+        size_t coord = static_cast<size_t>(clamped * (current_grid_resolution_ - 1));
+        return std::min(coord, current_grid_resolution_ - 1);
+    };
+    std::vector<size_t> coords;
+    coords.reserve(BEHAVIORAL_DIMENSIONS);
+    coords.push_back(discretize(behavior.architectural_complexity));
+    coords.push_back(discretize(behavior.protection_efficiency));
+    coords.push_back(discretize(behavior.computational_cost));
+    coords.push_back(discretize(behavior.radiation_tolerance));
+    coords.push_back(discretize(behavior.graceful_degradation));
+    coords.push_back(discretize(behavior.power_efficiency));
+    return coords;
+}
+
+size_t coordsToIndex(const std::vector<size_t>& coords) const
+{
+    size_t index = 0;
+    size_t multiplier = 1;
+    for (size_t i = 0; i < coords.size(); ++i) {
+        index += coords[i] * multiplier;
+        multiplier *= current_grid_resolution_;
+    }
+    return index;
+}
+```
+
+KNN novelty:
+```255:268:/Users/rishabnuguru/space/include/rad_ml/research/auto_arch/advanced_quality_diversity.hpp
+double calculateNoveltyScore(const RadiationAwareBehaviorDescriptor& behavior) const
+{
+    std::lock_guard<std::mutex> lock(novelty_mutex_);
+    if (novelty_archive_.size() < K_NEAREST_NEIGHBORS) return 1.0;
+    std::vector<double> distances;
+    distances.reserve(novelty_archive_.size());
+    for (const auto& archived : novelty_archive_)
+        distances.push_back(calculateBehavioralDistance(behavior, archived));
+    std::partial_sort(distances.begin(), distances.begin() + K_NEAREST_NEIGHBORS,
+                      distances.end());
+    double sum = 0.0;
+    for (size_t i = 0; i < K_NEAREST_NEIGHBORS; ++i) sum += distances[i];
+    return sum / K_NEAREST_NEIGHBORS;
+}
+```
+
+Combined fitness for archive updates:
+```353:356:/Users/rishabnuguru/space/include/rad_ml/research/auto_arch/advanced_quality_diversity.hpp
+static double calculateCombinedFitness(const ArchitectureTestResult& result, double novelty)
+{
+    return 0.8 * result.accuracy_preservation + 0.2 * novelty * 100.0;
+}
+```
+
+Elite sampling mix (40% fitness, 30% novelty, 30% uniform occupied):
+```147:185:/Users/rishabnuguru/space/include/rad_ml/research/auto_arch/advanced_quality_diversity.hpp
+std::vector<NetworkConfig> sampleDiverseElites(size_t sample_size) const
+{
+    std::lock_guard<std::mutex> lock(archive_mutex_);
+    std::vector<const ArchiveCell*> non_empty;
+    non_empty.reserve(behavioral_archive_.size());
+    for (const auto& cell : behavioral_archive_)
+        if (!cell.isEmpty()) non_empty.push_back(&cell);
+    std::vector<NetworkConfig> elites;
+    if (non_empty.empty() || sample_size == 0) return elites;
+
+    size_t fitness_samples = static_cast<size_t>(sample_size * 0.4);
+    size_t novelty_samples = static_cast<size_t>(sample_size * 0.3);
+    size_t diverse_samples = sample_size - fitness_samples - novelty_samples;
+
+    auto fitness_sorted = non_empty;
+    std::sort(fitness_sorted.begin(), fitness_sorted.end(),
+              [](const ArchiveCell* a, const ArchiveCell* b) {
+                  return a->fitness_score > b->fitness_score;
+              });
+    for (size_t i = 0; i < std::min(fitness_samples, fitness_sorted.size()); ++i)
+        elites.push_back(fitness_sorted[i]->best_config);
+
+    auto novelty_sorted = non_empty;
+    std::sort(novelty_sorted.begin(), novelty_sorted.end(),
+              [](const ArchiveCell* a, const ArchiveCell* b) {
+                  return a->novelty_score > b->novelty_score;
+              });
+    for (size_t i = 0; i < std::min(novelty_samples, novelty_sorted.size()); ++i)
+        elites.push_back(novelty_sorted[i]->best_config);
+
+    auto remaining = non_empty;
+    for (size_t i = 0; i < diverse_samples && !remaining.empty(); ++i) {
+        std::uniform_int_distribution<size_t> dist(0, remaining.size() - 1);
+        size_t idx = dist(rng_);
+        elites.push_back(remaining[idx]->best_config);
+        remaining.erase(remaining.begin() + idx);
+    }
+    return elites;
+}
+```
+
+Protection overhead mapping (used by power efficiency):
+```311:329:/Users/rishabnuguru/space/include/rad_ml/research/auto_arch/advanced_quality_diversity.hpp
+static double getProtectionOverhead(neural::ProtectionLevel level)
+{
+    switch (level) {
+        case neural::ProtectionLevel::NONE: return 0.0;
+        case neural::ProtectionLevel::CHECKSUM_ONLY: return 0.1;
+        case neural::ProtectionLevel::SELECTIVE_TMR: return 0.5;
+        case neural::ProtectionLevel::FULL_TMR: return 1.0;
+        case neural::ProtectionLevel::ADAPTIVE_TMR: return 0.7;
+        case neural::ProtectionLevel::SPACE_OPTIMIZED: return 0.3;
+        default: return 0.0;
+    }
+}
+```
+
 ### Novelty and Distances
 - Euclidean distance: `calculateBehavioralDistance(const Behavior&, const Behavior&)`.
 - KNN novelty: `calculateNoveltyScore(const Behavior&)` (K=5, bootstrap to 1.0 when archive < K).
@@ -693,6 +863,15 @@ Edge cases and clamping:
 - Export results: `exportResults(const std::string& filename)` in [`auto_arch_search.hpp`](../../include/rad_ml/research/auto_arch_search.hpp).
 - Example writes: `auto_arch_search_results.csv`, `run_summaries.csv`, and `operator_stats.csv` in [`examples/auto_arch_search_example.cpp`](../../examples/auto_arch_search_example.cpp).
 - Operator plots: [`tools/plot_operator_stats.py`](../../tools/plot_operator_stats.py).
+
+### IEEE QRS Validation Artifacts (From Tests)
+- Per-gen genetics metrics: `results/genetic_algorithm/ieee_qrs_ga_qd_metrics.csv`
+- Example run outputs (when examples/tests executed):
+  - `auto_search_results.csv` (per-architecture metrics)
+  - QD coverage logs in console: lines like `QD coverage: 0.0006% (occupied 6), elites injected: 1`
+- Short-run observations (2 gens, pop=6, trials=5):
+  - Coverage grows from ~0.0002% (occupied 2) to ~0.0006% (occupied 6)
+  - Preservation typically ~98–99% under high protection; stddev ~0.2–0.8%
 
 ### End-to-End Trace (From CLI to Cell Update)
 1) CLI flags parsed in example → toggles QD via `enableQualityDiversity(...)`, `enableAdvancedQualityDiversity(...)`.

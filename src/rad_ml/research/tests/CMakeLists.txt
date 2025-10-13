@@ -3,6 +3,8 @@
 set(RAD_ML_RESEARCH_TEST_SOURCES
     architecture_tester_test.cpp
     residual_network_test.cpp
+    evolutionary_ga_test.cpp
+    ieee_qrs_ga_qd_validation_test.cpp
 )
 
 # Create test executable
@@ -26,4 +28,4 @@ else()
 endif()
 
 # Add tests to CTest
-add_test(NAME RadML_Research_Tests COMMAND rad_ml_research_tests) 
+add_test(NAME RadML_Research_Tests COMMAND rad_ml_research_tests)

@@ -1,0 +1,2 @@
+trials,schedule,freeze,baseline_acc,radiation_acc,preservation,preservation_stddev,iterations
+50,2,4,87.19,86.47,99.17,0.663,400

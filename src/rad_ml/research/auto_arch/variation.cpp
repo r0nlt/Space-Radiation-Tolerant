@@ -54,20 +54,37 @@ NetworkConfig AutoArchSearch::crossoverConfigs(const NetworkConfig& parent1,
 {
     NetworkConfig child;
 
-    if (parent1.layer_sizes.size() != parent2.layer_sizes.size()) {
-        std::uniform_int_distribution<int> parent_choice(0, 1);
-        child.layer_sizes =
-            parent_choice(random_generator_) == 0 ? parent1.layer_sizes : parent2.layer_sizes;
-    }
-    else {
+    // Choose strategy for architecture gene
+    if (crossover_strategy_ == CrossoverStrategy::SINGLE_POINT &&
+        parent1.layer_sizes.size() == parent2.layer_sizes.size() &&
+        parent1.layer_sizes.size() >= 2) {
+        // Single-point crossover (preserve input/output sizes)
+        std::uniform_int_distribution<size_t> point_dist(1, parent1.layer_sizes.size() - 2);
+        size_t point = point_dist(random_generator_);
         child.layer_sizes.push_back(input_size_);
         for (size_t i = 1; i < parent1.layer_sizes.size() - 1; ++i) {
-            std::uniform_int_distribution<int> parent_choice(0, 1);
-            child.layer_sizes.push_back(parent_choice(random_generator_) == 0
-                                            ? parent1.layer_sizes[i]
-                                            : parent2.layer_sizes[i]);
+            const auto& src = (i <= point) ? parent1.layer_sizes : parent2.layer_sizes;
+            child.layer_sizes.push_back(src[i]);
         }
         child.layer_sizes.push_back(output_size_);
+    }
+    else {
+        // Uniform crossover (fallback when sizes differ or default strategy)
+        if (parent1.layer_sizes.size() != parent2.layer_sizes.size()) {
+            std::uniform_int_distribution<int> parent_choice(0, 1);
+            child.layer_sizes =
+                parent_choice(random_generator_) == 0 ? parent1.layer_sizes : parent2.layer_sizes;
+        }
+        else {
+            child.layer_sizes.push_back(input_size_);
+            for (size_t i = 1; i < parent1.layer_sizes.size() - 1; ++i) {
+                std::uniform_int_distribution<int> parent_choice(0, 1);
+                child.layer_sizes.push_back(parent_choice(random_generator_) == 0
+                                                ? parent1.layer_sizes[i]
+                                                : parent2.layer_sizes[i]);
+            }
+            child.layer_sizes.push_back(output_size_);
+        }
     }
 
     std::uniform_int_distribution<int> parent_choice(0, 1);

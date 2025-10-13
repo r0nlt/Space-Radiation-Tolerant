@@ -43,6 +43,9 @@ void AdaptiveMutationController::initializeDefaultOperators()
     addMutationOperator(create_wrapper(&AdaptiveMutationController::mutateBalanced), "Balanced");
     addMutationOperator(create_wrapper(&AdaptiveMutationController::mutateAggressive),
                         "Aggressive");
+    // Diversity-preserving mutation biases changes away from recent population modes
+    addMutationOperator(create_wrapper(&AdaptiveMutationController::mutateDiversityPreserving),
+                        "DiversityPreserving");
 }
 
 NetworkConfig AdaptiveMutationController::mutateArchitectureFocused(const NetworkConfig& config,
@@ -156,6 +159,75 @@ NetworkConfig AdaptiveMutationController::mutateAggressive(const NetworkConfig& 
 
     if (mutation_dist(*random_generator_) < aggressive_rate) {
         mutated.protection_level = getRandomProtectionLevel();
+    }
+
+    return mutated;
+}
+
+NetworkConfig AdaptiveMutationController::mutateDiversityPreserving(const NetworkConfig& config,
+                                                                    double rate)
+{
+    NetworkConfig mutated = config;
+    std::uniform_real_distribution<double> mutation_dist(0.0, 1.0);
+
+    // Prefer genes that reduce similarity to common population patterns.
+    // Heuristic: bias toward less frequent widths and alternate residual/protection when stuck.
+    if (mutation_dist(*random_generator_) < rate) {
+        // Architecture: sample a width that differs from current middle layers
+        if (mutated.layer_sizes.size() > 2 && parent_ && !parent_->width_options_.empty()) {
+            std::uniform_int_distribution<size_t> layer_idx_dist(1, mutated.layer_sizes.size() - 2);
+            size_t layer_idx = layer_idx_dist(*random_generator_);
+            size_t current = mutated.layer_sizes[layer_idx];
+
+            // Pick a width farthest (by index distance) from current in options
+            size_t best_width = parent_->width_options_.front();
+            size_t best_score = 0;
+            for (size_t i = 0; i < parent_->width_options_.size(); ++i) {
+                size_t w = parent_->width_options_[i];
+                // score: absolute difference in index from current's nearest index
+                size_t current_idx = 0;
+                for (size_t j = 0; j < parent_->width_options_.size(); ++j) {
+                    if (parent_->width_options_[j] == current) {
+                        current_idx = j;
+                        break;
+                    }
+                }
+                size_t score = (i > current_idx) ? (i - current_idx) : (current_idx - i);
+                if (score > best_score) {
+                    best_score = score;
+                    best_width = w;
+                }
+            }
+            mutated.layer_sizes[layer_idx] = best_width;
+        }
+    }
+
+    if (mutation_dist(*random_generator_) < rate * 0.7 && parent_ &&
+        !parent_->dropout_options_.empty()) {
+        // Choose dropout farthest from current among allowed options
+        double current = mutated.dropout_rate;
+        double best_dropout = parent_->dropout_options_.front();
+        double best_dist = -1.0;
+        for (double d : parent_->dropout_options_) {
+            double dist = std::abs(d - current);
+            if (dist > best_dist) {
+                best_dist = dist;
+                best_dropout = d;
+            }
+        }
+        mutated.dropout_rate = best_dropout;
+    }
+
+    if (mutation_dist(*random_generator_) < rate * 0.5) {
+        mutated.has_residual_connections = !mutated.has_residual_connections;
+    }
+
+    if (mutation_dist(*random_generator_) < rate * 0.7) {
+        // Cycle protection to a different level
+        int current = static_cast<int>(mutated.protection_level);
+        std::uniform_int_distribution<int> offset_dist(1, 3);
+        int next = (current + offset_dist(*random_generator_)) % 5;  // within known enum range
+        mutated.protection_level = static_cast<neural::ProtectionLevel>(next);
     }
 
     return mutated;

@@ -3,6 +3,8 @@
  * @brief Evolutionary (genetic) search implementation for AutoArchSearch
  */
 
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <rad_ml/research/auto_arch/genetic_operators.hpp>
@@ -127,11 +129,39 @@ SearchResult AutoArchSearch::evolutionarySearch(size_t population_size, size_t g
         // Track operator indices and improvements for adaptive credit updates
         std::vector<size_t> used_operator_indices;
         std::vector<double> operator_improvements;
+        size_t crossover_applications = 0;
 
         while (new_population.size() < population_size) {
             const NetworkConfig& parent1 = tournament_select(3);
             const NetworkConfig& parent2 = tournament_select(3);
-            NetworkConfig child = crossoverConfigs(parent1, parent2);
+            NetworkConfig child;
+            // Apply crossover probabilistically per FAQ default (configurable)
+            std::uniform_real_distribution<double> cross_dist(0.0, 1.0);
+            if (cross_dist(random_generator_) < crossover_rate_) {
+                child = crossoverConfigs(parent1, parent2);
+                ++crossover_applications;
+            }
+            else {
+                // No crossover: clone the better parent
+                double f1 = 0.0, f2 = 0.0;
+                for (size_t idx = 0; idx < population.size(); ++idx) {
+                    if (population[idx].layer_sizes == parent1.layer_sizes &&
+                        population[idx].dropout_rate == parent1.dropout_rate &&
+                        population[idx].has_residual_connections ==
+                            parent1.has_residual_connections &&
+                        population[idx].protection_level == parent1.protection_level) {
+                        f1 = std::max(f1, fitness[idx]);
+                    }
+                    if (population[idx].layer_sizes == parent2.layer_sizes &&
+                        population[idx].dropout_rate == parent2.dropout_rate &&
+                        population[idx].has_residual_connections ==
+                            parent2.has_residual_connections &&
+                        population[idx].protection_level == parent2.protection_level) {
+                        f2 = std::max(f2, fitness[idx]);
+                    }
+                }
+                child = (f1 >= f2) ? parent1 : parent2;
+            }
 
             // Record best parent fitness to compute improvement
             double parent_fitness = 0.0;
@@ -229,6 +259,61 @@ SearchResult AutoArchSearch::evolutionarySearch(size_t population_size, size_t g
         }
 
         population = std::move(new_population);
+
+        // Genetics metrics logging (per generation)
+        if (genetics_metrics_enabled_) {
+            // Ensure output directory exists
+            {
+                auto pos = genetics_metrics_file_.find_last_of("/\\");
+                if (pos != std::string::npos) {
+                    std::string dir = genetics_metrics_file_.substr(0, pos);
+                    if (!dir.empty()) {
+// Portable directory creation: use system command via std::system avoided.
+// Instead attempt to create with std::filesystem if available (C++17 optional).
+// Fallback: rely on user having created parent dirs.
+#if __cplusplus >= 201703L
+#include <filesystem>
+                        if (!std::filesystem::exists(dir)) {
+                            std::error_code ec;
+                            std::filesystem::create_directories(dir, ec);
+                        }
+#endif
+                    }
+                }
+            }
+            std::ofstream ofs;
+            ofs.open(genetics_metrics_file_, std::ios::app);
+            if (ofs.is_open()) {
+                if (!genetics_metrics_header_written_) {
+                    ofs << "generation,best_preservation,mean_fitness,fitness_variance,diversity,"
+                           "crossover_rate,crossover_count,population_size\n";
+                    genetics_metrics_header_written_ = true;
+                }
+                double mean = 0.0;
+                for (double f : fitness) mean += f;
+                mean = fitness.empty() ? 0.0 : (mean / fitness.size());
+                double var = 0.0;
+                for (double f : fitness) var += (f - mean) * (f - mean);
+                var = fitness.size() > 1 ? var / (fitness.size() - 1) : 0.0;
+                double diversity = calculatePopulationDiversity(population);
+                ofs << (gen + 1) << "," << std::fixed << std::setprecision(6) << best_preservation
+                    << "," << mean << "," << var << "," << diversity << "," << crossover_rate_
+                    << "," << crossover_applications << "," << population.size() << "\n";
+            }
+        }
+
+        // Random immigrants injection when diversity collapses
+        if (random_immigrants_enabled_) {
+            double diversity = calculatePopulationDiversity(population);
+            if (diversity < std::max(0.0, diversity_threshold_ * 0.5)) {
+                size_t inject_count =
+                    static_cast<size_t>(std::ceil(population_size * random_immigrants_fraction_));
+                inject_count = std::min(inject_count, population.size());
+                for (size_t i = 0; i < inject_count; ++i) {
+                    population[population.size() - 1 - i] = generateRandomConfig();
+                }
+            }
+        }
         // Update adaptive credits if applicable
         if (adaptive_mutation_enabled_ && adaptive_controller_ && !used_operator_indices.empty() &&
             operator_improvements.size() == used_operator_indices.size()) {
