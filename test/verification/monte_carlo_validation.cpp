@@ -31,6 +31,7 @@
 #include "../../include/rad_ml/core/memory/protected_value.hpp"
 #include "../../include/rad_ml/core/redundancy/enhanced_voting.hpp"
 #include "../../include/rad_ml/neural/protected_neural_network.hpp"
+// Note: AdaptiveProtection tests moved to adaptive_protection_validation.cpp
 #include "../../include/rad_ml/physics/quantum_enhanced_radiation.hpp"
 #include "../../include/rad_ml/tmr/enhanced_tmr.hpp"
 
@@ -118,6 +119,12 @@ struct TestResults {
     int recovery_corrected = 0;
     int recovery_uncorrectable = 0;
 
+    // AdaptiveProtection class tests (Hamming, Reed-Solomon, ECC)
+    int hamming_protection_success = 0;
+    int rs_high_protection_success = 0;       // RS with 8 ECC symbols
+    int rs_very_high_protection_success = 0;  // RS with 16 ECC symbols
+    int adaptive_ecc_success = 0;             // Overall AdaptiveProtection class
+
     // Confidence intervals for all methods
     double standard_ci_lower = 0.0, standard_ci_upper = 0.0;
     double bit_level_ci_lower = 0.0, bit_level_ci_upper = 0.0;
@@ -133,6 +140,12 @@ struct TestResults {
     double neural_network_ci_lower = 0.0, neural_network_ci_upper = 0.0;
     double mission_adaptive_ci_lower = 0.0, mission_adaptive_ci_upper = 0.0;
     double temperature_corrected_ci_lower = 0.0, temperature_corrected_ci_upper = 0.0;
+
+    // AdaptiveProtection class CI
+    double hamming_protection_ci_lower = 0.0, hamming_protection_ci_upper = 0.0;
+    double rs_high_protection_ci_lower = 0.0, rs_high_protection_ci_upper = 0.0;
+    double rs_very_high_protection_ci_lower = 0.0, rs_very_high_protection_ci_upper = 0.0;
+    double adaptive_ecc_ci_lower = 0.0, adaptive_ecc_ci_upper = 0.0;
 
     // Physics-based metrics
     double avg_charge_deposited_fc = 0.0;     // average charge deposited (femtocoulombs)
@@ -847,6 +860,9 @@ void runMonteCarloValidation(std::mt19937& gen,
                         test_results.temperature_corrected_success++;
                     }
                 }
+
+                // Note: AdaptiveProtection (ECC) tests moved to adaptive_protection_validation.cpp
+                // for faster execution of this main validation
             }
 
             // Finish progress line before summary output
@@ -906,7 +922,18 @@ void runMonteCarloValidation(std::mt19937& gen,
             calculateAndSetCI(test_results.temperature_corrected_success,
                               test_results.temperature_corrected_ci_lower,
                               test_results.temperature_corrected_ci_upper);
-            // (Selective hardening CI omitted in this run)
+            // AdaptiveProtection class CI calculations
+            calculateAndSetCI(test_results.hamming_protection_success,
+                              test_results.hamming_protection_ci_lower,
+                              test_results.hamming_protection_ci_upper);
+            calculateAndSetCI(test_results.rs_high_protection_success,
+                              test_results.rs_high_protection_ci_lower,
+                              test_results.rs_high_protection_ci_upper);
+            calculateAndSetCI(test_results.rs_very_high_protection_success,
+                              test_results.rs_very_high_protection_ci_lower,
+                              test_results.rs_very_high_protection_ci_upper);
+            calculateAndSetCI(test_results.adaptive_ecc_success, test_results.adaptive_ecc_ci_lower,
+                              test_results.adaptive_ecc_ci_upper);
 
             // Completion reporting with enhanced metrics
             auto end_time = std::chrono::high_resolution_clock::now();
@@ -1063,6 +1090,22 @@ void generateVerificationReport(
                 formatSuccessRate("Aligned Memory", test_results.aligned_memory_success,
                                   test_results.aligned_memory_ci_lower,
                                   test_results.aligned_memory_ci_upper);
+
+                // AdaptiveProtection class (ECC-based protection)
+                report << "\nADAPTIVE ECC PROTECTION:\n";
+                formatSuccessRate("Hamming (Moderate)", test_results.hamming_protection_success,
+                                  test_results.hamming_protection_ci_lower,
+                                  test_results.hamming_protection_ci_upper);
+                formatSuccessRate("Reed-Solomon HIGH", test_results.rs_high_protection_success,
+                                  test_results.rs_high_protection_ci_lower,
+                                  test_results.rs_high_protection_ci_upper);
+                formatSuccessRate("Reed-Solomon VERY_HIGH",
+                                  test_results.rs_very_high_protection_success,
+                                  test_results.rs_very_high_protection_ci_lower,
+                                  test_results.rs_very_high_protection_ci_upper);
+                formatSuccessRate("Adaptive ECC Overall", test_results.adaptive_ecc_success,
+                                  test_results.adaptive_ecc_ci_lower,
+                                  test_results.adaptive_ecc_ci_upper);
 
                 report << "\n";
             }
@@ -1255,6 +1298,20 @@ void printSummaryResults(const std::map<std::string, std::map<std::string, TestR
                     static_cast<double>(test_results.aligned_memory_success) /
                     test_results.total_trials;
 
+                // Add AdaptiveProtection ECC methods
+                method_success_rates["Hamming ECC"] +=
+                    static_cast<double>(test_results.hamming_protection_success) /
+                    test_results.total_trials;
+                method_success_rates["RS-8 ECC"] +=
+                    static_cast<double>(test_results.rs_high_protection_success) /
+                    test_results.total_trials;
+                method_success_rates["RS-16 ECC"] +=
+                    static_cast<double>(test_results.rs_very_high_protection_success) /
+                    test_results.total_trials;
+                method_success_rates["Adaptive ECC"] +=
+                    static_cast<double>(test_results.adaptive_ecc_success) /
+                    test_results.total_trials;
+
                 total_count++;
             }
         }
@@ -1288,6 +1345,16 @@ void printSummaryResults(const std::map<std::string, std::map<std::string, TestR
               << (method_success_rates["Protected Value"] * 100 / total_count) << "%\n";
     std::cout << "  Aligned Memory:      " << std::fixed << std::setprecision(4)
               << (method_success_rates["Aligned Memory"] * 100 / total_count) << "%\n";
+
+    std::cout << "\nADAPTIVE ECC PROTECTION:\n";
+    std::cout << "  Hamming (Moderate):  " << std::fixed << std::setprecision(4)
+              << (method_success_rates["Hamming ECC"] * 100 / total_count) << "%\n";
+    std::cout << "  Reed-Solomon HIGH:   " << std::fixed << std::setprecision(4)
+              << (method_success_rates["RS-8 ECC"] * 100 / total_count) << "%\n";
+    std::cout << "  Reed-Solomon V.HIGH: " << std::fixed << std::setprecision(4)
+              << (method_success_rates["RS-16 ECC"] * 100 / total_count) << "%\n";
+    std::cout << "  Adaptive ECC Overall:" << std::fixed << std::setprecision(4)
+              << (method_success_rates["Adaptive ECC"] * 100 / total_count) << "%\n";
 
     // Add reports for enhanced test scenarios
     std::cout << "\nCHALLENGING TEST SCENARIOS (Success Rates):\n";
@@ -1365,7 +1432,19 @@ void printSummaryResults(const std::map<std::string, std::map<std::string, TestR
                          "Protected Value"},
                         {static_cast<double>(test_results.aligned_memory_success) /
                              test_results.total_trials,
-                         "Aligned Memory"}};
+                         "Aligned Memory"},
+                        {static_cast<double>(test_results.hamming_protection_success) /
+                             test_results.total_trials,
+                         "Hamming ECC"},
+                        {static_cast<double>(test_results.rs_high_protection_success) /
+                             test_results.total_trials,
+                         "RS-8 ECC"},
+                        {static_cast<double>(test_results.rs_very_high_protection_success) /
+                             test_results.total_trials,
+                         "RS-16 ECC"},
+                        {static_cast<double>(test_results.adaptive_ecc_success) /
+                             test_results.total_trials,
+                         "Adaptive ECC"}};
 
                     // Find the best method by tracking during iteration (avoids floating-point
                     // equality issues)
@@ -1464,10 +1543,17 @@ void printSummaryResults(const std::map<std::string, std::map<std::string, TestR
          method_success_rates["Aligned Memory"]) /
         5;
 
+    double ecc_avg = (method_success_rates["Hamming ECC"] + method_success_rates["RS-8 ECC"] +
+                      method_success_rates["RS-16 ECC"] + method_success_rates["Adaptive ECC"]) /
+                     4;
+
     double improvement = ((enhanced_avg / traditional_avg) - 1.0) * 100;
+    double ecc_improvement = ((ecc_avg / traditional_avg) - 1.0) * 100;
 
     std::cout << "\nEnhanced Methods Improvement: " << std::fixed << std::setprecision(4)
               << improvement << "% over traditional methods\n";
+    std::cout << "Adaptive ECC Improvement: " << std::fixed << std::setprecision(4)
+              << ecc_improvement << "% over traditional methods\n";
 
     std::cout << "---------------------------------------------------------\n";
 }

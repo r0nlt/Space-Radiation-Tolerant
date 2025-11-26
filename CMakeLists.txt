@@ -310,6 +310,16 @@ if(ENABLE_PYTORCH AND PyTorch_FOUND)
 endif()
 add_test(NAME monte_carlo_validation COMMAND monte_carlo_validation)
 
+# Add executable for AdaptiveProtection (ECC) validation test
+add_executable(adaptive_protection_validation test/verification/adaptive_protection_validation.cpp)
+target_link_libraries(adaptive_protection_validation rad_ml_tmr rad_ml_testing)
+add_test(NAME adaptive_protection_validation COMMAND adaptive_protection_validation)
+
+# Add executable for physics-based radiation model validation
+add_executable(radiation_physics_test test/physics/radiation_physics_test.cpp)
+target_include_directories(radiation_physics_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME radiation_physics_test COMMAND radiation_physics_test)
+
 # Add executable for space-optimized Monte Carlo validation
 add_executable(space_monte_carlo_validation test/verification/space_monte_carlo_validation.cpp)
 target_link_libraries(space_monte_carlo_validation rad_ml_tmr rad_ml_testing)

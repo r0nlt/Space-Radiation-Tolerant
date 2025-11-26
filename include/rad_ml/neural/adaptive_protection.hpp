@@ -1,15 +1,19 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <cassert>
+#include <chrono>
 #include <cstring>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <random>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 #include "rad_ml/neural/advanced_reed_solomon.hpp"
@@ -19,14 +23,16 @@
 namespace rad_ml {
 namespace neural {
 
-// Forward declarations
-template <typename T>
-class ProtectedNeuralNetwork;
+// Use existing definitions from multi_bit_protection.hpp to avoid redefinition
+// Note: MultibitUpsetType, ECCCodingScheme are defined in multi_bit_protection.hpp
+// Note: AdaptiveProtectionLevel is defined in protected_neural_network.hpp
 
-// Missing enums
-enum class MultibitUpsetType { SINGLE_BIT, ADJACENT_BITS, RANDOM_MULTI };
+// Local enum for adaptive protection (avoids conflicts with multi_bit_protection.hpp)
+enum class AdaptiveMultibitUpsetType { SINGLE_BIT, ADJACENT_BITS, RANDOM_MULTI };
 
-enum class ProtectionLevel {
+// Local AdaptiveProtectionLevel for adaptive protection (independent of
+// protected_neural_network.hpp)
+enum class AdaptiveProtectionLevel {
     NONE,       // No protection
     MINIMAL,    // Basic parity-based protection
     MODERATE,   // TMR or Hamming code protection
@@ -34,6 +40,9 @@ enum class ProtectionLevel {
     VERY_HIGH,  // Reed-Solomon with strong parameter settings
     ADAPTIVE    // Dynamically adjusted based on radiation conditions
 };
+
+// Note: Do NOT use 'using AdaptiveProtectionLevel = ...' here as it conflicts with
+// protected_neural_network.hpp
 
 // Type trait for protectable types
 template <typename T>
@@ -45,29 +54,32 @@ struct is_protectable {
 
 // Weight criticality structure
 template <typename T>
-struct WeightCriticality {
-    T weight;               // The weight value
-    float sensitivity;      // Sensitivity score (higher = more critical)
-    ProtectionLevel level;  // Selected protection level
+struct AdaptiveWeightCriticality {
+    T weight;                       // The weight value
+    float sensitivity;              // Sensitivity score (higher = more critical)
+    AdaptiveProtectionLevel level;  // Selected protection level
 
     // Allow comparison for sorting
-    bool operator<(const WeightCriticality& other) const { return sensitivity < other.sensitivity; }
+    bool operator<(const AdaptiveWeightCriticality& other) const
+    {
+        return sensitivity < other.sensitivity;
+    }
 };
 
-// Note: Broken RS8Bit8Sym and RS8Bit16Sym implementations removed
-// Use AdvancedReedSolomon from advanced_reed_solomon.hpp instead
+// Note: Using AdvancedReedSolomon from advanced_reed_solomon.hpp
 
-// Multi-bit protection implementation
+// Multi-bit upset handler for adaptive protection (local implementation)
 template <typename T>
-class MultibitProtection {
+class AdaptiveMultibitHandler {
    public:
-    std::vector<uint8_t> apply_multi_bit_upset(std::vector<uint8_t> data, MultibitUpsetType type,
+    std::vector<uint8_t> apply_multi_bit_upset(std::vector<uint8_t> data,
+                                               AdaptiveMultibitUpsetType type,
                                                double seu_probability, std::mt19937_64& rng)
     {
         std::uniform_real_distribution<double> dist(0.0, 1.0);
 
         switch (type) {
-            case MultibitUpsetType::SINGLE_BIT:
+            case AdaptiveMultibitUpsetType::SINGLE_BIT:
                 for (auto& byte : data) {
                     for (int bit = 0; bit < 8; ++bit) {
                         if (dist(rng) < seu_probability) {
@@ -77,7 +89,7 @@ class MultibitProtection {
                 }
                 break;
 
-            case MultibitUpsetType::ADJACENT_BITS:
+            case AdaptiveMultibitUpsetType::ADJACENT_BITS:
                 for (auto& byte : data) {
                     if (dist(rng) < seu_probability) {
                         // Flip 2-3 adjacent bits
@@ -90,7 +102,7 @@ class MultibitProtection {
                 }
                 break;
 
-            case MultibitUpsetType::RANDOM_MULTI:
+            case AdaptiveMultibitUpsetType::RANDOM_MULTI:
                 for (auto& byte : data) {
                     if (dist(rng) < seu_probability) {
                         // Flip random number of bits
@@ -108,26 +120,27 @@ class MultibitProtection {
     }
 };
 
-// Basic Protected Neural Network Interface
+// Basic Adaptive Protected Neural Network Interface (local to avoid conflict with
+// protected_neural_network.hpp)
 template <typename T>
-class ProtectedNeuralNetwork {
+class AdaptiveProtectedNetwork {
    public:
-    virtual ~ProtectedNeuralNetwork() = default;
+    virtual ~AdaptiveProtectedNetwork() = default;
 
     virtual std::vector<T> forward(const std::vector<T>& input) = 0;
     virtual std::vector<T> get_all_weights() const = 0;
     virtual void replace_weight(const T& old_weight, const T& new_weight) = 0;
-    virtual void set_weight_protection(const T& weight, ProtectionLevel level) = 0;
+    virtual void set_weight_protection(const T& weight, AdaptiveProtectionLevel level) = 0;
 };
 
 // Example implementation for testing
 template <typename T>
-class SimpleProtectedNetwork : public ProtectedNeuralNetwork<T> {
+class SimpleAdaptiveNetwork : public AdaptiveProtectedNetwork<T> {
    private:
     std::vector<T> weights_;
 
    public:
-    SimpleProtectedNetwork(const std::vector<T>& weights) : weights_(weights) {}
+    SimpleAdaptiveNetwork(const std::vector<T>& weights) : weights_(weights) {}
 
     std::vector<T> forward(const std::vector<T>& input) override
     {
@@ -151,7 +164,7 @@ class SimpleProtectedNetwork : public ProtectedNeuralNetwork<T> {
         }
     }
 
-    void set_weight_protection(const T& weight, ProtectionLevel level) override
+    void set_weight_protection(const T& weight, AdaptiveProtectionLevel level) override
     {
         // Simplified implementation - in real system would store protection metadata
         (void)weight;
@@ -192,33 +205,43 @@ class AdaptiveProtection {
     // Updated constructors without RNG initialization
     AdaptiveProtection()
         : radiation_env_(SpaceMission::LEO_EQUATORIAL),
-          error_model_(MultibitUpsetType::SINGLE_BIT),
-          protection_level_(ProtectionLevel::MODERATE),
+          error_model_(AdaptiveMultibitUpsetType::SINGLE_BIT),
+          protection_level_(AdaptiveProtectionLevel::MODERATE),
           stats_()
     {
     }
 
     AdaptiveProtection(const RadiationEnvironment& env,
-                       ProtectionLevel level = ProtectionLevel::MODERATE)
+                       AdaptiveProtectionLevel level = AdaptiveProtectionLevel::MODERATE)
         : radiation_env_(env),
-          error_model_(MultibitUpsetType::SINGLE_BIT),
+          error_model_(AdaptiveMultibitUpsetType::SINGLE_BIT),
           protection_level_(level),
           stats_()
     {
     }
+
+    // Master seed for RNG - provides better entropy on embedded systems
+    // Set this once at startup for deterministic behavior across threads
+    static void set_master_seed(uint64_t seed)
+    {
+        master_seed_.store(seed, std::memory_order_release);
+        master_seed_set_.store(true, std::memory_order_release);
+    }
+
+    static bool has_master_seed() { return master_seed_set_.load(std::memory_order_acquire); }
 
     // Environment and configuration methods
     void set_environment(const RadiationEnvironment& env) { radiation_env_ = env; }
 
     const RadiationEnvironment& get_environment() const { return radiation_env_; }
 
-    void set_protection_level(ProtectionLevel level) { protection_level_ = level; }
+    void set_protection_level(AdaptiveProtectionLevel level) { protection_level_ = level; }
 
-    ProtectionLevel get_protection_level() const { return protection_level_; }
+    AdaptiveProtectionLevel get_protection_level() const { return protection_level_; }
 
-    void set_error_model(MultibitUpsetType model) { error_model_ = model; }
+    void set_error_model(AdaptiveMultibitUpsetType model) { error_model_ = model; }
 
-    MultibitUpsetType get_error_model() const { return error_model_; }
+    AdaptiveMultibitUpsetType get_error_model() const { return error_model_; }
 
     const ProtectionStats& get_stats() const { return stats_; }
 
@@ -232,41 +255,57 @@ class AdaptiveProtection {
             return value;  // Cannot protect this type
         }
 
-        ProtectionLevel effective_level = get_effective_protection_level(criticality);
+        AdaptiveProtectionLevel effective_level = get_effective_protection_level(criticality);
 
         switch (effective_level) {
-            case ProtectionLevel::NONE:
+            case AdaptiveProtectionLevel::NONE:
                 return value;
 
-            case ProtectionLevel::MINIMAL: {
+            case AdaptiveProtectionLevel::MINIMAL: {
                 // Parity protection
                 auto parity_protected = add_parity_protection(value);
                 return parity_protected.data;  // Return original data
             }
 
-            case ProtectionLevel::MODERATE: {
+            case AdaptiveProtectionLevel::MODERATE: {
                 // Hamming code protection
                 U result = apply_hamming_protection(value);
                 return result;
             }
 
-            case ProtectionLevel::HIGH: {
+            case AdaptiveProtectionLevel::HIGH: {
                 // Reed-Solomon with 8 symbols using AdvancedReedSolomon
                 neural::RS8Bit8Sym<U> rs;
                 auto encoded = rs.encode(value);
-                // For now, return original value (in real system would store encoded)
+
+                // Store encoded data for later recovery (thread-safe)
+                // Store encoded data for later recovery (position-based key)
+                size_t storage_key = compute_storage_key(&value);
+                {
+                    std::lock_guard<std::mutex> lock(rs_storage_mutex_);
+                    rs_encoded_storage_[storage_key] = encoded;
+                }
+
                 return value;
             }
 
-            case ProtectionLevel::VERY_HIGH: {
+            case AdaptiveProtectionLevel::VERY_HIGH: {
                 // Reed-Solomon with 16 symbols using AdvancedReedSolomon
                 neural::RS8Bit16Sym<U> rs;
                 auto encoded = rs.encode(value);
-                // For now, return original value (in real system would store encoded)
+
+                // Store encoded data for later recovery (thread-safe, position-based key)
+                size_t storage_key = compute_storage_key(&value);
+                {
+                    std::lock_guard<std::mutex> lock(rs_storage_mutex_);
+                    rs_encoded_storage_[storage_key] = encoded;
+                }
+
+                // Return original value (encoded data stored separately)
                 return value;
             }
 
-            case ProtectionLevel::ADAPTIVE:
+            case AdaptiveProtectionLevel::ADAPTIVE:
                 // Use moderate protection for adaptive
                 return protect_value<U>(value, 5.0);
 
@@ -282,55 +321,84 @@ class AdaptiveProtection {
             return {value, false};
         }
 
-        ProtectionLevel effective_level = get_effective_protection_level(criticality);
+        AdaptiveProtectionLevel effective_level = get_effective_protection_level(criticality);
 
         switch (effective_level) {
-            case ProtectionLevel::NONE:
+            case AdaptiveProtectionLevel::NONE:
                 return {value, false};
 
-            case ProtectionLevel::MINIMAL: {
+            case AdaptiveProtectionLevel::MINIMAL: {
                 // Parity protection recovery
                 auto parity_protected = add_parity_protection(value);
                 bool error_detected = !parity_protected.verify_parity();
                 return {parity_protected.data, error_detected};
             }
 
-            case ProtectionLevel::MODERATE: {
-                // Hamming code recovery
-                U result = apply_hamming_protection(value);
-                auto [recovered, was_corrected] = recover_with_hamming(result);
+            case AdaptiveProtectionLevel::MODERATE: {
+                // Hamming code recovery - use stored encoded data from protect_value
+                auto [recovered, was_corrected] = recover_with_hamming(value);
                 return {recovered, was_corrected};
             }
 
-            case ProtectionLevel::HIGH: {
+            case AdaptiveProtectionLevel::HIGH: {
                 // Reed-Solomon recovery using AdvancedReedSolomon
                 neural::RS8Bit8Sym<U> rs;
-                std::vector<uint8_t> encoded(sizeof(U) + 8);
-                std::memcpy(encoded.data(), &value, sizeof(U));
+
+                // Retrieve stored encoded data (position-based key)
+                size_t storage_key = compute_storage_key(&value);
+                std::vector<uint8_t> encoded;
+                {
+                    std::lock_guard<std::mutex> lock(rs_storage_mutex_);
+                    auto it = rs_encoded_storage_.find(storage_key);
+                    if (it != rs_encoded_storage_.end()) {
+                        encoded = it->second;
+                    }
+                    else {
+                        // If not found, encode current value (fallback)
+                        encoded = rs.encode(value);
+                    }
+                }
+
+                // Decode with error correction
                 auto decoded = rs.decode(encoded);
                 if (decoded) {
                     return {*decoded, false};
                 }
                 else {
-                    return {value, true};  // Error detected
+                    return {value, true};  // Error detected but uncorrectable
                 }
             }
 
-            case ProtectionLevel::VERY_HIGH: {
+            case AdaptiveProtectionLevel::VERY_HIGH: {
                 // Reed-Solomon recovery using AdvancedReedSolomon
                 neural::RS8Bit16Sym<U> rs;
-                std::vector<uint8_t> encoded(sizeof(U) + 16);
-                std::memcpy(encoded.data(), &value, sizeof(U));
+
+                // Retrieve stored encoded data (position-based key)
+                size_t storage_key = compute_storage_key(&value);
+                std::vector<uint8_t> encoded;
+                {
+                    std::lock_guard<std::mutex> lock(rs_storage_mutex_);
+                    auto it = rs_encoded_storage_.find(storage_key);
+                    if (it != rs_encoded_storage_.end()) {
+                        encoded = it->second;
+                    }
+                    else {
+                        // If not found, encode current value (fallback)
+                        encoded = rs.encode(value);
+                    }
+                }
+
+                // Decode with error correction
                 auto decoded = rs.decode(encoded);
                 if (decoded) {
                     return {*decoded, false};
                 }
                 else {
-                    return {value, true};  // Error detected
+                    return {value, true};  // Error detected but uncorrectable
                 }
             }
 
-            case ProtectionLevel::ADAPTIVE:
+            case AdaptiveProtectionLevel::ADAPTIVE:
                 // Use moderate protection for adaptive
                 return recover_value<U>(value, 5.0);
 
@@ -355,9 +423,10 @@ class AdaptiveProtection {
         std::memcpy(bytes.data(), &value, sizeof(U));
 
         // Use thread-local RNG for thread safety
-        thread_local std::mt19937_64 local_rng(std::random_device{}());
+        // Prefer master seed if set (better for embedded systems with limited entropy)
+        thread_local std::mt19937_64 local_rng(get_thread_seed());
 
-        MultibitProtection<U> mbu;
+        AdaptiveMultibitHandler<U> mbu;
         bytes = mbu.apply_multi_bit_upset(bytes, error_model_, seu_probability, local_rng);
 
         U result;
@@ -378,25 +447,25 @@ class AdaptiveProtection {
 
         // Adjust protection level based on SEU rate
         if (current_seu_rate > 1e-3) {  // High radiation
-            protection_level_ = ProtectionLevel::VERY_HIGH;
+            protection_level_ = AdaptiveProtectionLevel::VERY_HIGH;
         }
         else if (current_seu_rate > 1e-4) {  // Medium radiation
-            protection_level_ = ProtectionLevel::HIGH;
+            protection_level_ = AdaptiveProtectionLevel::HIGH;
         }
         else if (current_seu_rate > 1e-5) {  // Low radiation
-            protection_level_ = ProtectionLevel::MODERATE;
+            protection_level_ = AdaptiveProtectionLevel::MODERATE;
         }
         else {  // Very low radiation
-            protection_level_ = ProtectionLevel::MINIMAL;
+            protection_level_ = AdaptiveProtectionLevel::MINIMAL;
         }
     }
 
     template <typename U = T>
-    std::vector<WeightCriticality<U>> identify_critical_weights(
-        ProtectedNeuralNetwork<U>& network, const std::vector<std::vector<U>>& input_samples,
+    std::vector<AdaptiveWeightCriticality<U>> identify_critical_weights(
+        AdaptiveProtectedNetwork<U>& network, const std::vector<std::vector<U>>& input_samples,
         const std::vector<std::vector<U>>& output_samples)
     {
-        std::vector<WeightCriticality<U>> criticalities;
+        std::vector<AdaptiveWeightCriticality<U>> criticalities;
         auto weights = network.get_all_weights();
 
         for (const auto& weight : weights) {
@@ -406,18 +475,18 @@ class AdaptiveProtection {
             // Adjust based on position (weights in later layers are more critical)
             // This is a simplified approach - in practice, use gradient-based analysis
 
-            ProtectionLevel level = ProtectionLevel::NONE;
+            AdaptiveProtectionLevel level = AdaptiveProtectionLevel::NONE;
             if (sensitivity > 10.0) {
-                level = ProtectionLevel::VERY_HIGH;
+                level = AdaptiveProtectionLevel::VERY_HIGH;
             }
             else if (sensitivity > 5.0) {
-                level = ProtectionLevel::HIGH;
+                level = AdaptiveProtectionLevel::HIGH;
             }
             else if (sensitivity > 1.0) {
-                level = ProtectionLevel::MODERATE;
+                level = AdaptiveProtectionLevel::MODERATE;
             }
             else if (sensitivity > 0.1) {
-                level = ProtectionLevel::MINIMAL;
+                level = AdaptiveProtectionLevel::MINIMAL;
             }
 
             criticalities.push_back({weight, sensitivity, level});
@@ -427,14 +496,14 @@ class AdaptiveProtection {
     }
 
     template <typename U = T>
-    void apply_optimized_protection(ProtectedNeuralNetwork<U>& network,
-                                    const std::vector<WeightCriticality<U>>& criticalities,
+    void apply_optimized_protection(AdaptiveProtectedNetwork<U>& network,
+                                    const std::vector<AdaptiveWeightCriticality<U>>& criticalities,
                                     double budget = 0.5)
     {
         // Sort criticalities by sensitivity (highest first)
-        std::vector<WeightCriticality<U>> sorted_criticalities = criticalities;
+        std::vector<AdaptiveWeightCriticality<U>> sorted_criticalities = criticalities;
         std::sort(sorted_criticalities.begin(), sorted_criticalities.end(),
-                  std::greater<WeightCriticality<U>>());
+                  std::greater<AdaptiveWeightCriticality<U>>());
 
         // Calculate total sensitivity
         double total_sensitivity = 0.0;
@@ -522,31 +591,63 @@ class AdaptiveProtection {
         return result;
     }
 
+    /**
+     * Apply Hamming protection - stores encoded data separately for full byte protection
+     * Uses two Hamming(7,4) codes per byte to protect all 8 bits
+     */
     template <typename U>
     U apply_hamming_protection(const U& value) const
     {
-        U result = value;
-        uint8_t* bytes = reinterpret_cast<uint8_t*>(&result);
+        const uint8_t* bytes = reinterpret_cast<const uint8_t*>(&value);
 
-        // Apply Hamming code to each byte
+        // Encode all bytes and store in hamming_storage_
+        std::vector<uint16_t> encoded(sizeof(U));
         for (size_t i = 0; i < sizeof(U); ++i) {
-            bytes[i] = hamming_encode_byte(bytes[i]);
+            encoded[i] = hamming_encode_byte_full(bytes[i]);
         }
 
-        return result;
+        // Store encoded data using position-based key
+        size_t storage_key = compute_storage_key(&value);
+        {
+            std::lock_guard<std::mutex> lock(hamming_storage_mutex_);
+            hamming_encoded_storage_[storage_key] = std::move(encoded);
+        }
+
+        return value;  // Return original value (protection is in storage)
     }
 
+    /**
+     * Recover with Hamming error correction
+     * Uses stored encoded data to detect and correct single-bit errors per nibble
+     */
     template <typename U>
     std::tuple<U, bool> recover_with_hamming(const U& value) const
     {
-        U result = value;
-        uint8_t* bytes = reinterpret_cast<uint8_t*>(&result);
+        size_t storage_key = compute_storage_key(&value);
+        std::vector<uint16_t> encoded;
+
+        {
+            std::lock_guard<std::mutex> lock(hamming_storage_mutex_);
+            auto it = hamming_encoded_storage_.find(storage_key);
+            if (it == hamming_encoded_storage_.end()) {
+                // No stored encoding - cannot correct, return original
+                return {value, false};
+            }
+            encoded = it->second;
+        }
+
+        if (encoded.size() != sizeof(U)) {
+            return {value, false};  // Size mismatch
+        }
+
+        U result;
+        uint8_t* result_bytes = reinterpret_cast<uint8_t*>(&result);
         bool correction_applied = false;
 
-        // Decode each byte with Hamming error correction
+        // Decode each byte
         for (size_t i = 0; i < sizeof(U); ++i) {
-            auto [decoded_byte, was_corrected] = hamming_decode_byte(bytes[i]);
-            bytes[i] = decoded_byte;
+            auto [decoded_byte, was_corrected] = hamming_decode_byte_full(encoded[i]);
+            result_bytes[i] = decoded_byte;
             if (was_corrected) {
                 correction_applied = true;
             }
@@ -555,26 +656,44 @@ class AdaptiveProtection {
         return {result, correction_applied};
     }
 
-    static uint8_t hamming_encode_byte(uint8_t data)
+    /**
+     * Compute a storage key based on pointer address
+     * Uses just the pointer address for consistent lookup
+     */
+    size_t compute_storage_key(const void* ptr) const
     {
-        // Extract data bits (we'll use the lower 4 bits)
-        uint8_t d1 = (data >> 0) & 1;
-        uint8_t d2 = (data >> 1) & 1;
-        uint8_t d3 = (data >> 2) & 1;
-        uint8_t d4 = (data >> 3) & 1;
+        // Use pointer address directly - same address = same key
+        return reinterpret_cast<size_t>(ptr);
+    }
+
+    /**
+     * Encode a single nibble (4 bits) using Hamming(7,4) code
+     * @param nibble Lower 4 bits of input
+     * @return 7-bit codeword
+     */
+    static uint8_t hamming_encode_nibble(uint8_t nibble)
+    {
+        uint8_t d1 = (nibble >> 0) & 1;
+        uint8_t d2 = (nibble >> 1) & 1;
+        uint8_t d3 = (nibble >> 2) & 1;
+        uint8_t d4 = (nibble >> 3) & 1;
 
         // Calculate parity bits
         uint8_t p1 = d1 ^ d2 ^ d4;
         uint8_t p2 = d1 ^ d3 ^ d4;
         uint8_t p3 = d2 ^ d3 ^ d4;
 
-        // Construct codeword: p1 p2 d1 p3 d2 d3 d4
+        // Construct codeword: p1 p2 d1 p3 d2 d3 d4 (7 bits)
         return (p1 << 0) | (p2 << 1) | (d1 << 2) | (p3 << 3) | (d2 << 4) | (d3 << 5) | (d4 << 6);
     }
 
-    static std::tuple<uint8_t, bool> hamming_decode_byte(uint8_t codeword)
+    /**
+     * Decode a 7-bit Hamming(7,4) codeword
+     * @param codeword 7-bit encoded value
+     * @return Tuple of (decoded 4-bit nibble, was_corrected)
+     */
+    static std::tuple<uint8_t, bool> hamming_decode_nibble(uint8_t codeword)
     {
-        // Extract received bits
         uint8_t p1 = (codeword >> 0) & 1;
         uint8_t p2 = (codeword >> 1) & 1;
         uint8_t d1 = (codeword >> 2) & 1;
@@ -588,31 +707,107 @@ class AdaptiveProtection {
         uint8_t s2 = p2 ^ d1 ^ d3 ^ d4;
         uint8_t s3 = p3 ^ d2 ^ d3 ^ d4;
 
-        // Error position (0 if no error)
         uint8_t error_pos = (s3 << 2) | (s2 << 1) | s1;
 
-        if (error_pos != 0) {
-            // Correct the error
+        if (error_pos != 0 && error_pos <= 7) {
             codeword ^= (1 << (error_pos - 1));
-
-            // Re-extract corrected bits
             d1 = (codeword >> 2) & 1;
             d2 = (codeword >> 4) & 1;
             d3 = (codeword >> 5) & 1;
             d4 = (codeword >> 6) & 1;
         }
 
-        // Reconstruct data (4-bit result)
-        uint8_t data = (d1 << 0) | (d2 << 1) | (d3 << 2) | (d4 << 3);
+        return {static_cast<uint8_t>((d1 << 0) | (d2 << 1) | (d3 << 2) | (d4 << 3)),
+                error_pos != 0};
+    }
 
-        return {data, error_pos != 0};
+    /**
+     * Encode a full byte using two Hamming(7,4) codes
+     * Produces a 16-bit codeword (2 bytes) to protect all 8 bits
+     * @param data Full 8-bit byte to encode
+     * @return 16-bit codeword (lower 7 bits = lower nibble, upper 7 bits = upper nibble)
+     */
+    static uint16_t hamming_encode_byte_full(uint8_t data)
+    {
+        uint8_t low_nibble = data & 0x0F;
+        uint8_t high_nibble = (data >> 4) & 0x0F;
+
+        uint8_t encoded_low = hamming_encode_nibble(low_nibble);
+        uint8_t encoded_high = hamming_encode_nibble(high_nibble);
+
+        return static_cast<uint16_t>(encoded_low) | (static_cast<uint16_t>(encoded_high) << 8);
+    }
+
+    /**
+     * Decode a 16-bit Hamming-encoded byte
+     * @param codeword 16-bit encoded value
+     * @return Tuple of (decoded byte, was_corrected)
+     */
+    static std::tuple<uint8_t, bool> hamming_decode_byte_full(uint16_t codeword)
+    {
+        auto [low_nibble, low_corrected] = hamming_decode_nibble(codeword & 0x7F);
+        auto [high_nibble, high_corrected] = hamming_decode_nibble((codeword >> 8) & 0x7F);
+
+        uint8_t data = low_nibble | (high_nibble << 4);
+        return {data, low_corrected || high_corrected};
+    }
+
+    // Legacy single-nibble functions for backward compatibility
+    static uint8_t hamming_encode_byte(uint8_t data)
+    {
+        // Note: This only protects lower 4 bits - use hamming_encode_byte_full for full protection
+        return hamming_encode_nibble(data & 0x0F);
+    }
+
+    static std::tuple<uint8_t, bool> hamming_decode_byte(uint8_t codeword)
+    {
+        return hamming_decode_nibble(codeword);
     }
 
    private:
     RadiationEnvironment radiation_env_;
-    MultibitUpsetType error_model_;
-    ProtectionLevel protection_level_;
+    AdaptiveMultibitUpsetType error_model_;
+    AdaptiveProtectionLevel protection_level_;
     ProtectionStats stats_;
+
+    // Storage for Reed-Solomon encoded values (position-based key to avoid hash collisions)
+    mutable std::unordered_map<size_t, std::vector<uint8_t>> rs_encoded_storage_;
+    mutable std::mutex rs_storage_mutex_;  // Thread-safe access to RS storage
+
+    // Storage for Hamming encoded values (position-based key for full byte protection)
+    mutable std::unordered_map<size_t, std::vector<uint16_t>> hamming_encoded_storage_;
+    mutable std::mutex hamming_storage_mutex_;  // Thread-safe access to Hamming storage
+
+    // Master seed for thread-local RNGs (better entropy for embedded systems)
+    inline static std::atomic<uint64_t> master_seed_{0};
+    inline static std::atomic<bool> master_seed_set_{false};
+    inline static std::atomic<uint64_t> thread_counter_{0};
+
+    /**
+     * Get a seed for thread-local RNG
+     * Uses master seed + thread ID if set, otherwise falls back to random_device
+     */
+    static uint64_t get_thread_seed()
+    {
+        if (master_seed_set_.load(std::memory_order_acquire)) {
+            // Combine master seed with a unique thread counter for per-thread variation
+            uint64_t base_seed = master_seed_.load(std::memory_order_acquire);
+            uint64_t thread_offset = thread_counter_.fetch_add(1, std::memory_order_relaxed);
+            // Mix using a simple hash to avoid correlation between threads
+            return base_seed ^ (thread_offset * 0x9e3779b97f4a7c15ULL);
+        }
+        else {
+            // Fall back to random_device (may have limited entropy on embedded)
+            try {
+                return std::random_device{}();
+            }
+            catch (...) {
+                // If random_device fails (some embedded systems), use time-based fallback
+                return static_cast<uint64_t>(
+                    std::chrono::high_resolution_clock::now().time_since_epoch().count());
+            }
+        }
+    }
 
     // Safe parity-protected value structure
     template <typename U>
@@ -656,7 +851,8 @@ class AdaptiveProtection {
     U flip_random_bit(const U& value)
     {  // Removed const for thread safety
         // Use thread-local RNG for thread safety
-        thread_local std::mt19937_64 local_rng(std::random_device{}());
+        // Prefer master seed if set (better for embedded systems with limited entropy)
+        thread_local std::mt19937_64 local_rng(get_thread_seed());
 
         U result = value;
         uint8_t* bytes = reinterpret_cast<uint8_t*>(&result);
@@ -678,27 +874,27 @@ class AdaptiveProtection {
         return radiation_env_.calculateSEUProbability(pos);
     }
 
-    ProtectionLevel get_effective_protection_level(float criticality) const
+    AdaptiveProtectionLevel get_effective_protection_level(float criticality) const
     {
-        if (protection_level_ != ProtectionLevel::ADAPTIVE) {
+        if (protection_level_ != AdaptiveProtectionLevel::ADAPTIVE) {
             return protection_level_;
         }
 
         // For adaptive mode, select based on criticality
         if (criticality > 10.0) {
-            return ProtectionLevel::VERY_HIGH;
+            return AdaptiveProtectionLevel::VERY_HIGH;
         }
         else if (criticality > 5.0) {
-            return ProtectionLevel::HIGH;
+            return AdaptiveProtectionLevel::HIGH;
         }
         else if (criticality > 1.0) {
-            return ProtectionLevel::MODERATE;
+            return AdaptiveProtectionLevel::MODERATE;
         }
         else if (criticality > 0.1) {
-            return ProtectionLevel::MINIMAL;
+            return AdaptiveProtectionLevel::MINIMAL;
         }
         else {
-            return ProtectionLevel::NONE;
+            return AdaptiveProtectionLevel::NONE;
         }
     }
 
@@ -725,7 +921,7 @@ class AdaptiveProtection {
     }
 
     template <typename U>
-    double calculate_network_error(ProtectedNeuralNetwork<U>& network,
+    double calculate_network_error(AdaptiveProtectedNetwork<U>& network,
                                    const std::vector<std::vector<U>>& inputs,
                                    const std::vector<std::vector<U>>& expected) const
     {

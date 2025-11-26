@@ -9,7 +9,9 @@
 
 #include <Eigen/Dense>
 #include <functional>
+#include <map>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "rad_ml/core/material_database.hpp"
@@ -145,6 +147,12 @@ template <typename T>
 class HealthWeightedTMR : public TMRStrategy<T> {
    private:
     std::vector<double> health_scores = {1.0, 1.0, 1.0};
+    mutable std::mutex health_mutex_;  // Thread-safe health score updates
+
+    /**
+     * Internal update without locking (caller must hold lock)
+     */
+    void updateHealthScoresInternal(int component_index, bool had_error);
 
    public:
     TMRResult<T> execute(const std::function<T()>& operation) override;
@@ -154,9 +162,14 @@ class HealthWeightedTMR : public TMRStrategy<T> {
     }
 
     /**
-     * Update health scores based on error history
+     * Update health scores based on error history (thread-safe, acquires lock)
      */
     void updateHealthScores(int component_index, bool had_error);
+
+    /**
+     * Get current health scores (thread-safe)
+     */
+    std::vector<double> getHealthScores() const;
 };
 
 /**
