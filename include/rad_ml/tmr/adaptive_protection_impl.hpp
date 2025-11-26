@@ -7,8 +7,10 @@
 #pragma once
 
 #include <chrono>
+#include <cmath>    // For std::fpclassify, std::isnan, std::isinf
 #include <cstring>  // For memcpy
 #include <limits>   // For std::numeric_limits
+#include <mutex>
 #include <thread>
 #include <type_traits>  // For std::is_arithmetic_v, std::is_integral_v
 
@@ -286,14 +288,97 @@ TMRResult<T> StuckBitTMR<T>::execute(const std::function<T()>& operation)
 template <typename T>
 bool StuckBitTMR<T>::checkForStuckBits(const T& value)
 {
-    // Simplified check for stuck bits - in a real implementation, this would be
-    // more sophisticated and hardware-specific
+    // Conservative stuck-bit detection to minimize false positives
+    // Only flag truly suspicious patterns, not common legitimate values
 
-    // Generic check that works for any type
     if constexpr (std::is_arithmetic_v<T>) {
-        // For arithmetic types, check for extreme values (like 0 or max value)
-        if (value == T{} || value == std::numeric_limits<T>::max()) {
+        // For integral types, check for extreme bit patterns
+        if constexpr (std::is_integral_v<T>) {
+            // Check for all bits set (0xFF pattern for bytes, etc.)
+            if (value == static_cast<T>(~T(0))) {
+                return true;
+            }
+
+            // Check for max value (all 1s except sign bit for signed)
+            if (value == std::numeric_limits<T>::max()) {
+                return true;
+            }
+
+            // Check for min value (only for signed types - 0x80...00 pattern)
+            if constexpr (std::is_signed_v<T>) {
+                if (value == std::numeric_limits<T>::min()) {
+                    return true;
+                }
+            }
+
+            // Check for alternating bit patterns (0x55... or 0xAA...)
+            // These are classic stuck-bit failure signatures
+            if constexpr (sizeof(T) <= 8) {
+                T alt_pattern1 = 0;
+                T alt_pattern2 = 0;
+                for (size_t i = 0; i < sizeof(T) * 8; ++i) {
+                    if (i % 2 == 0) {
+                        alt_pattern1 |= (static_cast<T>(1) << i);
+                    }
+                    else {
+                        alt_pattern2 |= (static_cast<T>(1) << i);
+                    }
+                }
+                if (value == alt_pattern1 || value == alt_pattern2) {
+                    return true;
+                }
+            }
+
+            // NOTE: 0 is NOT flagged - it's a common legitimate value
+        }
+
+        // For floating point types, only flag truly invalid values
+        if constexpr (std::is_floating_point_v<T>) {
+            // NaN and Inf are definite error indicators
+            if (std::isnan(value) || std::isinf(value)) {
+                return true;
+            }
+
+            // Check for denormalized numbers close to 0 (potential stuck-at-0 in exponent)
+            if (std::fpclassify(value) == FP_SUBNORMAL) {
+                return true;  // Subnormal values are rare and often indicate problems
+            }
+
+            // DO NOT flag common legitimate values:
+            // - 0.0, 1.0, -1.0, 0.5, -0.5 are all valid neural network weights
+            // - These would require temporal tracking to detect stuck behavior
+        }
+    }
+    else {
+        // For non-arithmetic types, check byte-level patterns
+        const uint8_t* bytes = reinterpret_cast<const uint8_t*>(&value);
+        size_t size = sizeof(T);
+
+        // Check if all bytes are the same (potential stuck byte pattern)
+        bool all_same = true;
+        uint8_t first_byte = bytes[0];
+        for (size_t i = 1; i < size; ++i) {
+            if (bytes[i] != first_byte) {
+                all_same = false;
+                break;
+            }
+        }
+        if (all_same && (first_byte == 0x00 || first_byte == 0xFF)) {
             return true;
+        }
+
+        // Check for alternating byte patterns
+        if (size >= 2) {
+            bool alternating = true;
+            for (size_t i = 2; i < size; ++i) {
+                if (bytes[i] != bytes[i % 2]) {
+                    alternating = false;
+                    break;
+                }
+            }
+            if (alternating && (bytes[0] == 0x00 || bytes[0] == 0xFF)) {
+                return true;
+            }
         }
     }
 
@@ -492,7 +577,8 @@ TMRResult<T> HealthWeightedTMR<T>::execute(const std::function<T()>& operation)
     T result2 = operation();
     T result3 = operation();
 
-    // Calculate weighted voting based on health scores
+    // Calculate weighted voting based on health scores (thread-safe read)
+    std::unique_lock<std::mutex> lock(health_mutex_);
     double total_health = health_scores[0] + health_scores[1] + health_scores[2];
     double weight1 = health_scores[0] / total_health;
     double weight2 = health_scores[1] / total_health;
@@ -517,8 +603,8 @@ TMRResult<T> HealthWeightedTMR<T>::execute(const std::function<T()>& operation)
             result.confidence = combined_weight;
             result.error_detected = true;
             result.error_corrected = true;
-            // Update health scores
-            updateHealthScores(2, true);  // Component 3 had error
+            // Update health scores (using internal version since we hold the lock)
+            updateHealthScoresInternal(2, true);  // Component 3 had error
         }
         else {
             // Use highest health component
@@ -546,7 +632,7 @@ TMRResult<T> HealthWeightedTMR<T>::execute(const std::function<T()>& operation)
             result.confidence = combined_weight;
             result.error_detected = true;
             result.error_corrected = true;
-            updateHealthScores(1, true);  // Component 2 had error
+            updateHealthScoresInternal(1, true);  // Component 2 had error
         }
         else {
             // Use highest health component
@@ -574,7 +660,7 @@ TMRResult<T> HealthWeightedTMR<T>::execute(const std::function<T()>& operation)
             result.confidence = combined_weight;
             result.error_detected = true;
             result.error_corrected = true;
-            updateHealthScores(0, true);  // Component 1 had error
+            updateHealthScoresInternal(0, true);  // Component 1 had error
         }
         else {
             // Use highest health component
@@ -611,18 +697,23 @@ TMRResult<T> HealthWeightedTMR<T>::execute(const std::function<T()>& operation)
         result.error_detected = true;
         result.error_corrected = false;
 
-        // Update all health scores due to disagreement
-        updateHealthScores(0, false);
-        updateHealthScores(1, false);
-        updateHealthScores(2, false);
+        // Update all health scores due to disagreement (using internal version)
+        updateHealthScoresInternal(0, false);
+        updateHealthScoresInternal(1, false);
+        updateHealthScoresInternal(2, false);
     }
 
     return result;
 }
 
 template <typename T>
-void HealthWeightedTMR<T>::updateHealthScores(int component_index, bool had_error)
+void HealthWeightedTMR<T>::updateHealthScoresInternal(int component_index, bool had_error)
 {
+    // Internal update without locking - caller must hold health_mutex_
+    if (component_index < 0 || component_index >= static_cast<int>(health_scores.size())) {
+        return;  // Invalid index
+    }
+
     // Update health score based on error
     if (had_error) {
         // Decrease health score, but keep it above 0.1
@@ -632,6 +723,22 @@ void HealthWeightedTMR<T>::updateHealthScores(int component_index, bool had_erro
         // Increase health score, but keep it below 1.0
         health_scores[component_index] = std::min(1.0, health_scores[component_index] * 1.1);
     }
+}
+
+template <typename T>
+void HealthWeightedTMR<T>::updateHealthScores(int component_index, bool had_error)
+{
+    // Thread-safe update of health scores (acquires lock)
+    std::lock_guard<std::mutex> lock(health_mutex_);
+    updateHealthScoresInternal(component_index, had_error);
+}
+
+template <typename T>
+std::vector<double> HealthWeightedTMR<T>::getHealthScores() const
+{
+    // Thread-safe read of health scores
+    std::lock_guard<std::mutex> lock(health_mutex_);
+    return health_scores;
 }
 
 //------------------------------------------------------------------------------
