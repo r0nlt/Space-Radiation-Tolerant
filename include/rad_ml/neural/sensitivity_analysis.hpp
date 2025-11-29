@@ -1,15 +1,17 @@
 #pragma once
 
-#include <vector>
-#include <map>
-#include <string>
-#include <memory>
-#include <functional>
 #include <cmath>
+#include <functional>
+#include <map>
+#include <memory>
+#include <queue>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <queue>
+#include <vector>
+
 #include "../error/error_handling.hpp"
+#include "../physics/radiation_physics.hpp"
 #include "../radiation/environment.hpp"
 #include "selective_hardening.hpp"
 
@@ -65,89 +67,107 @@ struct TopologicalAnalysisResult {
     std::map<std::string, double> layer_criticality;
     std::map<std::string, double> propagation_factors;
     std::vector<std::string> critical_paths;
-    std::map<std::string, size_t> fan_in_count;  // Input connections per layer
-    std::map<std::string, size_t> fan_out_count; // Output connections per layer
+    std::map<std::string, size_t> fan_in_count;   // Input connections per layer
+    std::map<std::string, size_t> fan_out_count;  // Output connections per layer
     std::map<std::string, double> information_bottleneck_score;
 };
 
 /**
  * @brief Extended topological analysis result with space environment considerations
+ *
+ * Updated (November 2025): Now includes physics-based SEU rates from
+ * physics::PhysicsRadiationEnvironment for accurate radiation modeling.
  */
 struct SpaceAwareTopologicalResult : public TopologicalAnalysisResult {
     // Radiation vulnerability factors per layer
     std::map<std::string, double> radiation_vulnerability;
-    
+
     // Thermal sensitivity factors per layer
     std::map<std::string, double> thermal_sensitivity;
-    
+
     // Power consumption impact per layer
     std::map<std::string, double> power_impact;
-    
+
     // Overall space environment impact score (0-1)
     double space_environment_impact = 0.0;
-    
-    // Reference to radiation environment
+
+    // Reference to radiation environment (legacy interface)
     std::shared_ptr<radiation::Environment> environment;
+
+    // Physics-based radiation environment (new, more accurate)
+    std::shared_ptr<physics::PhysicsRadiationEnvironment> physics_environment;
+
+    // Physics-based SEU rates per layer (errors/bit/day)
+    std::map<std::string, double> seu_rates;
+
+    // Recommended scrubbing intervals per layer (seconds)
+    std::map<std::string, double> scrub_intervals;
+
+    // Orbit-averaged SEU rate (errors/bit/day)
+    double orbit_average_seu_rate = 0.0;
+
+    // Worst-case SEU rate (in SAA, errors/bit/day)
+    double worst_case_seu_rate = 0.0;
 };
 
 /**
  * @brief Analyzer for neural network topology
  */
 class TopologicalAnalyzer {
-public:
+   public:
     /**
      * @brief Analyze network structure to determine criticality
-     * 
+     *
      * @tparam NetworkType Type of neural network
      * @param network Network to analyze
      * @return Result of topological analysis
      */
     template <typename NetworkType>
-    TopologicalAnalysisResult analyzeNetwork(const NetworkType& network) {
+    TopologicalAnalysisResult analyzeNetwork(const NetworkType& network)
+    {
         TopologicalAnalysisResult result;
-        
+
         // Extract network topology
         auto layers = extractNetworkLayers(network);
-        
+
         // Calculate connectivity metrics
         calculateConnectivityMetrics(layers, result);
-        
+
         // Calculate input-to-output influence paths
         calculateCriticalPaths(layers, result.critical_paths);
-        
+
         // Determine propagation factors (how errors multiply through the network)
         for (const auto& layer : layers) {
-            result.propagation_factors[layer.name] = 
-                calculatePropagationFactor(layer, layers);
+            result.propagation_factors[layer.name] = calculatePropagationFactor(layer, layers);
         }
-        
+
         // Calculate information bottleneck scores
         calculateInformationBottlenecks(layers, result);
-        
+
         // Assign criticality scores based on topology
         for (const auto& layer : layers) {
-            result.layer_criticality[layer.name] = 
-                calculateTopologicalCriticality(layer, result);
+            result.layer_criticality[layer.name] = calculateTopologicalCriticality(layer, result);
         }
-        
+
         return result;
     }
 
-private:
+   private:
     /**
      * @brief Extract layer information from a network
-     * 
+     *
      * @tparam NetworkType Type of neural network
      * @param network Network to analyze
      * @return Vector of layer information
      */
     template <typename NetworkType>
-    std::vector<LayerInfo> extractNetworkLayers(const NetworkType& network) {
+    std::vector<LayerInfo> extractNetworkLayers(const NetworkType& network)
+    {
         // This would need to be specialized for different network types
         // Here's a generic implementation that uses the network's getLayerInfo if available
         if constexpr (has_get_layer_info<NetworkType>::value) {
             return network.getLayerInfo();
-        } 
+        }
         else {
             // Fallback implementation for networks without direct layer info access
             std::vector<LayerInfo> layers;
@@ -156,63 +176,61 @@ private:
             return layers;
         }
     }
-    
+
     /**
      * @brief Calculate connectivity metrics for layers
-     * 
+     *
      * @param layers Network layers
      * @param result Analysis result to update
      */
-    void calculateConnectivityMetrics(
-        const std::vector<LayerInfo>& layers,
-        TopologicalAnalysisResult& result) {
-        
+    void calculateConnectivityMetrics(const std::vector<LayerInfo>& layers,
+                                      TopologicalAnalysisResult& result)
+    {
         // Initialize counters
         for (const auto& layer : layers) {
             result.fan_in_count[layer.name] = 0;
             result.fan_out_count[layer.name] = 0;
         }
-        
+
         // Count connections
         for (const auto& layer : layers) {
             result.fan_in_count[layer.name] += layer.input_layers.size();
-            
+
             for (const auto& output_layer : layer.output_layers) {
                 result.fan_out_count[layer.name]++;
             }
         }
     }
-    
+
     /**
      * @brief Find critical paths from input to output
-     * 
+     *
      * @param layers Network layers
      * @param critical_paths Vector to store critical paths
      */
-    void calculateCriticalPaths(
-        const std::vector<LayerInfo>& layers,
-        std::vector<std::string>& critical_paths) {
-        
+    void calculateCriticalPaths(const std::vector<LayerInfo>& layers,
+                                std::vector<std::string>& critical_paths)
+    {
         // Find input and output layers
         std::vector<std::string> input_layers;
         std::vector<std::string> output_layers;
-        
+
         for (const auto& layer : layers) {
             if (layer.input_layers.empty()) {
                 input_layers.push_back(layer.name);
             }
-            
+
             if (layer.output_layers.empty()) {
                 output_layers.push_back(layer.name);
             }
         }
-        
+
         // Build layer map for quick lookups
         std::unordered_map<std::string, LayerInfo> layer_map;
         for (const auto& layer : layers) {
             layer_map[layer.name] = layer;
         }
-        
+
         // Find all paths from input to output layers
         for (const auto& input_layer : input_layers) {
             for (const auto& output_layer : output_layers) {
@@ -220,113 +238,111 @@ private:
             }
         }
     }
-    
+
     /**
      * @brief Helper to find all paths between two layers
      */
-    void findPaths(
-        const std::string& start,
-        const std::string& end,
-        const std::unordered_map<std::string, LayerInfo>& layer_map,
-        std::vector<std::string>& critical_paths,
-        std::unordered_set<std::string> visited = {},
-        std::string current_path = "") {
-        
+    void findPaths(const std::string& start, const std::string& end,
+                   const std::unordered_map<std::string, LayerInfo>& layer_map,
+                   std::vector<std::string>& critical_paths,
+                   std::unordered_set<std::string> visited = {}, std::string current_path = "")
+    {
         visited.insert(start);
-        
+
         if (current_path.empty()) {
             current_path = start;
-        } else {
+        }
+        else {
             current_path += " -> " + start;
         }
-        
+
         if (start == end) {
             critical_paths.push_back(current_path);
-        } else {
+        }
+        else {
             auto it = layer_map.find(start);
             if (it != layer_map.end()) {
                 for (const auto& next_layer : it->second.output_layers) {
                     if (visited.find(next_layer) == visited.end()) {
-                        findPaths(next_layer, end, layer_map, critical_paths, visited, current_path);
+                        findPaths(next_layer, end, layer_map, critical_paths, visited,
+                                  current_path);
                     }
                 }
             }
         }
-        
+
         // Remove from visited for backtracking
         visited.erase(start);
     }
-    
+
     /**
      * @brief Calculate propagation factor for a layer
-     * 
+     *
      * @param layer Layer to analyze
      * @param layers All layers in the network
      * @return Propagation factor
      */
-    double calculatePropagationFactor(
-        const LayerInfo& layer,
-        const std::vector<LayerInfo>& layers) {
-        
+    double calculatePropagationFactor(const LayerInfo& layer, const std::vector<LayerInfo>& layers)
+    {
         // Calculate how much errors can propagate and multiply
         double propagation_factor = 1.0;
-        
+
         // Different layer types have different propagation characteristics
         if (layer.type == "dense") {
             // Dense layers can propagate errors widely
-            propagation_factor = std::sqrt(layer.output_size / static_cast<double>(layer.input_size));
-        } 
+            propagation_factor =
+                std::sqrt(layer.output_size / static_cast<double>(layer.input_size));
+        }
         else if (layer.type == "conv") {
             // Convolutional layers propagate locally
             propagation_factor = 0.7;
-        } 
+        }
         else if (layer.type == "pool") {
             // Pooling can reduce propagation but concentrate errors
             propagation_factor = 0.5;
-        } 
+        }
         else if (layer.type == "dropout") {
             // Dropout adds robustness
             propagation_factor = 0.3;
-        } 
+        }
         else if (layer.type == "batch_norm") {
             // Batch normalization can amplify errors
             propagation_factor = 1.2;
-        } 
+        }
         else {
             // Default for unknown layer types
             propagation_factor = 1.0;
         }
-        
+
         // Adjust for fan-out - more outputs means more propagation
         size_t fan_out = 0;
         for (const auto& out_layer : layer.output_layers) {
             fan_out++;
         }
-        
+
         if (fan_out > 1) {
             propagation_factor *= (1.0 + 0.1 * std::log(fan_out));
         }
-        
+
         return propagation_factor;
     }
-    
+
     /**
      * @brief Calculate information bottlenecks in the network
      */
-    void calculateInformationBottlenecks(
-        const std::vector<LayerInfo>& layers,
-        TopologicalAnalysisResult& result) {
-        
+    void calculateInformationBottlenecks(const std::vector<LayerInfo>& layers,
+                                         TopologicalAnalysisResult& result)
+    {
         for (const auto& layer : layers) {
             double bottleneck_score = 0.0;
-            
+
             // Get fan-in and fan-out
             size_t fan_in = result.fan_in_count[layer.name];
             size_t fan_out = result.fan_out_count[layer.name];
-            
+
             // Check input/output size ratio
             double size_ratio = layer.output_size / static_cast<double>(layer.input_size);
-            
+
             // Calculate bottleneck score
             // Higher score = more of a bottleneck = more critical
             if (fan_in > 1 && size_ratio < 1.0) {
@@ -341,47 +357,48 @@ private:
                 // Not a significant bottleneck
                 bottleneck_score = 0.1;
             }
-            
+
             // Bottlenecks in the middle of the network are most critical
             if (!layer.input_layers.empty() && !layer.output_layers.empty()) {
                 bottleneck_score *= 1.5;
             }
-            
+
             result.information_bottleneck_score[layer.name] = bottleneck_score;
         }
     }
-    
+
     /**
      * @brief Calculate topological criticality for a layer
      */
-    double calculateTopologicalCriticality(
-        const LayerInfo& layer,
-        const TopologicalAnalysisResult& analysis) {
-        
+    double calculateTopologicalCriticality(const LayerInfo& layer,
+                                           const TopologicalAnalysisResult& analysis)
+    {
         double criticality = 0.0;
-        
+
         // Consider propagation factor (25%)
         double propagation_contrib = 0.0;
         if (analysis.propagation_factors.count(layer.name)) {
-            propagation_contrib = analysis.propagation_factors.at(layer.name) / 2.0; // Normalize to 0-0.5 range
+            propagation_contrib =
+                analysis.propagation_factors.at(layer.name) / 2.0;  // Normalize to 0-0.5 range
         }
-        
+
         // Consider information bottleneck (25%)
         double bottleneck_contrib = 0.0;
         if (analysis.information_bottleneck_score.count(layer.name)) {
-            bottleneck_contrib = std::min(0.5, analysis.information_bottleneck_score.at(layer.name));
+            bottleneck_contrib =
+                std::min(0.5, analysis.information_bottleneck_score.at(layer.name));
         }
-        
+
         // Consider connectivity (25%)
         double connectivity_factor = 0.0;
         if (analysis.fan_in_count.count(layer.name) && analysis.fan_out_count.count(layer.name)) {
             size_t fan_in = analysis.fan_in_count.at(layer.name);
             size_t fan_out = analysis.fan_out_count.at(layer.name);
-            
+
             // Normalize to 0-0.5 range
             connectivity_factor = std::min(0.5, (fan_in + fan_out) * 0.1);
         }
-        
+
         // Consider critical paths (25%)
         double critical_path_contrib = 0.0;
         for (const auto& path : analysis.critical_paths) {
@@ -390,27 +407,26 @@ private:
             }
         }
         critical_path_contrib = std::min(0.5, critical_path_contrib);
-        
+
         // Sum all contributions
-        criticality = propagation_contrib + bottleneck_contrib + 
-                      connectivity_factor + critical_path_contrib;
-        
+        criticality =
+            propagation_contrib + bottleneck_contrib + connectivity_factor + critical_path_contrib;
+
         // Add bonus for manually marked critical layers
         if (layer.is_critical) {
             criticality += 0.2;
         }
-        
+
         // Normalize to 0-1 range
         return std::min(1.0, criticality);
     }
-    
+
     // Helper to check if a network type has getLayerInfo method
-    template<typename T, typename = void>
+    template <typename T, typename = void>
     struct has_get_layer_info : std::false_type {};
-    
-    template<typename T>
-    struct has_get_layer_info<T, 
-        std::void_t<decltype(std::declval<T>().getLayerInfo())>> 
+
+    template <typename T>
+    struct has_get_layer_info<T, std::void_t<decltype(std::declval<T>().getLayerInfo())>>
         : std::true_type {};
 };
 
@@ -418,10 +434,10 @@ private:
  * @brief Gradient-based importance mapping for neural networks
  */
 class GradientImportanceMapper {
-public:
+   public:
     /**
      * @brief Calculate parameter importance using gradient-based sensitivity
-     * 
+     *
      * @tparam NetworkType Type of neural network
      * @tparam DatasetType Type of dataset container
      * @param network Network to analyze
@@ -430,58 +446,56 @@ public:
      */
     template <typename NetworkType, typename DatasetType>
     std::map<std::string, double> calculateParameterImportance(
-        const NetworkType& network,
-        const DatasetType& calibration_dataset) {
-        
+        const NetworkType& network, const DatasetType& calibration_dataset)
+    {
         std::map<std::string, double> importance_map;
-        
+
         // Get network parameters
         auto parameters = getNetworkParameters(network);
-        
+
         // For each parameter in the network
         for (const auto& param : parameters) {
             // Compute sensitivity by measuring output delta over parameter delta
             double sensitivity = 0.0;
-            
+
             // For each sample in calibration dataset (limit to first 50 samples for efficiency)
             const size_t max_samples = std::min(calibration_dataset.size(), size_t(50));
             for (size_t i = 0; i < max_samples; ++i) {
                 const auto& sample = calibration_dataset[i];
-                
+
                 // Original output
                 auto original_output = network.forward(sample.input);
-                
+
                 // Perturb parameter slightly
                 auto perturbed_network = network;
                 perturbParameter(perturbed_network, param.id, param.value * 1.001);
-                
+
                 // Get new output
                 auto perturbed_output = perturbed_network.forward(sample.input);
-                
+
                 // Measure output difference
-                double output_delta = calculateOutputDifference(
-                    original_output, perturbed_output);
-                    
+                double output_delta = calculateOutputDifference(original_output, perturbed_output);
+
                 // Accumulate sensitivity
                 sensitivity += output_delta / (param.value * 0.001);
             }
-            
+
             // Average sensitivity across dataset
             sensitivity /= max_samples;
-            
+
             // Store absolute sensitivity in importance map
             importance_map[param.id] = std::abs(sensitivity);
         }
-        
+
         // Normalize importance values
         normalizeImportanceMap(importance_map);
-        
+
         return importance_map;
     }
-    
+
     /**
      * @brief Calculate activation-based importance for layers
-     * 
+     *
      * @tparam NetworkType Type of neural network
      * @tparam DatasetType Type of dataset container
      * @param network Network to analyze
@@ -490,66 +504,66 @@ public:
      */
     template <typename NetworkType, typename DatasetType>
     std::map<std::string, double> calculateActivationImportance(
-        const NetworkType& network,
-        const DatasetType& calibration_dataset) {
-        
+        const NetworkType& network, const DatasetType& calibration_dataset)
+    {
         std::map<std::string, double> activation_importance;
         std::map<std::string, double> sparsity_scores;
         std::map<std::string, double> magnitude_scores;
-        
+
         // For each sample in calibration dataset (limit to first 50 samples for efficiency)
         const size_t max_samples = std::min(calibration_dataset.size(), size_t(50));
         for (size_t i = 0; i < max_samples; ++i) {
             const auto& sample = calibration_dataset[i];
-            
+
             // Get layer activations
             auto activations = network.getLayerActivations(sample.input);
-            
+
             // Process each layer's activation
             for (const auto& activation : activations) {
                 // Calculate sparsity (% of zeros or near-zeros)
                 double sparsity = calculateSparsity(activation.values);
-                
+
                 // Calculate magnitude (L2 norm)
                 double magnitude = calculateMagnitude(activation.values);
-                
+
                 // Accumulate scores
                 sparsity_scores[activation.layer_name] += sparsity;
                 magnitude_scores[activation.layer_name] += magnitude;
             }
         }
-        
+
         // Average and combine scores
         for (auto& [layer_name, sparsity] : sparsity_scores) {
             sparsity /= max_samples;
             double magnitude = magnitude_scores[layer_name] / max_samples;
-            
+
             // Sparse activations with high magnitude are more critical
             // (they represent concentrated information flow)
             activation_importance[layer_name] = (1.0 - sparsity) * magnitude;
         }
-        
+
         // Normalize importance values
         normalizeImportanceMap(activation_importance);
-        
+
         return activation_importance;
     }
 
-private:
+   private:
     /**
      * @brief Extract parameters from a network
-     * 
+     *
      * @tparam NetworkType Type of neural network
      * @param network Network to extract parameters from
      * @return Vector of parameter information
      */
     template <typename NetworkType>
-    std::vector<ParameterInfo> getNetworkParameters(const NetworkType& network) {
+    std::vector<ParameterInfo> getNetworkParameters(const NetworkType& network)
+    {
         // This would need to be specialized for different network types
         // Here's a generic implementation that uses the network's getParameters if available
         if constexpr (has_get_parameters<NetworkType>::value) {
             return network.getParameters();
-        } 
+        }
         else {
             // Fallback implementation for networks without direct parameter access
             std::vector<ParameterInfo> parameters;
@@ -558,17 +572,18 @@ private:
             return parameters;
         }
     }
-    
+
     /**
      * @brief Perturb a specific parameter in the network
-     * 
+     *
      * @tparam NetworkType Type of neural network
      * @param network Network to modify
      * @param param_id Parameter identifier
      * @param new_value New parameter value
      */
     template <typename NetworkType>
-    void perturbParameter(NetworkType& network, const std::string& param_id, double new_value) {
+    void perturbParameter(NetworkType& network, const std::string& param_id, double new_value)
+    {
         // This would need to be specialized for different network types
         // Here's a generic implementation that uses the network's setParameterValue if available
         if constexpr (has_set_parameter<NetworkType>::value) {
@@ -578,26 +593,23 @@ private:
             // Fallback implementation would depend on specific network type
             // This is a placeholder and would need to be implemented for specific network types
             error::ErrorHandler::logError(
-                error::ErrorInfo(
-                    error::ErrorCode::OPERATION_FAILED,
-                    error::ErrorCategory::VALIDATION,
-                    error::ErrorSeverity::WARNING,
-                    "Parameter perturbation not implemented for this network type"
-                )
-            );
+                error::ErrorInfo(error::ErrorCode::OPERATION_FAILED,
+                                 error::ErrorCategory::VALIDATION, error::ErrorSeverity::WARNING,
+                                 "Parameter perturbation not implemented for this network type"));
         }
     }
-    
+
     /**
      * @brief Calculate difference between two network outputs
-     * 
+     *
      * @tparam OutputType Type of network output
      * @param output1 First output
      * @param output2 Second output
      * @return Difference measure
      */
     template <typename OutputType>
-    double calculateOutputDifference(const OutputType& output1, const OutputType& output2) {
+    double calculateOutputDifference(const OutputType& output1, const OutputType& output2)
+    {
         // For vector outputs, use L2 norm of difference
         if constexpr (is_vector<OutputType>::value) {
             double sum_squared_diff = 0.0;
@@ -612,56 +624,59 @@ private:
             return std::abs(output1 - output2);
         }
     }
-    
+
     /**
      * @brief Calculate sparsity of activation values
-     * 
+     *
      * @param values Activation values
      * @return Sparsity measure (0-1, higher means more sparse)
      */
-    double calculateSparsity(const std::vector<double>& values) {
+    double calculateSparsity(const std::vector<double>& values)
+    {
         if (values.empty()) {
             return 0.0;
         }
-        
+
         const double threshold = 1e-6;
         size_t zero_count = 0;
-        
+
         for (double value : values) {
             if (std::abs(value) < threshold) {
                 zero_count++;
             }
         }
-        
+
         return static_cast<double>(zero_count) / values.size();
     }
-    
+
     /**
      * @brief Calculate magnitude of activation values
-     * 
+     *
      * @param values Activation values
      * @return Magnitude (L2 norm)
      */
-    double calculateMagnitude(const std::vector<double>& values) {
+    double calculateMagnitude(const std::vector<double>& values)
+    {
         double sum_squared = 0.0;
         for (double value : values) {
             sum_squared += value * value;
         }
         return std::sqrt(sum_squared);
     }
-    
+
     /**
      * @brief Normalize importance values to 0-1 range
-     * 
+     *
      * @param importance_map Map of importance values to normalize
      */
-    void normalizeImportanceMap(std::map<std::string, double>& importance_map) {
+    void normalizeImportanceMap(std::map<std::string, double>& importance_map)
+    {
         // Find maximum importance value
         double max_importance = 0.0;
         for (const auto& [id, importance] : importance_map) {
             max_importance = std::max(max_importance, importance);
         }
-        
+
         // Normalize all values
         if (max_importance > 0.0) {
             for (auto& [id, importance] : importance_map) {
@@ -669,71 +684,108 @@ private:
             }
         }
     }
-    
+
     // Helper to check if a network type has getParameters method
-    template<typename T, typename = void>
+    template <typename T, typename = void>
     struct has_get_parameters : std::false_type {};
-    
-    template<typename T>
-    struct has_get_parameters<T, 
-        std::void_t<decltype(std::declval<T>().getParameters())>> 
+
+    template <typename T>
+    struct has_get_parameters<T, std::void_t<decltype(std::declval<T>().getParameters())>>
         : std::true_type {};
-        
+
     // Helper to check if a network type has setParameterValue method
-    template<typename T, typename = void>
+    template <typename T, typename = void>
     struct has_set_parameter : std::false_type {};
-    
-    template<typename T>
-    struct has_set_parameter<T, 
-        std::void_t<decltype(std::declval<T>().setParameterValue(std::string(), double()))>> 
+
+    template <typename T>
+    struct has_set_parameter<
+        T, std::void_t<decltype(std::declval<T>().setParameterValue(std::string(), double()))>>
         : std::true_type {};
-        
+
     // Helper to check if a type is a vector-like container
-    template<typename T, typename = void>
+    template <typename T, typename = void>
     struct is_vector : std::false_type {};
-    
-    template<typename T>
-    struct is_vector<T, 
-        std::void_t<decltype(std::declval<T>().size()),
-                   decltype(std::declval<T>()[0])>> 
+
+    template <typename T>
+    struct is_vector<
+        T, std::void_t<decltype(std::declval<T>().size()), decltype(std::declval<T>()[0])>>
         : std::true_type {};
 };
 
 /**
  * @brief Enhanced analyzer for space mission radiation effects
+ *
+ * Updated (November 2025): Now integrates with physics::PhysicsRadiationEnvironment
+ * for accurate SEU rate calculations based on:
+ * - AP-8/AE-8 trapped particle models
+ * - CREME96-style GCR spectra
+ * - Weibull cross-section and Bendel proton models
+ * - South Atlantic Anomaly enhancement
+ * - Solar particle events
  */
 class SpaceEnvironmentAnalyzer {
-public:
+   public:
     /**
-     * @brief Constructor with radiation environment
-     * 
+     * @brief Constructor with radiation environment (legacy interface)
+     *
      * @param environment Space radiation environment
      */
-    explicit SpaceEnvironmentAnalyzer(
-        std::shared_ptr<radiation::Environment> environment = nullptr)
-        : environment_(environment) {}
-    
+    explicit SpaceEnvironmentAnalyzer(std::shared_ptr<radiation::Environment> environment = nullptr)
+        : environment_(environment), physics_env_(nullptr)
+    {
+    }
+
     /**
-     * @brief Set the radiation environment
-     * 
+     * @brief Constructor with physics-based radiation environment (recommended)
+     *
+     * @param physics_env Physics-based radiation environment
+     */
+    explicit SpaceEnvironmentAnalyzer(
+        std::shared_ptr<physics::PhysicsRadiationEnvironment> physics_env)
+        : environment_(nullptr), physics_env_(physics_env)
+    {
+    }
+
+    /**
+     * @brief Set the radiation environment (legacy interface)
+     *
      * @param environment Environment to analyze for
      */
-    void setEnvironment(std::shared_ptr<radiation::Environment> environment) {
+    void setEnvironment(std::shared_ptr<radiation::Environment> environment)
+    {
         environment_ = environment;
     }
-    
+
     /**
-     * @brief Get the current environment
-     * 
+     * @brief Set the physics-based radiation environment (recommended)
+     *
+     * @param physics_env Physics-based environment with accurate SEU models
+     */
+    void setPhysicsEnvironment(std::shared_ptr<physics::PhysicsRadiationEnvironment> physics_env)
+    {
+        physics_env_ = physics_env;
+    }
+
+    /**
+     * @brief Get the current environment (legacy)
+     *
      * @return Current environment
      */
-    std::shared_ptr<radiation::Environment> getEnvironment() const {
-        return environment_;
+    std::shared_ptr<radiation::Environment> getEnvironment() const { return environment_; }
+
+    /**
+     * @brief Get the physics-based environment
+     *
+     * @return Physics environment
+     */
+    std::shared_ptr<physics::PhysicsRadiationEnvironment> getPhysicsEnvironment() const
+    {
+        return physics_env_;
     }
-    
+
     /**
      * @brief Analyze network for space radiation vulnerability
-     * 
+     *
      * @tparam NetworkType Type of neural network
      * @param network Network to analyze
      * @param base_analysis Base topological analysis result
@@ -741,11 +793,10 @@ public:
      */
     template <typename NetworkType>
     SpaceAwareTopologicalResult analyzeSpaceRadiationEffects(
-        const NetworkType& network,
-        const TopologicalAnalysisResult& base_analysis) {
-        
+        const NetworkType& network, const TopologicalAnalysisResult& base_analysis)
+    {
         SpaceAwareTopologicalResult result;
-        
+
         // Copy base analysis results
         result.layer_criticality = base_analysis.layer_criticality;
         result.propagation_factors = base_analysis.propagation_factors;
@@ -753,156 +804,314 @@ public:
         result.fan_in_count = base_analysis.fan_in_count;
         result.fan_out_count = base_analysis.fan_out_count;
         result.information_bottleneck_score = base_analysis.information_bottleneck_score;
-        
-        // Store environment reference
+
+        // Store environment references
         result.environment = environment_;
-        
+        result.physics_environment = physics_env_;
+
         // If no environment specified, use LEO as default
         if (!environment_) {
             result.environment = radiation::Environment::createEnvironment(
                 radiation::EnvironmentType::LOW_EARTH_ORBIT);
         }
-        
+
+        // If no physics environment, create default ISS-like config
+        if (!physics_env_) {
+            auto config = physics::PhysicsRadiationEnvironment::Config();
+            config.altitude_km = 400.0;     // ISS altitude
+            config.inclination_deg = 51.6;  // ISS inclination
+            physics_env_ = std::make_shared<physics::PhysicsRadiationEnvironment>(config);
+            result.physics_environment = physics_env_;
+        }
+
         // Extract network layers
         auto layers = extractLayers(network);
-        
-        // Calculate radiation vulnerability factors
-        calculateRadiationVulnerability(layers, result);
-        
+
+        // Calculate radiation vulnerability factors using physics model
+        calculateRadiationVulnerabilityPhysics(layers, result);
+
         // Calculate thermal sensitivity (important for space)
         calculateThermalSensitivity(layers, result);
-        
+
         // Calculate power impact (critical for space missions)
         calculatePowerImpact(layers, result);
-        
+
+        // Calculate physics-based SEU rates for each layer
+        calculateLayerSEURates(layers, result);
+
         // Calculate overall space environment impact
         calculateSpaceEnvironmentImpact(result);
-        
+
         return result;
     }
-    
+
     /**
      * @brief Calculate radiation-adjusted criticality scores
-     * 
+     *
      * @param base_result Base analysis result
      * @param space_result Space-aware analysis result
      * @return Map of layers to radiation-adjusted criticality
      */
     std::map<std::string, double> calculateRadiationAdjustedCriticality(
         const TopologicalAnalysisResult& base_result,
-        const SpaceAwareTopologicalResult& space_result) {
-        
+        const SpaceAwareTopologicalResult& space_result)
+    {
         std::map<std::string, double> adjusted_criticality;
-        
+
         for (const auto& [layer_name, criticality] : base_result.layer_criticality) {
             double rad_factor = 1.0;
             if (space_result.radiation_vulnerability.count(layer_name)) {
                 rad_factor = 1.0 + space_result.radiation_vulnerability.at(layer_name);
             }
-            
+
             adjusted_criticality[layer_name] = criticality * rad_factor;
         }
-        
+
         // Normalize values to 0-1 range
         double max_value = 0.0;
         for (const auto& [_, value] : adjusted_criticality) {
             max_value = std::max(max_value, value);
         }
-        
+
         if (max_value > 0.0) {
             for (auto& [_, value] : adjusted_criticality) {
                 value /= max_value;
             }
         }
-        
+
         return adjusted_criticality;
     }
-    
+
     /**
      * @brief Get recommended protection levels based on space environment
-     * 
+     *
+     * Uses physics-based SEU rates when available for more accurate
+     * protection level recommendations.
+     *
      * @param space_result Space-aware analysis result
      * @return Map of layers to recommended protection levels
      */
     std::map<std::string, ProtectionLevel> getRecommendedProtectionLevels(
-        const SpaceAwareTopologicalResult& space_result) {
-        
+        const SpaceAwareTopologicalResult& space_result)
+    {
         std::map<std::string, ProtectionLevel> protection_levels;
-        
+
+        // Use physics-based SEU rate if available
+        double seu_rate_factor = 0.5;  // Default mid-range
+        if (space_result.physics_environment) {
+            // Normalize orbit-average SEU rate to 0-1
+            // Typical range: 10^-9 (very benign) to 10^-4 (severe SPE)
+            double log_rate = std::log10(space_result.orbit_average_seu_rate + 1e-15);
+            seu_rate_factor = std::clamp((log_rate + 9.0) / 5.0, 0.0, 1.0);
+        }
+        else if (space_result.environment) {
+            // Fallback to legacy interface
+            double flux = space_result.environment->getSEUFlux();
+            seu_rate_factor = std::clamp((std::log10(flux + 1e-15) + 15) / 10.0, 0.0, 1.0);
+        }
+
         for (const auto& [layer_name, criticality] : space_result.layer_criticality) {
             // Base on radiation-adjusted criticality
             double rad_factor = 1.0;
             if (space_result.radiation_vulnerability.count(layer_name)) {
                 rad_factor = space_result.radiation_vulnerability.at(layer_name);
             }
-            
+
             double adjusted_criticality = criticality * (1.0 + rad_factor);
-            
-            // Environment flux factor (normalized to 0-1 for common environments)
-            double flux_factor = 0.5;  // Default mid-range
-            if (space_result.environment) {
-                double flux = space_result.environment->getSEUFlux();
-                // Normalize to 0-1 scale (adjust constants based on expected range)
-                flux_factor = std::min(1.0, std::max(0.0, std::log10(flux + 1e-15) + 15) / 10.0);
+
+            // Consider layer-specific SEU rate if available
+            double layer_seu_factor = seu_rate_factor;
+            if (space_result.seu_rates.count(layer_name)) {
+                double layer_rate = space_result.seu_rates.at(layer_name);
+                // High SEU rate layers need more protection
+                layer_seu_factor =
+                    std::clamp((std::log10(layer_rate + 1e-15) + 6.0) / 6.0, 0.0, 1.0);
             }
-            
-            // Determine protection level based on criticality and environment
-            if (adjusted_criticality > 0.8 || flux_factor > 0.8) {
+
+            // Combined protection score
+            double protection_score = 0.5 * adjusted_criticality + 0.5 * layer_seu_factor;
+
+            // Determine protection level based on combined score
+            // Thresholds tuned for space applications
+            if (protection_score > 0.8) {
+                // Critical: use full TMR with checksums
                 protection_levels[layer_name] = ProtectionLevel::FULL_TMR;
             }
-            else if (adjusted_criticality > 0.6 || flux_factor > 0.6) {
+            else if (protection_score > 0.65) {
+                // High: health-weighted TMR adapts to module degradation
                 protection_levels[layer_name] = ProtectionLevel::HEALTH_WEIGHTED_TMR;
             }
-            else if (adjusted_criticality > 0.4 || flux_factor > 0.4) {
+            else if (protection_score > 0.5) {
+                // Moderate-high: selective TMR for critical values
                 protection_levels[layer_name] = ProtectionLevel::SELECTIVE_TMR;
             }
-            else if (adjusted_criticality > 0.2 || flux_factor > 0.2) {
+            else if (protection_score > 0.35) {
+                // Moderate: approximate TMR saves resources
+                protection_levels[layer_name] = ProtectionLevel::APPROXIMATE_TMR;
+            }
+            else if (protection_score > 0.2) {
+                // Low-moderate: checksum with recovery backup
                 protection_levels[layer_name] = ProtectionLevel::CHECKSUM_WITH_RECOVERY;
             }
-            else {
+            else if (protection_score > 0.1) {
+                // Low: detection only
                 protection_levels[layer_name] = ProtectionLevel::CHECKSUM_ONLY;
             }
+            else {
+                // Minimal: no protection for very low-risk layers
+                protection_levels[layer_name] = ProtectionLevel::NONE;
+            }
         }
-        
+
         return protection_levels;
     }
 
-private:
+   private:
     std::shared_ptr<radiation::Environment> environment_;
-    
+    std::shared_ptr<physics::PhysicsRadiationEnvironment> physics_env_;
+
     /**
      * @brief Extract layer information from network
      */
     template <typename NetworkType>
-    std::vector<LayerInfo> extractLayers(const NetworkType& network) {
+    std::vector<LayerInfo> extractLayers(const NetworkType& network)
+    {
         // Similar to TopologicalAnalyzer::extractNetworkLayers
         if constexpr (has_get_layer_info<NetworkType>::value) {
             return network.getLayerInfo();
-        } 
+        }
         else {
             // Fallback implementation
             std::vector<LayerInfo> layers;
             return layers;
         }
     }
-    
+
     /**
-     * @brief Calculate radiation vulnerability for each layer
+     * @brief Calculate radiation vulnerability using physics-based model
+     *
+     * Uses physics::PhysicsRadiationEnvironment for accurate SEU rates
+     * based on AP-8/AE-8, GCR, and device cross-sections.
      */
-    void calculateRadiationVulnerability(
-        const std::vector<LayerInfo>& layers,
-        SpaceAwareTopologicalResult& result) {
-        
+    void calculateRadiationVulnerabilityPhysics(const std::vector<LayerInfo>& layers,
+                                                SpaceAwareTopologicalResult& result)
+    {
+        // Get physics-based SEU rate (errors/bit/day)
+        double seu_rate = 1e-7;  // Default LEO value
+        if (physics_env_) {
+            seu_rate = physics_env_->get_orbit_average_seu_rate();
+            result.orbit_average_seu_rate = seu_rate;
+            result.worst_case_seu_rate = physics_env_->get_worst_case_seu_rate();
+        }
+
+        // Normalize SEU rate to vulnerability factor (0-1)
+        // Typical rates: 10^-9 (rad-hard) to 10^-5 (sensitive COTS)
+        // Use log scale: -9 → 0.0, -5 → 1.0
+        double log_rate = std::log10(seu_rate + 1e-15);
+        double base_vulnerability = std::clamp((log_rate + 9.0) / 4.0, 0.0, 1.0);
+
+        for (const auto& layer : layers) {
+            // Layer-type vulnerability multiplier
+            double type_factor = 0.5;  // Default
+
+            if (layer.type == "dense") {
+                // Dense layers: many parameters, high vulnerability
+                type_factor = 0.8;
+            }
+            else if (layer.type == "conv") {
+                // Convolutional: parameter sharing provides some redundancy
+                type_factor = 0.6;
+            }
+            else if (layer.type == "pool" || layer.type == "activation") {
+                // Few/no parameters, but errors in activations can propagate
+                type_factor = 0.4;
+            }
+            else if (layer.type == "batch_norm") {
+                // Critical statistical parameters (mean, variance)
+                type_factor = 0.9;
+            }
+            else if (layer.type == "dropout") {
+                // Provides natural robustness during training
+                type_factor = 0.3;
+            }
+
+            // Size factor: more bits = more targets for radiation
+            // Use log scale for large layers
+            size_t layer_bits = layer.input_size * layer.output_size * 32;  // Assume 32-bit floats
+            double size_factor =
+                std::clamp(std::log10(static_cast<double>(layer_bits)) / 10.0, 0.0, 1.0);
+
+            // Combine factors
+            double vulnerability = base_vulnerability * (0.6 * type_factor + 0.4 * size_factor);
+
+            // Boost for manually marked critical layers
+            if (layer.is_critical) {
+                vulnerability = std::min(1.0, vulnerability * 1.3);
+            }
+
+            result.radiation_vulnerability[layer.name] = vulnerability;
+        }
+    }
+
+    /**
+     * @brief Calculate physics-based SEU rates and scrub intervals per layer
+     */
+    void calculateLayerSEURates(const std::vector<LayerInfo>& layers,
+                                SpaceAwareTopologicalResult& result)
+    {
+        if (!physics_env_) return;
+
+        double base_seu_rate = physics_env_->get_orbit_average_seu_rate();
+
+        for (const auto& layer : layers) {
+            // SEU rate scales with number of bits
+            size_t layer_bits = layer.input_size * layer.output_size * 32;
+
+            // Type-based sensitivity multiplier (some layer types more sensitive)
+            double sensitivity = 1.0;
+            if (layer.type == "batch_norm") {
+                sensitivity = 1.5;  // More sensitive to parameter corruption
+            }
+            else if (layer.type == "pool") {
+                sensitivity = 0.5;  // Less sensitive
+            }
+
+            // Layer SEU rate (errors/day for this layer)
+            double layer_seu_rate = base_seu_rate * static_cast<double>(layer_bits) * sensitivity;
+            result.seu_rates[layer.name] = layer_seu_rate;
+
+            // Calculate recommended scrub interval
+            // Using physics model's scrub interval calculation
+            // ECC correction capability: assume SECDED (1 error) by default
+            int correction_capability = 1;
+            if (result.radiation_vulnerability.count(layer.name) &&
+                result.radiation_vulnerability.at(layer.name) > 0.7) {
+                // High vulnerability layers should use stronger ECC
+                correction_capability = 8;  // RS can correct up to t errors
+            }
+
+            double scrub_interval =
+                physics_env_->recommended_scrub_interval(layer_bits, correction_capability);
+            result.scrub_intervals[layer.name] = scrub_interval;
+        }
+    }
+
+    /**
+     * @brief Legacy: Calculate radiation vulnerability (backward compatibility)
+     */
+    void calculateRadiationVulnerability(const std::vector<LayerInfo>& layers,
+                                         SpaceAwareTopologicalResult& result)
+    {
         // Get environment SEU flux
-        float flux = 1e-7f; // Default LEO value
+        float flux = 1e-7f;  // Default LEO value
         if (environment_) {
             flux = environment_->getSEUFlux();
         }
-        
+
         for (const auto& layer : layers) {
             // Base vulnerability on layer type and size
-            double vulnerability = 0.5; // Default mid-range
-            
+            double vulnerability = 0.5;  // Default mid-range
+
             // Consider layer type
             if (layer.type == "dense") {
                 // Dense layers have more parameters, higher vulnerability
@@ -920,38 +1129,38 @@ private:
                 // Batch normalization has critical statistical parameters
                 vulnerability = 0.8;
             }
-            
+
             // Adjust for input/output size (more memory = more vulnerability)
-            double size_factor = std::min(1.0, std::log10(layer.input_size * layer.output_size) / 10.0);
+            double size_factor =
+                std::min(1.0, std::log10(layer.input_size * layer.output_size) / 10.0);
             vulnerability = 0.5 * vulnerability + 0.5 * size_factor;
-            
+
             // Scale by environment flux (normalized, higher flux = higher vulnerability)
             double flux_factor = std::min(1.0, std::log10(flux + 1e-15) + 15);
             vulnerability *= (0.5 + 0.5 * flux_factor / 10.0);
-            
+
             // Adjust for criticality (critical layers are more important to protect)
             if (layer.is_critical) {
                 vulnerability *= 1.2;
             }
-            
+
             // Clamp to 0-1 range
             vulnerability = std::min(1.0, std::max(0.0, vulnerability));
-            
+
             result.radiation_vulnerability[layer.name] = vulnerability;
         }
     }
-    
+
     /**
      * @brief Calculate thermal sensitivity for each layer
      */
-    void calculateThermalSensitivity(
-        const std::vector<LayerInfo>& layers,
-        SpaceAwareTopologicalResult& result) {
-        
+    void calculateThermalSensitivity(const std::vector<LayerInfo>& layers,
+                                     SpaceAwareTopologicalResult& result)
+    {
         for (const auto& layer : layers) {
             // Base thermal sensitivity on layer type and computational requirements
-            double thermal_sensitivity = 0.5; // Default mid-range
-            
+            double thermal_sensitivity = 0.5;  // Default mid-range
+
             // Consider layer type
             if (layer.type == "dense") {
                 // Dense layers have high computation, higher thermal output
@@ -969,29 +1178,29 @@ private:
                 // Activation functions are relatively simple
                 thermal_sensitivity = 0.2;
             }
-            
+
             // Adjust for layer size (more computation = more heat)
-            double size_factor = std::min(1.0, std::log10(layer.input_size * layer.output_size) / 10.0);
+            double size_factor =
+                std::min(1.0, std::log10(layer.input_size * layer.output_size) / 10.0);
             thermal_sensitivity = 0.6 * thermal_sensitivity + 0.4 * size_factor;
-            
+
             // Clamp to 0-1 range
             thermal_sensitivity = std::min(1.0, std::max(0.0, thermal_sensitivity));
-            
+
             result.thermal_sensitivity[layer.name] = thermal_sensitivity;
         }
     }
-    
+
     /**
      * @brief Calculate power impact for each layer
      */
-    void calculatePowerImpact(
-        const std::vector<LayerInfo>& layers,
-        SpaceAwareTopologicalResult& result) {
-        
+    void calculatePowerImpact(const std::vector<LayerInfo>& layers,
+                              SpaceAwareTopologicalResult& result)
+    {
         for (const auto& layer : layers) {
             // Base power impact on layer type and computational requirements
-            double power_impact = 0.5; // Default mid-range
-            
+            double power_impact = 0.5;  // Default mid-range
+
             // Consider layer type (similar to thermal, but with different scaling)
             if (layer.type == "dense") {
                 power_impact = 0.6;
@@ -1005,56 +1214,58 @@ private:
             else if (layer.type == "activation") {
                 power_impact = 0.2;
             }
-            
+
             // Adjust for size and complexity
-            double size_factor = std::min(1.0, std::log10(layer.input_size * layer.output_size) / 10.0);
+            double size_factor =
+                std::min(1.0, std::log10(layer.input_size * layer.output_size) / 10.0);
             power_impact = 0.7 * power_impact + 0.3 * size_factor;
-            
+
             // Protection increases power requirements
             if (result.layer_criticality.count(layer.name)) {
                 double criticality = result.layer_criticality.at(layer.name);
                 // Higher criticality = more protection = more power
                 power_impact *= (1.0 + 0.5 * criticality);
             }
-            
+
             // Clamp to 0-1 range
             power_impact = std::min(1.0, std::max(0.0, power_impact));
-            
+
             result.power_impact[layer.name] = power_impact;
         }
     }
-    
+
     /**
      * @brief Calculate overall space environment impact score
      */
-    void calculateSpaceEnvironmentImpact(SpaceAwareTopologicalResult& result) {
+    void calculateSpaceEnvironmentImpact(SpaceAwareTopologicalResult& result)
+    {
         double total_rad_vulnerability = 0.0;
         double total_thermal_sensitivity = 0.0;
         double total_power_impact = 0.0;
         double count = 0.0;
-        
+
         for (const auto& [layer_name, _] : result.layer_criticality) {
             if (result.radiation_vulnerability.count(layer_name)) {
                 total_rad_vulnerability += result.radiation_vulnerability.at(layer_name);
             }
-            
+
             if (result.thermal_sensitivity.count(layer_name)) {
                 total_thermal_sensitivity += result.thermal_sensitivity.at(layer_name);
             }
-            
+
             if (result.power_impact.count(layer_name)) {
                 total_power_impact += result.power_impact.at(layer_name);
             }
-            
+
             count++;
         }
-        
+
         if (count > 0) {
             // Weighted impact calculation
             double avg_rad = total_rad_vulnerability / count;
             double avg_thermal = total_thermal_sensitivity / count;
             double avg_power = total_power_impact / count;
-            
+
             // Weights based on space mission priorities
             result.space_environment_impact = 0.5 * avg_rad + 0.3 * avg_thermal + 0.2 * avg_power;
         }
@@ -1062,16 +1273,15 @@ private:
             result.space_environment_impact = 0.0;
         }
     }
-    
+
     // Helper template for checking if a network has getLayerInfo
-    template<typename T, typename = void>
+    template <typename T, typename = void>
     struct has_get_layer_info : std::false_type {};
-    
-    template<typename T>
-    struct has_get_layer_info<T, 
-        std::void_t<decltype(std::declval<T>().getLayerInfo())>> 
+
+    template <typename T>
+    struct has_get_layer_info<T, std::void_t<decltype(std::declval<T>().getLayerInfo())>>
         : std::true_type {};
 };
 
-} // namespace neural
-} // namespace rad_ml 
+}  // namespace neural
+}  // namespace rad_ml

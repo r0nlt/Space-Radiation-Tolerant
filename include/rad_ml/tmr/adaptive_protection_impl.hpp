@@ -296,7 +296,7 @@ bool StuckBitTMR<T>::checkForStuckBits(const T& value)
         if constexpr (std::is_integral_v<T>) {
             // Check for all bits set (0xFF pattern for bytes, etc.)
             if (value == static_cast<T>(~T(0))) {
-                return true;
+            return true;
             }
 
             // Check for max value (all 1s except sign bit for signed)

@@ -243,72 +243,90 @@ class GaloisField {
     std::tuple<std::vector<element_t>, std::vector<element_t>> rs_find_error_locator(
         const std::vector<element_t>& syndromes, uint8_t nsym) const
     {
-        // Berlekamp–Massey: initialize locator polynomials
-        std::vector<element_t> err_loc = {1};  // Initialize error locator polynomial
-        std::vector<element_t> old_loc = {1};  // Previous iteration
+        // Berlekamp-Massey algorithm (standard lowest-degree-first convention)
+        // Λ(x) = Λ_0 + Λ_1*x + Λ_2*x^2 + ..., stored as [Λ_0, Λ_1, Λ_2, ...]
+        // Initial: Λ = [1] (constant 1)
 
-        for (uint8_t i = 0; i < nsym; ++i) {
-            // Compute discrepancy Δ = S_{i+1} + sum_{j=1..deg(Λ)} Λ_j S_{i+1−j}
-            // Note: in GF(2^m) addition/subtraction is XOR, hence additions below
-            element_t delta = syndromes[i + 1];
-            for (size_t j = 1; j < err_loc.size(); ++j) {
-                // err_loc is stored highest degree first; index from the back
-                delta = add(delta, multiply(err_loc[err_loc.size() - 1 - j], syndromes[i + 1 - j]));
-            }
+        std::vector<element_t> C = {1};  // Current error locator Λ(x)
+        std::vector<element_t> B = {1};  // Previous error locator (backup)
+        size_t L = 0;                    // Current number of assumed errors
+        element_t b_prev = 1;            // Previous discrepancy
+        size_t shift = 1;                // Number of iterations since L changed
 
-            // Candidate update: shift old_loc by one (multiply by x)
-            std::vector<element_t> new_loc = old_loc;
-            new_loc.insert(new_loc.begin(), 0);  // Multiply by x
-
-            if (delta != 0) {
-                // Λ_new(x) = Λ(x) + Δ · x · B(x), where B(x) is previous best
-                for (size_t j = 0; j < new_loc.size(); ++j) {
-                    element_t current_err_loc_coeff =
-                        (j < err_loc.size()) ? err_loc[j] : static_cast<element_t>(0);
-                    new_loc[j] = add(current_err_loc_coeff, multiply(delta, new_loc[j]));
+        for (uint8_t n = 0; n < nsym; ++n) {
+            // Compute discrepancy: d = S_{n+1} + Σ_{i=1}^{L} C_i * S_{n+1-i}
+            element_t d = syndromes[n + 1];
+            for (size_t i = 1; i < C.size() && i <= L; ++i) {
+                if (n + 1 >= i) {
+                    d = add(d, multiply(C[i], syndromes[n + 1 - i]));
                 }
             }
 
-            if (2 * old_loc.size() <= i + 1 && delta != 0) {
-                // A new maximum linear span has been achieved: update backup
-                old_loc = err_loc;
-                for (auto& el : old_loc) {
-                    el = multiply(el, delta);
-                }
-                err_loc = new_loc;
+            if (d == 0) {
+                // No change needed
+                shift++;
             }
             else {
-                old_loc = new_loc;
+                // T(x) = C(x) - (d/b) * x^shift * B(x)
+                std::vector<element_t> T = C;
+                element_t coeff = divide(d, b_prev);
+
+                // Ensure T is large enough
+                if (T.size() < B.size() + shift) {
+                    T.resize(B.size() + shift, 0);
+                }
+
+                // T = C - coeff * x^shift * B
+                for (size_t i = 0; i < B.size(); ++i) {
+                    T[i + shift] = add(T[i + shift], multiply(coeff, B[i]));
+                }
+
+                if (2 * L <= n) {
+                    // Increase L
+                    L = n + 1 - L;
+                    B = C;
+                    b_prev = d;
+                    shift = 1;
+                }
+                else {
+                    shift++;
+                }
+
+                C = T;
             }
         }
 
-        // Form Ω(x) by truncated product: Ω(x) = S(x) · Λ(x) mod x^{nsym}
-        std::vector<element_t> err_eval(nsym);
-
-        for (uint8_t i = 0; i < nsym; ++i) {
-            element_t tmp = 0;
-            for (size_t j = 0; j < std::min<size_t>(i + 1, err_loc.size()); ++j) {
-                tmp = add(tmp, multiply(err_loc[j], syndromes[i - j + 1]));
-            }
-            err_eval[i] = tmp;
+        // Trim trailing zeros from C
+        while (C.size() > 1 && C.back() == 0) {
+            C.pop_back();
         }
 
-        return {err_loc, err_eval};
+        // Compute error evaluator Ω(x) = S(x) * Λ(x) mod x^nsym
+        // where S(x) = S_1 + S_2*x + S_3*x^2 + ...
+        std::vector<element_t> omega(nsym, 0);
+        for (size_t i = 0; i < nsym; ++i) {
+            for (size_t j = 0; j < C.size() && j <= i; ++j) {
+                // S(x) has S_1 at x^0, S_2 at x^1, etc., so syndromes[j+1]
+                if (i - j + 1 < syndromes.size()) {
+                    omega[i] = add(omega[i], multiply(C[j], syndromes[i - j + 1]));
+                }
+            }
+        }
+
+        return {C, omega};
     }
 
     /**
      * @brief Find error positions using Chien search
      *
      * Chien search evaluates the locator polynomial Λ(x) at successive inverses
-     * of field elements corresponding to codeword positions. For RS codes with
-     * evaluation points α^0, α^1, …, α^{n−1}, an error at position j implies
-     * Λ(α^{−j}) = 0. We scan all positions and collect the roots.
+     * of field elements. For RS codes, if Λ(α^{-k}) = 0, there's an error at
+     * array position (n-1-k).
      *
-     * Complexity: O(n · deg(Λ)).
-     *
-     * @param err_loc Error locator polynomial Λ(x) (coefficients highest degree first)
+     * @param err_loc Error locator polynomial Λ(x) (coefficients LOWEST degree first)
+     *                Λ(x) = err_loc[0] + err_loc[1]*x + err_loc[2]*x^2 + ...
      * @param msg_len Message length (n)
-     * @return Vector of error positions (0-based, from left to right)
+     * @return Vector of error positions (0-based array indices)
      */
     std::vector<size_t> rs_find_errors(const std::vector<element_t>& err_loc, size_t msg_len) const
     {
@@ -317,29 +335,34 @@ class GaloisField {
         // Number of errors = degree of error locator polynomial
         size_t num_errors = err_loc.size() - 1;
 
-        if (num_errors > msg_len) {
-            return {};  // Error count exceeds message length - uncorrectable
+        if (num_errors == 0 || num_errors > msg_len) {
+            return {};
         }
 
-        // Chien search: evaluate Λ(α^{−i}) at all positions i
-        for (size_t i = 0; i < msg_len; ++i) {
-            element_t eval = 0;
-            element_t x_inv = exp_table[(field_size - 1 - i) % (field_size - 1)];  // α^(-i)
+        // Chien search: evaluate Λ(α^{-k}) for k = 0, 1, ..., n-1
+        for (size_t k = 0; k < msg_len; ++k) {
+            // Compute α^{-k} = α^{field_size - 1 - k}
+            element_t x_inv = (k == 0) ? 1 : exp_table[(field_size - 1 - k) % (field_size - 1)];
 
-            // Evaluate using Horner's method
-            for (const auto& coeff : err_loc) {
-                eval = add(multiply(eval, x_inv), coeff);
+            // Evaluate Λ(x_inv) = Σ err_loc[i] * x_inv^i
+            element_t eval = 0;
+            element_t x_pow = 1;  // x_inv^0 = 1
+
+            for (size_t i = 0; i < err_loc.size(); ++i) {
+                eval = add(eval, multiply(err_loc[i], x_pow));
+                x_pow = multiply(x_pow, x_inv);
             }
 
             if (eval == 0) {
-                // Found an error location
-                err_pos.push_back(msg_len - 1 - i);
+                // α^{-k} is a root, so error at position (n-1-k)
+                size_t pos = msg_len - 1 - k;
+                err_pos.push_back(pos);
             }
         }
 
-        // Check if we found the correct number of errors
+        // Verify we found the expected number of roots
         if (err_pos.size() != num_errors) {
-            return {};  // Number of roots doesn't match error count - uncorrectable
+            return {};  // Mismatch - uncorrectable
         }
 
         return err_pos;
@@ -348,55 +371,56 @@ class GaloisField {
     /**
      * @brief Correct errors using the Forney algorithm
      *
-     * Given Λ(x), Ω(x), and the set of error positions, Forney's formula
-     * computes error magnitudes E_j at each position j as
-     *
-     *   E_j = − Ω(α^{−j}) / (α^{−j} · Λ'(α^{−j}))
-     *
-     * where Λ' is the formal derivative of Λ. In GF(2^m) subtraction==addition,
-     * so the sign is omitted in implementation.
+     * Forney's formula: E = X * Ω(X^{-1}) / Λ'(X^{-1})
+     * where X = α^{n-1-pos} for array position pos.
      *
      * @param msg_in Message with errors
-     * @param err_pos Error positions (0-based indices)
-     * @param err_loc Error locator polynomial Λ(x)
-     * @param err_eval Error evaluator polynomial Ω(x)
-     * @return Corrected message (same size as msg_in)
+     * @param err_pos Error positions (0-based array indices)
+     * @param err_loc Error locator Λ(x) (LOWEST degree first)
+     * @param err_eval Error evaluator Ω(x) (LOWEST degree first)
+     * @return Corrected message
      */
     std::vector<element_t> rs_correct_errors_at_positions(
         const std::vector<element_t>& msg_in, const std::vector<size_t>& err_pos,
         const std::vector<element_t>& err_loc, const std::vector<element_t>& err_eval) const
     {
         std::vector<element_t> msg = msg_in;
+        size_t n = msg.size();
 
-        // Forney algorithm to calculate error magnitudes
-        for (size_t i = 0; i < err_pos.size(); ++i) {
-            // Get error position
-            size_t pos = err_pos[i];
+        for (size_t pos : err_pos) {
+            // For array position pos, the position exponent is j = n-1-pos
+            // X = α^j, X^{-1} = α^{-j}
+            size_t j = n - 1 - pos;
+            element_t X = exp_table[j % (field_size - 1)];
+            element_t X_inv = (j == 0) ? 1 : exp_table[(field_size - 1 - j) % (field_size - 1)];
 
-            // Calculate error magnitude using Forney algorithm
-            element_t x_inv = exp_table[(field_size - 1 - pos) % (field_size - 1)];  // α^(-j)
-
-            // Calculate error evaluator at position
-            element_t err_eval_at_pos = 0;
-            for (size_t j = 0; j < err_eval.size(); ++j) {
-                err_eval_at_pos = add(err_eval_at_pos, multiply(err_eval[j], pow(x_inv, j)));
+            // Evaluate Ω(X^{-1}) = Σ omega[i] * X_inv^i
+            element_t omega_val = 0;
+            element_t X_inv_pow = 1;
+            for (size_t i = 0; i < err_eval.size(); ++i) {
+                omega_val = add(omega_val, multiply(err_eval[i], X_inv_pow));
+                X_inv_pow = multiply(X_inv_pow, X_inv);
             }
 
-            // Calculate Λ'(α^{−j}) using formal derivative over GF(2)
-            // Coefficients are stored highest-degree-first; only odd-degree terms contribute
-            element_t err_loc_deriv = 0;
-            size_t locator_degree = (err_loc.empty() ? 0 : err_loc.size() - 1);
-            for (size_t k = 0; k < err_loc.size(); ++k) {
-                size_t term_degree = locator_degree - k;
-                if ((term_degree & 1U) == 1U) {  // odd degree survives in characteristic-2
-                    // Contribution: coeff * (α^{-j})^{degree-1}
-                    err_loc_deriv =
-                        add(err_loc_deriv, multiply(err_loc[k], pow(x_inv, term_degree - 1)));
-                }
+            // Evaluate Λ'(X^{-1})
+            // For Λ(x) = Σ Λ_i * x^i, the formal derivative is Λ'(x) = Σ i*Λ_i * x^{i-1}
+            // In GF(2^m), coefficients multiply by i mod 2, so only odd i survive:
+            // Λ'(x) = Λ_1 + Λ_3*x^2 + Λ_5*x^4 + ...
+            element_t lambda_deriv = 0;
+            X_inv_pow = 1;  // Start at X_inv^0 for i=1 term (which contributes Λ_1 * X_inv^0)
+            for (size_t i = 1; i < err_loc.size(); i += 2) {  // Only odd indices
+                lambda_deriv = add(lambda_deriv, multiply(err_loc[i], X_inv_pow));
+                // Next odd index is i+2, need X_inv^{(i+2)-1} = X_inv^{i+1}
+                // Currently at X_inv^{i-1}, need to multiply by X_inv^2
+                X_inv_pow = multiply(X_inv_pow, multiply(X_inv, X_inv));
             }
 
-            // Calculate error magnitude
-            element_t err_mag = divide(err_eval_at_pos, multiply(x_inv, err_loc_deriv));
+            // Forney formula: E = X * Ω(X^{-1}) / Λ'(X^{-1})
+            if (lambda_deriv == 0) {
+                continue;  // Can't correct this position
+            }
+
+            element_t err_mag = divide(multiply(X, omega_val), lambda_deriv);
 
             // Correct the error
             msg[pos] = add(msg[pos], err_mag);
@@ -443,7 +467,181 @@ class GaloisField {
             return msg;  // No errors to correct
         }
 
-        // Find error locator and evaluator polynomials
+        // Try simple single-error correction first (Peterson decoder)
+        // For RS with polynomial c(x) = c_0*x^{n-1} + ... + c_{n-1}:
+        // Error e at array position i contributes e*α^{j*(n-1-i)} to S_j
+        // So S_2/S_1 = α^{n-1-i}, meaning i = n-1 - log_α(S_2/S_1)
+        bool try_multi_error = true;  // Flag to try multi-error correction
+
+        if (syndromes[1] != 0 && syndromes[2] != 0) {
+            element_t ratio = divide(syndromes[2], syndromes[1]);
+            size_t n = msg.size();
+
+            // Find exponent k where α^k = ratio, then position = n-1-k
+            for (size_t k = 0; k < field_size - 1; ++k) {
+                if (exp_table[k] == ratio) {
+                    // Check if position is valid
+                    if (k >= n) {
+                        break;  // Invalid position, try multi-error
+                    }
+
+                    size_t pos = n - 1 - k;  // Actual array position
+
+                    // Compute magnitude: e = S_1 / α^{n-1-pos} = S_1 / α^k = S_1 * α^{-k}
+                    element_t alpha_neg_k = exp_table[(field_size - 1 - k) % (field_size - 1)];
+                    element_t magnitude = multiply(syndromes[1], alpha_neg_k);
+
+                    // Verify with S_3: should equal e * α^{3*(n-1-pos)} = e * α^{3k}
+                    if (nsym >= 3 && syndromes[3] != 0) {
+                        element_t expected_s3 =
+                            multiply(magnitude, exp_table[(3 * k) % (field_size - 1)]);
+                        if (syndromes[3] != expected_s3) {
+                            break;  // More than one error, try multi-error
+                        }
+                    }
+
+                    // Single error confirmed - correct it
+                    std::vector<element_t> corrected = msg;
+                    corrected[pos] = add(corrected[pos], magnitude);
+                    return corrected;
+                }
+            }
+        }
+
+        // Try 2-error correction using brute-force position search
+        // For short codewords, this is practical (O(n²) pairs to check)
+        if (nsym >= 4 && msg.size() <= 32) {
+            size_t n = msg.size();
+
+            // Try all pairs of positions
+            for (size_t p1 = 0; p1 < n; ++p1) {
+                for (size_t p2 = p1 + 1; p2 < n; ++p2) {
+                    // Position exponents: k1 = n-1-p1, k2 = n-1-p2
+                    size_t k1 = n - 1 - p1;
+                    size_t k2 = n - 1 - p2;
+
+                    element_t X1 = exp_table[k1 % (field_size - 1)];
+                    element_t X2 = exp_table[k2 % (field_size - 1)];
+                    element_t X1_2 = multiply(X1, X1);
+                    element_t X2_2 = multiply(X2, X2);
+
+                    // Solve: e1*X1 + e2*X2 = S1
+                    //        e1*X1² + e2*X2² = S2
+                    // Cramer's rule: det = X1*X2² - X2*X1² = X1*X2*(X2 - X1)
+                    element_t det = multiply(multiply(X1, X2), add(X2, X1));
+
+                    if (det == 0) continue;  // Singular (X1 == X2)
+
+                    // e1 = (S1*X2² - S2*X2) / det = (S1*X2² + S2*X2) / det in GF(2^m)
+                    // e2 = (S2*X1 - S1*X1²) / det = (S2*X1 + S1*X1²) / det in GF(2^m)
+                    element_t e1 =
+                        divide(add(multiply(syndromes[1], X2_2), multiply(syndromes[2], X2)), det);
+                    element_t e2 =
+                        divide(add(multiply(syndromes[2], X1), multiply(syndromes[1], X1_2)), det);
+
+                    // Skip if either error magnitude is 0 (not a valid 2-error case)
+                    if (e1 == 0 || e2 == 0) continue;
+
+                    // Apply candidate correction and verify ALL syndromes become zero
+                    std::vector<element_t> candidate = msg;
+                    candidate[p1] = add(candidate[p1], e1);
+                    candidate[p2] = add(candidate[p2], e2);
+
+                    // Recompute syndromes for the corrected message
+                    auto new_syndromes = rs_calc_syndromes(candidate, nsym);
+
+                    // Check if all syndromes are zero
+                    bool all_zero = true;
+                    for (uint8_t i = 0; i < nsym && all_zero; ++i) {
+                        if (new_syndromes[i] != 0) all_zero = false;
+                    }
+
+                    if (all_zero) {
+                        return candidate;
+                    }
+                }
+            }
+
+            // Try 3-error correction (O(n³) - still practical for small n)
+            if (nsym >= 6 && n <= 16) {
+                for (size_t p1 = 0; p1 < n; ++p1) {
+                    for (size_t p2 = p1 + 1; p2 < n; ++p2) {
+                        for (size_t p3 = p2 + 1; p3 < n; ++p3) {
+                            // Compute X values for each position
+                            size_t k1 = n - 1 - p1, k2 = n - 1 - p2, k3 = n - 1 - p3;
+                            element_t X1 = exp_table[k1 % (field_size - 1)];
+                            element_t X2 = exp_table[k2 % (field_size - 1)];
+                            element_t X3 = exp_table[k3 % (field_size - 1)];
+
+                            // Solve 3x3 system: Vandermonde-like matrix
+                            // [X1  X2  X3 ][e1]   [S1]
+                            // [X1² X2² X3²][e2] = [S2]
+                            // [X1³ X2³ X3³][e3]   [S3]
+                            element_t X1_2 = multiply(X1, X1), X2_2 = multiply(X2, X2),
+                                      X3_2 = multiply(X3, X3);
+                            element_t X1_3 = multiply(X1_2, X1), X2_3 = multiply(X2_2, X2),
+                                      X3_3 = multiply(X3_2, X3);
+
+                            // Compute 2x2 minors (cofactors) for column expansion
+                            // M_ij = det of 2x2 submatrix with row i and col j removed
+                            element_t M11 = add(multiply(X2_2, X3_3), multiply(X3_2, X2_3));
+                            element_t M21 = add(multiply(X2, X3_3), multiply(X3, X2_3));
+                            element_t M31 = add(multiply(X2, X3_2), multiply(X3, X2_2));
+
+                            // Full 3x3 determinant by cofactor expansion along column 1:
+                            // det = X1*M11 + X1²*M21 + X1³*M31 (signs are +1 in GF(2))
+                            element_t det = add(add(multiply(X1, M11), multiply(X1_2, M21)),
+                                                multiply(X1_3, M31));
+                            if (det == 0) continue;
+
+                            element_t S1 = syndromes[1], S2 = syndromes[2], S3 = syndromes[3];
+
+                            // e1: replace col 1 with [S1,S2,S3], expand along col 1
+                            element_t e1_num =
+                                add(add(multiply(S1, M11), multiply(S2, M21)), multiply(S3, M31));
+                            element_t e1 = divide(e1_num, det);
+
+                            // For e2 and e3, compute different minors
+                            element_t M12 = add(multiply(X1_2, X3_3), multiply(X3_2, X1_3));
+                            element_t M22 = add(multiply(X1, X3_3), multiply(X3, X1_3));
+                            element_t M32 = add(multiply(X1, X3_2), multiply(X3, X1_2));
+
+                            element_t M13 = add(multiply(X1_2, X2_3), multiply(X2_2, X1_3));
+                            element_t M23 = add(multiply(X1, X2_3), multiply(X2, X1_3));
+                            element_t M33 = add(multiply(X1, X2_2), multiply(X2, X1_2));
+
+                            // e2: replace col 2 with [S1,S2,S3], expand along col 2
+                            element_t e2_num =
+                                add(add(multiply(S1, M12), multiply(S2, M22)), multiply(S3, M32));
+                            element_t e2 = divide(e2_num, det);
+
+                            // e3: replace col 3 with [S1,S2,S3], expand along col 3
+                            element_t e3_num =
+                                add(add(multiply(S1, M13), multiply(S2, M23)), multiply(S3, M33));
+                            element_t e3 = divide(e3_num, det);
+
+                            if (e1 == 0 || e2 == 0 || e3 == 0) continue;
+
+                            // Apply and verify
+                            std::vector<element_t> candidate = msg;
+                            candidate[p1] = add(candidate[p1], e1);
+                            candidate[p2] = add(candidate[p2], e2);
+                            candidate[p3] = add(candidate[p3], e3);
+
+                            auto new_syndromes = rs_calc_syndromes(candidate, nsym);
+                            bool all_zero = true;
+                            for (uint8_t i = 0; i < nsym && all_zero; ++i) {
+                                if (new_syndromes[i] != 0) all_zero = false;
+                            }
+                            if (all_zero) return candidate;
+                        }
+                    }
+                }
+            }
+        }
+
+    full_decode:
+        // Fall back to full Berlekamp-Massey for multiple errors
         auto [err_loc, err_eval] = rs_find_error_locator(syndromes, nsym);
 
         // Find error positions

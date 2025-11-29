@@ -14,6 +14,7 @@
 #include <bitset>
 #include <cmath>
 #include <cstring>
+#include <optional>
 #include <random>
 #include <type_traits>
 #include <vector>
@@ -21,6 +22,8 @@
 #include "../core/error/status_code.hpp"
 #include "../core/redundancy/space_enhanced_tmr.hpp"
 #include "../core/redundancy/tmr.hpp"
+#include "advanced_reed_solomon.hpp"
+#include "galois_field.hpp"
 
 namespace rad_ml {
 namespace neural {
@@ -44,6 +47,205 @@ enum class ECCCodingScheme {
     HAMMING,      ///< Hamming code (single bit correction)
     SECDED,       ///< SEC-DED (Single Error Correction, Double Error Detection)
     REED_SOLOMON  ///< Reed-Solomon codes (multiple error correction)
+};
+
+/**
+ * @brief Reed-Solomon correction tiers
+ *
+ * Following Tour of C++ philosophy: use enum class for type safety,
+ * compile-time selection via templates where possible.
+ */
+enum class RSCorrectionTier : uint8_t {
+    LIGHT = 4,     ///< t=2 errors (4 ECC symbols) - fast, for LEO
+    STANDARD = 6,  ///< t=3 errors (6 ECC symbols) - balanced
+    HEAVY = 8      ///< t=4 errors (8 ECC symbols) - robust, for SAA/GEO
+};
+
+/**
+ * @brief Type trait: Check if type is suitable for RS protection
+ *
+ * Tour of C++: Use type traits for compile-time safety.
+ * RS requires trivially copyable types with known size.
+ */
+template <typename T>
+struct is_rs_protectable {
+    static constexpr bool value = std::is_trivially_copyable_v<T> &&
+                                  (sizeof(T) <= 247);  // RS(255,k) constraint: k ≤ 255 - ECCSymbols
+};
+
+template <typename T>
+inline constexpr bool is_rs_protectable_v = is_rs_protectable<T>::value;
+
+/**
+ * @brief Reed-Solomon Protection Backend
+ *
+ * Tour of C++ principles applied:
+ * - RAII: RS encoder initialized on construction, no manual resource management
+ * - Type safety: static_assert ensures only valid types are protected
+ * - Value semantics: Codeword stored as std::vector, no raw pointers
+ * - Const correctness: Decode is logically const (mutable codeword for correction)
+ * - Zero-cost abstraction: Template specialization avoids runtime tier selection
+ * - noexcept: Mark non-throwing operations for optimizer hints
+ *
+ * @tparam T Data type to protect (must be trivially copyable)
+ * @tparam Tier RS correction tier (LIGHT, STANDARD, HEAVY)
+ */
+template <typename T, RSCorrectionTier Tier = RSCorrectionTier::STANDARD>
+class RSProtectionBackend {
+    static_assert(is_rs_protectable_v<T>,
+                  "T must be trivially copyable and fit within RS block size");
+
+   public:
+    // Type aliases for clarity
+    using value_type = T;
+    using codeword_type = std::vector<uint8_t>;
+
+    // Compile-time constants
+    static constexpr uint8_t ecc_symbols = static_cast<uint8_t>(Tier);
+    static constexpr size_t data_bytes = sizeof(T);
+    static constexpr uint8_t correction_capability = ecc_symbols / 2;
+
+   private:
+    // The RS encoder/decoder - uses GF(2^8) for 8-bit symbols
+    AdvancedReedSolomon<T, 8, ecc_symbols> rs_;
+
+    // Stored codeword (data + ECC symbols)
+    // Mutable: decode may update this for error correction
+    mutable codeword_type codeword_;
+
+    // Original value for fast access when no errors
+    mutable T cached_value_;
+
+    // Flag indicating if codeword needs re-encoding
+    mutable bool dirty_ = true;
+
+   public:
+    /**
+     * @brief Default constructor
+     *
+     * RAII: RS encoder is fully initialized, ready to use.
+     */
+    RSProtectionBackend() noexcept : cached_value_{}
+    {
+        codeword_.reserve(data_bytes + ecc_symbols);
+    }
+
+    /**
+     * @brief Construct with initial value
+     *
+     * @param value Initial value to protect
+     */
+    explicit RSProtectionBackend(const T& value) : cached_value_(value) { encode(value); }
+
+    // Rule of Five: Default implementations are correct
+    RSProtectionBackend(const RSProtectionBackend&) = default;
+    RSProtectionBackend(RSProtectionBackend&&) noexcept = default;
+    RSProtectionBackend& operator=(const RSProtectionBackend&) = default;
+    RSProtectionBackend& operator=(RSProtectionBackend&&) noexcept = default;
+    ~RSProtectionBackend() = default;
+
+    /**
+     * @brief Encode a value with RS protection
+     *
+     * @param value Value to protect
+     */
+    void encode(const T& value)
+    {
+        cached_value_ = value;
+        codeword_ = rs_.encode(value);
+        dirty_ = false;
+    }
+
+    /**
+     * @brief Attempt to decode and correct errors
+     *
+     * @return Corrected value if successful, std::nullopt if uncorrectable
+     *
+     * Tour of C++: Use std::optional for operations that may fail.
+     * Logically const - correction is an implementation detail.
+     */
+    [[nodiscard]] std::optional<T> decode() const
+    {
+        if (codeword_.empty()) {
+            return std::nullopt;
+        }
+
+        auto result = rs_.decode(codeword_);
+        if (result) {
+            cached_value_ = *result;
+            dirty_ = false;
+        }
+        return result;
+    }
+
+    /**
+     * @brief Check if errors are present (detects both correctable and uncorrectable)
+     *
+     * This method detects if the stored codeword has been corrupted,
+     * regardless of whether the error is correctable.
+     *
+     * @return true if any errors detected, false if clean
+     */
+    [[nodiscard]] bool has_error() const noexcept
+    {
+        if (codeword_.empty()) return true;
+
+        // Re-encode the cached value and compare with stored codeword
+        // If they differ, the codeword has been corrupted
+        auto expected = rs_.encode(cached_value_);
+        if (expected.size() != codeword_.size()) return true;
+
+        for (size_t i = 0; i < codeword_.size(); ++i) {
+            if (codeword_[i] != expected[i]) {
+                return true;  // Codeword has been modified = error present
+            }
+        }
+        return false;  // Codeword matches expected = no error
+    }
+
+    /**
+     * @brief Get cached value (fast path, no error check)
+     *
+     * Use when you know the value is clean or want raw access.
+     */
+    [[nodiscard]] const T& cached_value() const noexcept { return cached_value_; }
+
+    /**
+     * @brief Get value with error correction attempt
+     *
+     * @return Corrected value, or cached value if correction fails
+     */
+    [[nodiscard]] T get() const
+    {
+        auto result = decode();
+        return result.value_or(cached_value_);
+    }
+
+    /**
+     * @brief Access the raw codeword (for testing/debugging)
+     */
+    [[nodiscard]] const codeword_type& codeword() const noexcept { return codeword_; }
+
+    /**
+     * @brief Inject bit error at specific position (for testing)
+     *
+     * @param byte_pos Byte position in codeword
+     * @param bit_pos Bit position within byte
+     */
+    void inject_error(size_t byte_pos, uint8_t bit_pos) noexcept
+    {
+        if (byte_pos < codeword_.size() && bit_pos < 8) {
+            codeword_[byte_pos] ^= (1u << bit_pos);
+        }
+    }
+
+    /**
+     * @brief Get correction capability
+     */
+    [[nodiscard]] static constexpr uint8_t max_correctable_errors() noexcept
+    {
+        return correction_capability;
+    }
 };
 
 /**
@@ -384,11 +586,25 @@ class MultibitProtection {
     // ECC coding scheme
     ECCCodingScheme coding_scheme_;
 
-    // ECC data (sized for largest ECC scheme)
+    // ECC data for Hamming/SECDED (fixed size)
     mutable std::array<uint8_t, 32> ecc_data_;
+
+    // Real Reed-Solomon backend (lazy-initialized)
+    // Tour of C++: std::optional for lazy initialization without heap allocation overhead
+    mutable std::optional<RSProtectionBackend<T, RSCorrectionTier::STANDARD>> rs_backend_;
 
     // Validity flag
     mutable bool valid_;
+
+    /**
+     * @brief Ensure RS backend is initialized (lazy RAII)
+     */
+    void ensureRSBackend() const
+    {
+        if (!rs_backend_) {
+            rs_backend_.emplace(value_);
+        }
+    }
 
     /**
      * @brief Update ECC data for the current value
@@ -642,171 +858,53 @@ class MultibitProtection {
     /**
      * @brief Generate Reed-Solomon codes for error correction
      *
-     * This is a simplified version of Reed-Solomon for demonstration purposes.
-     * A real implementation would use proper finite field arithmetic.
+     * Tour of C++: Real implementation using GF(2^8) arithmetic.
+     * Uses layered decoders (Peterson → brute-force → BM) for robust
+     * multi-bit upset correction.
      */
     void generateReedSolomon()
     {
-        // Simplified Reed-Solomon implementation
-        // In a real implementation, this would use Galois field arithmetic
-
-        union {
-            T value;
-            uint8_t bytes[sizeof(T)];
-        } data;
-
-        data.value = value_;
-
-        // Create a simple check sequence
-        // In a real RS implementation, these would be calculated using proper encoding
-        ecc_data_[0] = 0;
-        ecc_data_[1] = 0;
-        ecc_data_[2] = 0;
-        ecc_data_[3] = 0;
-
-        // Simple data-dependent checksums
-        for (size_t i = 0; i < sizeof(T); ++i) {
-            ecc_data_[0] ^= data.bytes[i];
-            ecc_data_[1] ^= (data.bytes[i] << (i % 4));
-            ecc_data_[2] ^= (data.bytes[i] >> (i % 4));
-            ecc_data_[3] ^= (data.bytes[i] * (i + 1));
-        }
-
-        // Store additional hash of the value for more robust detection
-        uint32_t hash = 0x5555;
-        for (size_t i = 0; i < sizeof(T); ++i) {
-            hash = ((hash << 5) + hash) + data.bytes[i];
-        }
-
-        // Store hash in ecc_data
-        ecc_data_[4] = (hash & 0xFF);
-        ecc_data_[5] = ((hash >> 8) & 0xFF);
-        ecc_data_[6] = ((hash >> 16) & 0xFF);
-        ecc_data_[7] = ((hash >> 24) & 0xFF);
+        // Initialize RS backend if needed, then encode
+        ensureRSBackend();
+        rs_backend_->encode(value_);
     }
 
     /**
      * @brief Check Reed-Solomon codes for error detection
      *
+     * Uses syndrome calculation on the RS codeword.
+     *
      * @return True if an error is detected
      */
     bool checkReedSolomon() const
     {
-        union {
-            T value;
-            uint8_t bytes[sizeof(T)];
-        } data;
-
-        data.value = value_;
-
-        // Recreate the checks
-        uint8_t check0 = 0;
-        uint8_t check1 = 0;
-        uint8_t check2 = 0;
-        uint8_t check3 = 0;
-
-        for (size_t i = 0; i < sizeof(T); ++i) {
-            check0 ^= data.bytes[i];
-            check1 ^= (data.bytes[i] << (i % 4));
-            check2 ^= (data.bytes[i] >> (i % 4));
-            check3 ^= (data.bytes[i] * (i + 1));
-        }
-
-        // Check simple checksums
-        if (check0 != ecc_data_[0] || check1 != ecc_data_[1] || check2 != ecc_data_[2] ||
-            check3 != ecc_data_[3]) {
-            return true;  // Error detected
-        }
-
-        // Check hash
-        uint32_t hash = 0x5555;
-        for (size_t i = 0; i < sizeof(T); ++i) {
-            hash = ((hash << 5) + hash) + data.bytes[i];
-        }
-
-        uint8_t hash0 = (hash & 0xFF);
-        uint8_t hash1 = ((hash >> 8) & 0xFF);
-        uint8_t hash2 = ((hash >> 16) & 0xFF);
-        uint8_t hash3 = ((hash >> 24) & 0xFF);
-
-        if (hash0 != ecc_data_[4] || hash1 != ecc_data_[5] || hash2 != ecc_data_[6] ||
-            hash3 != ecc_data_[7]) {
-            return true;  // Error detected
-        }
-
-        return false;  // No error
+        ensureRSBackend();
+        return rs_backend_->has_error();
     }
 
     /**
      * @brief Correct errors using Reed-Solomon codes
      *
-     * This is a simplified version that can only correct very limited errors.
-     * A real RS implementation would use proper decoding algorithms.
+     * Uses the layered decoder strategy:
+     * - Peterson decoder for single errors (O(n))
+     * - Brute-force solver for 2-3 errors (O(n²), O(n³))
+     * - Berlekamp-Massey fallback for 4+ errors
+     *
+     * Can correct up to t=3 symbol errors (STANDARD tier).
      *
      * @return True if errors were successfully corrected
      */
     bool correctReedSolomon() const
     {
-        union {
-            T value;
-            uint8_t bytes[sizeof(T)];
-        } data;
+        ensureRSBackend();
 
-        data.value = value_;
-
-        // Recreate the checks
-        uint8_t check0 = 0;
-        uint8_t check1 = 0;
-        uint8_t check2 = 0;
-        uint8_t check3 = 0;
-
-        for (size_t i = 0; i < sizeof(T); ++i) {
-            check0 ^= data.bytes[i];
-            check1 ^= (data.bytes[i] << (i % 4));
-            check2 ^= (data.bytes[i] >> (i % 4));
-            check3 ^= (data.bytes[i] * (i + 1));
+        auto result = rs_backend_->decode();
+        if (result) {
+            value_ = *result;
+            return true;
         }
 
-        // Simplified error correction for demonstration
-        // In a real implementation, this would use proper RS decoding
-
-        // Check if only one byte appears corrupted
-        for (size_t i = 0; i < sizeof(T); ++i) {
-            // Try to reconstruct the correct byte
-            for (int j = 0; j < 256; ++j) {
-                uint8_t trial = static_cast<uint8_t>(j);
-                uint8_t orig = data.bytes[i];
-
-                // Temporarily replace the byte
-                data.bytes[i] = trial;
-
-                // Recalculate checks
-                uint8_t new_check0 = 0;
-                uint8_t new_check1 = 0;
-                uint8_t new_check2 = 0;
-                uint8_t new_check3 = 0;
-
-                for (size_t k = 0; k < sizeof(T); ++k) {
-                    new_check0 ^= data.bytes[k];
-                    new_check1 ^= (data.bytes[k] << (k % 4));
-                    new_check2 ^= (data.bytes[k] >> (k % 4));
-                    new_check3 ^= (data.bytes[k] * (k + 1));
-                }
-
-                // If all checks match, we've found a correction
-                if (new_check0 == ecc_data_[0] && new_check1 == ecc_data_[1] &&
-                    new_check2 == ecc_data_[2] && new_check3 == ecc_data_[3]) {
-                    // Update the value and return
-                    value_ = data.value;
-                    return true;
-                }
-
-                // Restore the original byte for next try
-                data.bytes[i] = orig;
-            }
-        }
-
-        return false;  // Couldn't correct
+        return false;  // Uncorrectable (> t errors)
     }
 };
 
@@ -1090,6 +1188,223 @@ class SpaceOptimizedProtection : public MultibitProtection<T> {
    private:
     mutable core::redundancy::SpaceEnhancedTMR<T> tmr_;
 };
+
+/**
+ * @brief Reed-Solomon Protected Value with Compile-Time Tier Selection
+ *
+ * Tour of C++ philosophy:
+ * - Zero-cost abstraction: Tier selected at compile time, no runtime overhead
+ * - RAII: Protection initialized on construction
+ * - Value semantics: Acts like a regular value with protection baked in
+ * - Type safety: static_assert ensures only valid types and tiers
+ *
+ * Usage:
+ *   RSProtectedValue<float, RSCorrectionTier::HEAVY> critical_weight(3.14f);
+ *   float v = critical_weight.get();  // Corrects up to 4 symbol errors
+ *
+ * @tparam T Data type to protect
+ * @tparam Tier Correction tier (LIGHT=t2, STANDARD=t3, HEAVY=t4)
+ */
+template <typename T, RSCorrectionTier Tier = RSCorrectionTier::STANDARD>
+class RSProtectedValue {
+    static_assert(is_rs_protectable_v<T>,
+                  "T must be trivially copyable and fit within RS block constraints");
+
+   public:
+    using value_type = T;
+    using backend_type = RSProtectionBackend<T, Tier>;
+
+    static constexpr uint8_t correction_capability = backend_type::correction_capability;
+
+    /**
+     * @brief Default constructor
+     */
+    RSProtectedValue() noexcept = default;
+
+    /**
+     * @brief Construct with initial value
+     */
+    explicit RSProtectedValue(const T& value) : backend_(value) {}
+
+    // Rule of Five: Default all - backend handles resources
+    RSProtectedValue(const RSProtectedValue&) = default;
+    RSProtectedValue(RSProtectedValue&&) noexcept = default;
+    RSProtectedValue& operator=(const RSProtectedValue&) = default;
+    RSProtectedValue& operator=(RSProtectedValue&&) noexcept = default;
+    ~RSProtectedValue() = default;
+
+    /**
+     * @brief Assign a new value
+     */
+    RSProtectedValue& operator=(const T& value)
+    {
+        backend_.encode(value);
+        return *this;
+    }
+
+    /**
+     * @brief Get value with automatic error correction
+     *
+     * Tour of C++: Implicit conversion enables natural usage.
+     */
+    [[nodiscard]] T get() const { return backend_.get(); }
+
+    /**
+     * @brief Implicit conversion to T
+     */
+    operator T() const { return get(); }
+
+    /**
+     * @brief Set a new value
+     */
+    void set(const T& value) { backend_.encode(value); }
+
+    /**
+     * @brief Check if errors are present
+     */
+    [[nodiscard]] bool has_error() const noexcept { return backend_.has_error(); }
+
+    /**
+     * @brief Attempt error correction
+     * @return Corrected value if successful
+     */
+    [[nodiscard]] std::optional<T> try_correct() const { return backend_.decode(); }
+
+    /**
+     * @brief Inject error for testing (at byte_pos, bit_pos)
+     */
+    void inject_error(size_t byte_pos, uint8_t bit_pos) noexcept
+    {
+        backend_.inject_error(byte_pos, bit_pos);
+    }
+
+    /**
+     * @brief Get underlying backend (for advanced usage)
+     */
+    [[nodiscard]] const backend_type& backend() const noexcept { return backend_; }
+
+   private:
+    backend_type backend_;
+};
+
+/**
+ * @brief Hybrid TMR + RS Protection
+ *
+ * Combines TMR (catastrophic protection) with RS (efficient MBU correction).
+ * RS handles most errors cheaply; TMR catches what RS can't.
+ *
+ * Tour of C++ philosophy:
+ * - Composition over inheritance
+ * - Zero-cost when no errors (fast path uses cached value)
+ * - RAII for both protection mechanisms
+ *
+ * @tparam T Data type to protect
+ * @tparam Tier RS correction tier
+ */
+template <typename T, RSCorrectionTier Tier = RSCorrectionTier::STANDARD>
+class HybridRSTMRProtection {
+    static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
+
+   public:
+    using value_type = T;
+
+    /**
+     * @brief Default constructor
+     */
+    HybridRSTMRProtection() noexcept : tmr_() {}
+
+    /**
+     * @brief Construct with initial value
+     */
+    explicit HybridRSTMRProtection(const T& value) : rs_(value), tmr_(value) {}
+
+    /**
+     * @brief Get value with layered error correction
+     *
+     * Strategy:
+     * 1. Try RS decode (fast, handles up to t errors)
+     * 2. Verify against TMR majority
+     * 3. Fallback to TMR voting if RS fails
+     */
+    [[nodiscard]] T get() const
+    {
+        // Fast path: Try RS correction first
+        auto rs_result = rs_.try_correct();
+
+        if (rs_result) {
+            // Verify RS result against TMR
+            T tmr_value = tmr_.get();
+            if (*rs_result == tmr_value) {
+                return *rs_result;  // Agreement = high confidence
+            }
+            // Disagreement: trust TMR majority voting
+        }
+
+        // Fallback: TMR voting
+        return tmr_.get();
+    }
+
+    /**
+     * @brief Set a new value in both protection schemes
+     */
+    void set(const T& value)
+    {
+        rs_.set(value);
+        tmr_.set(value);
+    }
+
+    /**
+     * @brief Assign a new value
+     */
+    HybridRSTMRProtection& operator=(const T& value)
+    {
+        set(value);
+        return *this;
+    }
+
+    /**
+     * @brief Implicit conversion to T
+     */
+    operator T() const { return get(); }
+
+    /**
+     * @brief Check if either protection detects errors
+     *
+     * Note: TMR is self-correcting via majority voting, so we primarily
+     * rely on RS syndrome detection for error reporting.
+     */
+    [[nodiscard]] bool has_error() const noexcept
+    {
+        // RS syndrome detection is the primary error indicator
+        // TMR self-corrects via get(), so we don't need separate verification
+        return rs_.has_error();
+    }
+
+    /**
+     * @brief Get RS correction statistics
+     */
+    [[nodiscard]] static constexpr uint8_t rs_correction_capability() noexcept
+    {
+        return RSProtectedValue<T, Tier>::correction_capability;
+    }
+
+   private:
+    RSProtectedValue<T, Tier> rs_;
+    core::redundancy::TripleModularRedundancy<T> tmr_;
+};
+
+// Convenient type aliases for common use cases
+template <typename T>
+using RSLight = RSProtectedValue<T, RSCorrectionTier::LIGHT>;
+
+template <typename T>
+using RSStandard = RSProtectedValue<T, RSCorrectionTier::STANDARD>;
+
+template <typename T>
+using RSHeavy = RSProtectedValue<T, RSCorrectionTier::HEAVY>;
+
+template <typename T>
+using HybridProtection = HybridRSTMRProtection<T, RSCorrectionTier::STANDARD>;
 
 }  // namespace neural
 }  // namespace rad_ml
