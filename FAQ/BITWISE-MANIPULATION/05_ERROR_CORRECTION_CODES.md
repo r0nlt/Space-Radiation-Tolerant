@@ -1,6 +1,6 @@
 # Error Correction Code Implementation
 
-## 🎯 Learning Objectives
+## Learning Objectives
 
 After studying this module, you'll understand:
 - Reed-Solomon codes and Galois Field mathematics
@@ -9,7 +9,7 @@ After studying this module, you'll understand:
 - Berlekamp-Massey algorithm for error location
 - Forney algorithm for error magnitude calculation
 
-## 🧠 Error Correction Fundamentals
+## Error Correction Fundamentals
 
 ### Why ECC is Critical for Space Systems
 
@@ -20,7 +20,7 @@ Error Correction Codes (ECC) can detect and automatically correct errors without
 3. **Systematic codes**: Data remains readable even without decoding
 4. **Galois Field arithmetic**: Mathematical foundation for finite field operations
 
-📖 **Reference**: See [Stuck Bit Detection Algorithms](./04_STUCK_BIT_DETECTION.md) for complementary error detection techniques.
+**Reference**: See [Stuck Bit Detection Algorithms](./04_STUCK_BIT_DETECTION.md) for complementary error detection techniques.
 
 ### Error Types in Radiation Environments
 
@@ -35,7 +35,7 @@ enum class ErrorPattern {
 };
 ```
 
-## 🔧 Reed-Solomon Implementation
+## Reed-Solomon Implementation
 
 ### Core Architecture
 
@@ -416,7 +416,7 @@ std::optional<T> decode(const std::vector<uint8_t>& encoded_data) const {
 }
 ```
 
-## 📊 Performance Analysis
+## Performance Analysis
 
 ### Error Correction Capability
 
@@ -447,7 +447,7 @@ constexpr size_t correction_capability() const {
 - **Overhead**: 200%
 - **Correction**: Up to 4 symbol errors
 
-## 🧪 Testing and Validation
+## Testing and Validation
 
 ### 1. Systematic Error Injection
 
@@ -525,7 +525,7 @@ void validate_error_correction() {
 }
 ```
 
-## 🎯 Best Practices
+## Best Practices
 
 ### Implementation Guidelines
 
@@ -542,14 +542,13 @@ void validate_error_correction() {
 3. **Memory Layout**: Organize data for cache efficiency
 4. **Template Specialization**: Optimize for common symbol sizes
 
-## 🔗 Related Topics
+## Related Topics
 
-- 📖 **Previous**: [Stuck Bit Detection Algorithms](./04_STUCK_BIT_DETECTION.md) - Complementary error detection
-- 📖 **Next**: [Memory Scrubbing Strategies](./06_MEMORY_SCRUBBING.md) - Continuous error monitoring
-- 🔧 **Implementation**: [Galois Field Mathematics](./07_GALOIS_FIELD_MATH.md) - Mathematical foundation
-- 📊 **Performance**: [Compile-Time Bit Manipulation](./10_COMPILE_TIME_OPTIMIZATION.md) - Zero-cost abstractions
+- **Previous**: [Stuck Bit Detection Algorithms](./04_STUCK_BIT_DETECTION.md) - Complementary error detection
+- **Next**: [Memory Scrubbing Strategies](./06_MEMORY_SCRUBBING.md) - Continuous error monitoring
+- **Implementation**: [Galois Field Mathematics](./08_GALOIS_FIELD_MATH.md) - Mathematical foundation
 
-## 💡 Key Takeaways
+## Key Takeaways
 
 1. **Reed-Solomon codes provide powerful symbol-level correction** for burst errors
 2. **Galois Field arithmetic** enables efficient finite field operations
@@ -562,4 +561,4 @@ void validate_error_correction() {
 
 ---
 
-📖 **Continue Learning**: Advance to [Memory Scrubbing Strategies](./06_MEMORY_SCRUBBING.md) to see how ECC integrates with continuous memory monitoring.
+**Continue Learning**: Advance to [Memory Scrubbing Strategies](./06_MEMORY_SCRUBBING.md) to see how ECC integrates with continuous memory monitoring.

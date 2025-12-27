@@ -44,7 +44,12 @@ Use unions to safely reinterpret memory:
 ```cpp
 // From: include/rad_ml/utils/bit_manipulation.hpp
 static float flipBit(float value, int bit_position) {
-    // Use union to reinterpret float as uint32_t
+    // Validate bit position bounds
+    if (bit_position < 0 || bit_position >= 32) {
+        return value; // Invalid bit position
+    }
+
+    // Use union to reinterpret float as uint32_t for bit manipulation
     union {
         float f;
         uint32_t i;
@@ -87,18 +92,26 @@ Mantissa = Fractional part (23 bits)
 
 ```cpp
 // From: include/rad_ml/neural/adaptive_protection.hpp
-const uint8_t* bytes = reinterpret_cast<const uint8_t*>(&value);
+// Example: Counting bit differences between two values
+template <typename U>
+size_t count_bit_differences(const U& a, const U& b) const {
+    const uint8_t* bytes_a = reinterpret_cast<const uint8_t*>(&a);
+    const uint8_t* bytes_b = reinterpret_cast<const uint8_t*>(&b);
 
-// Examine each byte individually
-for (size_t i = 0; i < sizeof(T); ++i) {
-    uint8_t byte = bytes[i];
+    size_t differences = 0;
 
-    // Check each bit in the byte
-    for (int bit = 0; bit < 8; ++bit) {
-        if (byte & (1 << bit)) {
-            // Process set bits
+    for (size_t i = 0; i < sizeof(U); ++i) {
+        uint8_t diff = bytes_a[i] ^ bytes_b[i];
+
+        // Count bits in the difference
+        for (int bit = 0; bit < 8; ++bit) {
+            if ((diff >> bit) & 1) {
+                differences++;
+            }
         }
     }
+
+    return differences;
 }
 ```
 
@@ -108,22 +121,36 @@ for (size_t i = 0; i < sizeof(T); ++i) {
 
 ```cpp
 // From: include/rad_ml/tmr/enhanced_stuck_bit_tmr.hpp
-template <typename T>
 void update_stuck_bit_tracking() {
-    for (size_t bit = 0; bit < sizeof(T) * 8; ++bit) {
-        // Extract bit from each copy
-        bool bit0 = (copies_[0] >> bit) & 1;
-        bool bit1 = (copies_[1] >> bit) & 1;
-        bool bit2 = (copies_[2] >> bit) & 1;
+    // Get the current value based on standard health-weighted voting
+    T voted_value = get_standard();
 
-        // Check if this bit differs across copies
-        if (bit0 != bit1 || bit1 != bit2 || bit0 != bit2) {
-            // Increment error counter for this bit position
-            error_consistency_counters[bit]++;
+    // Analyze each copy for potential stuck bits
+    for (size_t copy_idx = 0; copy_idx < copies_.size(); ++copy_idx) {
+        // Skip completely healthy copies
+        if (copies_[copy_idx] == voted_value) {
+            continue;
+        }
 
-            // Mark as potentially stuck if threshold exceeded
-            if (error_consistency_counters[bit] >= stuck_bit_threshold) {
-                potential_stuck_bits.set(bit);
+        // Calculate XOR to identify differing bits
+        T diff = copies_[copy_idx] ^ voted_value;
+
+        // Check each differing bit
+        for (size_t bit = 0; bit < sizeof(T) * 8; ++bit) {
+            if ((diff >> bit) & 1) {
+                // Increment error consistency counter
+                if (error_consistency_counters[bit] < 255) {
+                    error_consistency_counters[bit]++;
+                }
+
+                // Record stuck bit value (0 or 1) for this copy
+                bool current_bit_value = (copies_[copy_idx] >> bit) & 1;
+                stuck_value_masks[copy_idx][bit] = current_bit_value;
+
+                // Mark bit as potentially stuck if threshold reached
+                if (error_consistency_counters[bit] >= stuck_bit_threshold) {
+                    potential_stuck_bits.set(bit);
+                }
             }
         }
     }
@@ -140,17 +167,26 @@ void update_stuck_bit_tracking() {
 ```cpp
 // From: include/rad_ml/neural/advanced_reed_solomon.hpp
 std::vector<uint8_t> interleave(const std::vector<uint8_t>& data) const {
+    if (data.empty()) return {};
+
+    // Determine how many blocks we need
+    size_t block_count = (data.size() + 7) / 8;
     std::vector<uint8_t> result(data.size());
 
     // Process each bit position across all bytes
     for (size_t bit = 0; bit < 8; ++bit) {
         for (size_t block = 0; block < block_count; ++block) {
-            // Extract bit from source
-            bool bit_value = (data[src_idx] >> bit) & 1;
+            size_t src_idx = block;
+            size_t dst_idx = bit * block_count + block;
 
-            // Place in interleaved position
-            if (bit_value) {
-                result[dst_idx / 8] |= (1 << (dst_idx % 8));
+            if (src_idx < data.size() && dst_idx < result.size()) {
+                // Extract bit from source byte
+                bool bit_value = (data[src_idx] >> bit) & 1;
+
+                // Set bit in destination byte
+                if (bit_value) {
+                    result[dst_idx / 8] |= (1 << (dst_idx % 8));
+                }
             }
         }
     }
@@ -172,13 +208,21 @@ After burst: [XXXXXXXX][A₁B₁C₁...][A₂B₂C₂...]  ← Distributed error
 
 ```cpp
 // From: include/rad_ml/math/fixed_point.hpp
-template <unsigned IntBits, unsigned FracBits, typename T>
+template <unsigned IntBits, unsigned FracBits, typename T = std::int32_t>
 class FixedPoint {
+    static_assert(std::is_integral_v<T>, "Base type must be integral");
+    static_assert(IntBits + FracBits <= sizeof(T) * 8, "Total bits must fit in underlying type");
+
+public:
     static constexpr T scale = static_cast<T>(1) << FracBits;
 
     constexpr FixedPoint operator*(const FixedPoint& other) const noexcept {
-        // Use wider type to prevent overflow
-        using wider_t = std::conditional_t<sizeof(T) <= 4, std::int64_t, std::int64_t>;
+        // Use wider type to prevent overflow during multiplication
+        using wider_t = typename std::conditional<
+            sizeof(T) <= 4,
+            std::int64_t,
+            std::int64_t  // Would use int128_t if available
+        >::type;
 
         wider_t wide_result = static_cast<wider_t>(value_) * other.value_;
 
@@ -187,7 +231,14 @@ class FixedPoint {
         result.value_ = static_cast<T>(wide_result >> FracBits);
         return result;
     }
+
+private:
+    T value_;  // The fixed-point value
 };
+
+// Common type aliases
+using Fixed16_16 = FixedPoint<16, 16, std::int32_t>;  // 16.16 fixed-point
+using Fixed8_24 = FixedPoint<8, 24, std::int32_t>;    // 8.24 fixed-point
 ```
 
 **Advantages over floating-point**:
@@ -221,11 +272,19 @@ The code is endianness-aware:
 ### Portable Bit Manipulation
 
 ```cpp
+// From: include/rad_ml/utils/bit_manipulation.hpp
 template<typename T>
 static bool isBitSet(T value, int bit_position) {
+    // Validate bit position bounds
+    if (bit_position < 0 || bit_position >= sizeof(T) * 8) {
+        return false; // Invalid bit position
+    }
+
+    // For floating-point types, convert to integer representation
     if constexpr (std::is_floating_point<T>::value) {
-        // Handle floating-point types
-        using UIntType = std::conditional_t<sizeof(T) == 8, uint64_t, uint32_t>;
+        using UIntType = typename std::conditional<
+            sizeof(T) == 8, uint64_t, uint32_t
+        >::type;
 
         union {
             T value;
@@ -234,8 +293,9 @@ static bool isBitSet(T value, int bit_position) {
 
         converter.value = value;
         return (converter.bits & (static_cast<UIntType>(1) << bit_position)) != 0;
-    } else {
-        // Handle integer types
+    }
+    else {
+        // Handle integer types directly
         return (value & (static_cast<T>(1) << bit_position)) != 0;
     }
 }
@@ -247,15 +307,20 @@ static bool isBitSet(T value, int bit_position) {
 
 ```cpp
 // From: include/rad_ml/tmr/enhanced_stuck_bit_tmr.hpp
+template <typename T>
 class EnhancedStuckBitTMR {
-private:
-    // Hot data: frequently accessed
-    std::array<T, 3> copies_;                    // 3 * sizeof(T) bytes
+protected:
+    // Hot data: frequently accessed (TMR copies and health tracking)
+    std::array<T, 3> copies_;                     // 3 * sizeof(T) bytes
     mutable std::array<double, 3> health_scores_; // 24 bytes
 
-    // Cold data: infrequently accessed
-    std::bitset<sizeof(T) * 8> potential_stuck_bits;      // sizeof(T) bytes
-    std::array<uint8_t, sizeof(T) * 8> error_consistency_counters; // sizeof(T) * 8 bytes
+    // Cold data: stuck bit detection and tracking
+    std::bitset<sizeof(T) * 8> potential_stuck_bits{};      // Bits identified as stuck
+    std::array<std::bitset<sizeof(T) * 8>, 3> stuck_value_masks{}; // Per-copy stuck values
+    std::array<uint8_t, sizeof(T) * 8> error_consistency_counters{}; // Error frequency
+
+    // Threshold based on JUICE mission testing (3+ consecutive errors = stuck)
+    static constexpr uint8_t stuck_bit_threshold = 3;
 };
 ```
 
@@ -264,9 +329,9 @@ private:
 - **Cold data last**: Infrequently accessed data separate
 - **Alignment considerations**: Natural alignment for performance
 
-### NUMA-Aware Allocation
+### Radiation-Aware Memory Allocation
 
-🔧 **Implementation**: See [Radiation-Aware Memory Management](./08_RADIATION_MEMORY_MGMT.md) for details.
+🔧 **Implementation**: The radiation-mapped allocator places data in memory regions based on criticality and shielding levels. See [Memory Scrubbing](./06_MEMORY_SCRUBBING.md) for related memory protection techniques.
 
 ```cpp
 // From: include/rad_ml/memory/radiation_mapped_allocator.hpp
@@ -343,7 +408,8 @@ void test_endianness_independence() {
 - 📖 **Previous**: [Branchless Programming Fundamentals](./01_BRANCHLESS_PROGRAMMING.md) - Foundation concepts
 - 📖 **Next**: [Type Punning and reinterpret_cast](./03_TYPE_PUNNING.md) - Safe memory reinterpretation
 - 🔧 **Implementation**: [Stuck Bit Detection Algorithms](./04_STUCK_BIT_DETECTION.md) - Advanced bit tracking
-- 📊 **Performance**: [Cache-Friendly Algorithms](./11_CACHE_OPTIMIZATION.md) - Memory access optimization
+- 🔧 **Memory Protection**: [Memory Scrubbing](./06_MEMORY_SCRUBBING.md) - Memory scrubbing techniques
+- 📊 **Error Correction**: [Error Correction Codes](./05_ERROR_CORRECTION_CODES.md) - Reed-Solomon and Hamming codes
 
 ## 💡 Key Takeaways
 
