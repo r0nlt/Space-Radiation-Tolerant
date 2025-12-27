@@ -24,9 +24,8 @@ struct SourceLocation {
     int line;
     const char* function_name;
 
-    SourceLocation(const char* file = __FILE__, int line = __LINE__,
-                   const char* function = __func__)
-        : file_name(file), line(line), function_name(function)
+    SourceLocation(const char* file = "", int line_num = 0, const char* function = "")
+        : file_name(file), line(line_num), function_name(function)
     {
     }
 
@@ -123,7 +122,7 @@ struct ErrorInfo {
      * @param details Additional details (optional)
      */
     ErrorInfo(ErrorCode code, ErrorCategory category, ErrorSeverity severity, std::string message,
-              SourceLocation location = RAD_ML_CURRENT_LOCATION,
+              SourceLocation location = SourceLocation{},
               std::optional<std::string> details = std::nullopt)
         : code(code),
           category(category),
@@ -264,8 +263,7 @@ class RadiationFrameworkException : public std::exception {
      * @param details Additional details (optional)
      */
     RadiationFrameworkException(ErrorCode code, ErrorCategory category, ErrorSeverity severity,
-                                std::string message,
-                                SourceLocation location = RAD_ML_CURRENT_LOCATION,
+                                std::string message, SourceLocation location = SourceLocation{},
                                 std::optional<std::string> details = std::nullopt)
         : error_info_(code, category, severity, std::move(message), location, std::move(details))
     {
@@ -487,7 +485,7 @@ class Result {
      */
     template <typename U>
     static Result<U> error(ErrorCode code, ErrorCategory category, ErrorSeverity severity,
-                           std::string message, SourceLocation location = RAD_ML_CURRENT_LOCATION,
+                           std::string message, SourceLocation location = SourceLocation{},
                            std::optional<std::string> details = std::nullopt)
     {
         return Result<U>::error(
@@ -577,8 +575,7 @@ class Result<void> {
      * @return Error result with the given error information
      */
     static Result<void> error(ErrorCode code, ErrorCategory category, ErrorSeverity severity,
-                              std::string message,
-                              SourceLocation location = RAD_ML_CURRENT_LOCATION,
+                              std::string message, SourceLocation location = SourceLocation{},
                               std::optional<std::string> details = std::nullopt)
     {
         return Result<void>::error(
@@ -618,8 +615,7 @@ class IErrorLogger {
      * @param details Additional details (optional)
      */
     void logError(ErrorCode code, ErrorCategory category, ErrorSeverity severity,
-                  const std::string& message,
-                  const SourceLocation& location = RAD_ML_CURRENT_LOCATION,
+                  const std::string& message, const SourceLocation& location = SourceLocation{},
                   const std::optional<std::string>& details = std::nullopt)
     {
         logError(ErrorInfo(code, category, severity, message, location, details));

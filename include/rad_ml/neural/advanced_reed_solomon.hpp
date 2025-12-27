@@ -15,6 +15,7 @@
 #include <bitset>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <limits>
 #include <optional>
 #include <span>

@@ -320,6 +320,26 @@ add_executable(radiation_physics_test test/physics/radiation_physics_test.cpp)
 target_include_directories(radiation_physics_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME radiation_physics_test COMMAND radiation_physics_test)
 
+# Add executable for selective hardening validation
+add_executable(selective_hardening_test test/neural/selective_hardening_test.cpp)
+target_include_directories(selective_hardening_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME selective_hardening_test COMMAND selective_hardening_test)
+
+# Add executable for fine-tuning module validation
+add_executable(fine_tuning_test test/neural/fine_tuning_test.cpp)
+target_include_directories(fine_tuning_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME fine_tuning_test COMMAND fine_tuning_test)
+
+# Add executable for comprehensive RS error correction testing
+add_executable(rs_comprehensive_test test/neural/rs_comprehensive_test.cpp)
+target_include_directories(rs_comprehensive_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME rs_comprehensive_test COMMAND rs_comprehensive_test)
+
+# Add executable for MultibitProtection RS integration testing
+add_executable(multibit_rs_test test/neural/multibit_rs_test.cpp)
+target_include_directories(multibit_rs_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME multibit_rs_test COMMAND multibit_rs_test)
+
 # Add executable for space-optimized Monte Carlo validation
 add_executable(space_monte_carlo_validation test/verification/space_monte_carlo_validation.cpp)
 target_link_libraries(space_monte_carlo_validation rad_ml_tmr rad_ml_testing)

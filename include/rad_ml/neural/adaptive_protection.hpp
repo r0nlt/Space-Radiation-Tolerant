@@ -611,7 +611,7 @@ class AdaptiveProtection {
         {
             std::lock_guard<std::mutex> lock(hamming_storage_mutex_);
             hamming_encoded_storage_[storage_key] = std::move(encoded);
-        }
+    }
 
         return value;  // Return original value (protection is in storage)
     }
