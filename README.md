@@ -14,21 +14,24 @@
 
 **Email:** spacelabsai@gmail.com
 
-**Version:** v1.0.2.4=5
+**Version:** v1.0.2.5
 
 A C++ software framework for implementing machine learning models that can operate reliably in radiation environments, such as space. This framework is meant to extend fault tolerance to machine learning. RadML is a custom library focused to engineer systems resilient to radiation effects in Space Environments. Currently the framework explores embedded databases using VAE neural network alongside LMDB (Lightning Memory Mapped Database).
+
+> **📖 Complete Technical Documentation**: For the full mathematical foundations, code cross-references, and implementation details, see [`docs/RadML_Complete_Technical.pdf`](docs/RadML_Complete_Technical.pdf) — a comprehensive 65+ page technical manual covering quantum physics models, ECC algorithms, defense-in-depth architecture, and validation methodology.
 
 ## About Space-Radiation-Tolerant
 
 Space-Radiation-Tolerant is a research project by Rishab Nuguru with core principles focused around sustainability in space. RadML was designed to help provide cost efficient solution for COTS processors as AI demand increases.
 
 Status:
-October 5 2025
+December 27 2025
 - Enhanced radiation sim (Dirac+BSE+Green’s), energy/material-aware cascade
 - New verification tests (intensity; cascade) + CTest
 - FAQ with math, mapping, code refs
 - AVX2 mat-vec fix; SIMD condition corrected
 - Thread-safe pool fix (no T::next; defined size_type)
+- Going for AIS Space Force bid
 
 ### Approach
 
@@ -119,6 +122,7 @@ Recent improvements:
   - Diversity collapses to a single protection strategy → increase novelty or sampling of diverse cells.
 
 ### 📚 Documentation Links:
+- **[Complete Technical Manual (PDF)](docs/RadML_Complete_Technical.pdf)** — 65+ page comprehensive documentation with quantum physics, ECC algorithms, and defense-in-depth architecture
 - **[Auto Architecture Search Guide](AUTO_ARCH_SEARCH_GUIDE.md)**
 - **[Scientific Validation Report](autoarchsearchwriteup.md)**
 - **[Genetic Algorithm Architecture](FAQ/GENETICS/Genetic_Algorithm_Architecture.md)**
@@ -939,13 +943,14 @@ The framework introduces several novel scientific and technical advancements:
    - Implements synergy factor modeling for combined radiation/temperature effects
    - Achieved accurate error rate prediction from 10⁻⁶ to 10⁻¹ across 8 radiation environments
 
-2. **Quantum Field Theory Integration**: Our framework incorporates quantum field theory to enhance radiation effect modeling at quantum scales:
-   - Implements quantum tunneling calculations for improved defect mobility predictions
-   - Applies Klein-Gordon equation solutions for more accurate defect propagation modeling
-   - Accounts for zero-point energy contributions at low temperatures
+2. **Advanced Quantum Physics Models**: Our framework incorporates first-principles quantum physics to enhance radiation effect modeling beyond classical empirical models:
+   - **Dirac Equation Solver** (`physics/advanced_quantum_models.hpp`): Relativistic electron behavior in silicon for high-energy particle interactions
+   - **Bethe-Salpeter Equation Solver**: Models electron-hole pair creation and defect clustering—predicts multi-bit upset (MBU) patterns
+   - **Green's Function Propagator**: Tracks charge propagation through the crystal lattice after ion strikes
+   - **Quantum Field Theory Framework** (`physics/quantum_field_theory.hpp`): Discretized field evolution on lattice with Gaussian/coherent state initialization
+   - **Quantum-Enhanced Radiation** (`physics/quantum_enhanced_radiation.hpp`): Bridges QFT to practical SEU calculations including temperature-dependent critical charge and device sensitivity
+   - Automatically applies quantum corrections via `applyQuantumFieldCorrections()` when feature sizes (<20nm) or temperatures (<150K) warrant it
    - Enhances prediction accuracy by up to 22% in extreme conditions (4.2K, 5nm)
-   - Automatically applies quantum corrections only when appropriate thresholds are met
-   - Shows significant accuracy improvements in nanoscale devices (<20nm) and cryogenic environments (<150K)
 
 3. **Multi-Scale Temporal Protection**: Implements protection at multiple timescales simultaneously:
    - Microsecond scale: Individual computation protection (TMR voting)
@@ -986,19 +991,60 @@ This finding challenges the conventional approach of always attempting to correc
 
 These advancements collectively represent a significant step forward in radiation-tolerant computing for space applications, enabling ML systems to operate reliably across the full spectrum of space radiation environments.
 
+## Why RadML Works
+
+RadML's effectiveness comes from the **integration** of physics, protection, and adaptation—not just individual techniques:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Why RadML Works                               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  Physics Models ──────► Protection Selection ──────► ECC/TMR        │
+│  (Weibull, Bendel,       (Adaptive based on         (Hamming, RS,   │
+│   Quantum corrections)    environment + criticality)  Health-TMR)   │
+│         │                        │                        │         │
+│         └────────────────────────┼────────────────────────┘         │
+│                                  │                                   │
+│                          Error Tracking                              │
+│                                  │                                   │
+│                    ┌─────────────┴─────────────┐                    │
+│                    ▼                           ▼                    │
+│            Feedback Loop                Mission Adaptation           │
+│         (Adjust protection              (SAA, Solar events,         │
+│          based on observed errors)       Power constraints)          │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Design Principles:**
+
+1. **Physics-Informed Protection**: Uses real Weibull/Bendel cross-section models with quantum corrections for modern nanoscale devices
+2. **Zero-Overhead Abstractions**: C++ template metaprogramming ensures protection logic is resolved at compile-time, not runtime
+3. **Adaptive Resource Allocation**: Protection scales with radiation intensity—no wasted overhead in benign environments
+4. **Defense-in-Depth**: 10 independent protection layers ensure single-point failures don't compromise the system
+5. **Self-Monitoring**: Framework infers radiation levels from error statistics, eliminating need for dedicated sensors
+
 ## Framework Architecture
 
-### Overall Design
+### Defense-in-Depth Design
 
-Space-Radiation-Tolerant follows a layered architecture designed to provide radiation protection at multiple levels:
+RadML implements a **10-layer defense-in-depth architecture** where each layer catches what the previous might miss:
 
-1. **Memory Layer**: The foundation that ensures data integrity through protected memory regions and continuous scrubbing.
-2. **Redundancy Layer**: Implements various TMR strategies to protect computation through redundant execution and voting.
-3. **Error Correction Layer**: Provides advanced Reed-Solomon ECC capabilities for recovering from complex error patterns.
-4. **Adaptive Layer**: Dynamically adjusts protection strategies based on environment and criticality.
-5. **Application Layer**: Provides radiation-hardened ML components that leverage the protection layers.
+| Layer | Component | Protection Mechanism | Files |
+|-------|-----------|---------------------|-------|
+| 1 | **Physical Memory Placement** | Allocates critical data in shielded regions (10,000× SEU reduction) | `memory/radiation_mapped_allocator.hpp` |
+| 2 | **Memory Scrubbing** | Periodic ECC syndrome verification and correction | `core/memory/memory_scrubber.hpp` |
+| 3 | **Error Correcting Codes** | Hamming(7,4) and Reed-Solomon with Berlekamp-Massey decoder | `neural/galois_field.hpp`, `neural/adaptive_protection.hpp` |
+| 4 | **Basic TMR** | Triple Modular Redundancy with majority voting | `tmr/tmr.hpp` |
+| 5 | **Enhanced TMR** | CRC32 checksums + health-weighted voting | `tmr/enhanced_tmr.hpp`, `tmr/health_weighted_tmr.hpp` |
+| 6 | **Temporal Redundancy** | Time-delayed re-execution to detect transients | `tmr/temporal_redundancy.hpp` |
+| 7 | **Hybrid Redundancy** | Combined spatial + temporal with checkpointing | `tmr/hybrid_redundancy.hpp` |
+| 8 | **Checkpoint Manager** | Periodic state snapshots for rollback recovery | `core/recovery/checkpoint_manager.hpp` |
+| 9 | **Error Tracking** | Real-time statistics for adaptive protection | `core/runtime/error_tracker.hpp` |
+| 10 | **Power-Aware Protection** | Scales protection based on power budget | `power/power_aware_protection.hpp` |
 
-This multi-layered approach allows for defense-in-depth, where each layer provides protection against different radiation effects.
+This multi-layered approach ensures that a single protection failure doesn't compromise the system—each layer provides independent protection against different radiation effects.
 
 ### Memory Management Approach
 
