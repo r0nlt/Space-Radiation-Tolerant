@@ -18,7 +18,6 @@
 #include <rad_ml/physics/quantum_enhanced_radiation.hpp>
 #include <rad_ml/sim/mission_environment.hpp>
 #include <rad_ml/sim/physics_radiation_simulator.hpp>
-#include <rad_ml/storage/ai_native_database.hpp>
 
 namespace rad_ml {
 namespace sim {

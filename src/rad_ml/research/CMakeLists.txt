@@ -13,9 +13,11 @@ set(RAD_ML_RESEARCH_SOURCES
     auto_arch/auto_arch_search.cpp
     radiation_aware_training.cpp
     variational_autoencoder.cpp
-    vae_auto_tuner.cpp
-    # Other source files will be added as they are implemented
 )
+
+if(LMDB_FOUND)
+    list(APPEND RAD_ML_RESEARCH_SOURCES vae_auto_tuner.cpp)
+endif()
 
 # Create research library
 add_library(rad_ml_research ${RAD_ML_RESEARCH_SOURCES})
@@ -26,11 +28,15 @@ target_include_directories(rad_ml_research
         ${CMAKE_SOURCE_DIR}/include
 )
 
-# Link dependencies - remove non-existent dependencies for now
-# to get the build working
+# Link dependencies
 target_link_libraries(rad_ml_research
     PUBLIC
+        Eigen3::Eigen
 )
+
+if(LMDB_FOUND)
+    target_link_libraries(rad_ml_research PUBLIC LMDB::LMDB)
+endif()
 
 # Export library
 install(TARGETS rad_ml_research

@@ -112,13 +112,13 @@ struct MissionStats {
         std::cout << "Anomalies Detected: " << anomalies_detected << std::endl;
         std::cout << "Data Packets Compressed: " << data_packets_compressed << std::endl;
         std::cout << "Average Compression Ratio: "
-                  << (total_compression_ratio / std::max(1ULL, data_packets_compressed)) << ":1"
+                  << (total_compression_ratio / std::max(static_cast<uint64_t>(1), data_packets_compressed)) << ":1"
                   << std::endl;
         std::cout << "Mission Uptime: " << std::fixed << std::setprecision(2)
                   << mission_uptime * 100 << "%" << std::endl;
         std::cout << "Critical Failures: " << critical_failures << std::endl;
         std::cout << "Mission Success Rate: " << std::fixed << std::setprecision(3)
-                  << (double)successful_inferences / std::max(1ULL, total_orbits) * 100 << "%"
+                  << (double)successful_inferences / std::max(static_cast<uint64_t>(1), total_orbits) * 100 << "%"
                   << std::endl;
     }
 };

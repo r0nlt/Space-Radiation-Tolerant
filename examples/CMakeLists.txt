@@ -201,6 +201,7 @@ target_compile_features(large_dataset_compression_test PRIVATE cxx_std_17)
 add_executable(modern_cpp_training_example modern_cpp_training_example.cpp)
 target_link_libraries(modern_cpp_training_example
     PRIVATE
+    Eigen3::Eigen
     ${CMAKE_THREAD_LIBS_INIT}
 )
 
@@ -215,6 +216,7 @@ target_link_libraries(cpu_optimized_training
 add_executable(mnist_training_example mnist_training_example.cpp)
 target_link_libraries(mnist_training_example
     PRIVATE
+    Eigen3::Eigen
     ${CMAKE_THREAD_LIBS_INIT}
 )
 target_compile_features(modern_cpp_training_example PRIVATE cxx_std_17)
@@ -223,6 +225,7 @@ target_compile_options(modern_cpp_training_example PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /O2>
 )
 target_include_directories(modern_cpp_training_example PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(mnist_training_example PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 # Add tests
 add_test(NAME architecture_test_run COMMAND architecture_test)
@@ -237,15 +240,23 @@ add_test(NAME vae_space_mission_test_run COMMAND vae_space_mission_test)
 add_test(NAME vae_validation_test_run COMMAND vae_validation_test)
 add_test(NAME vae_production_example_run COMMAND vae_production_example)
 add_test(NAME vae_comprehensive_test COMMAND vae_comprehensive_test)
-add_test(NAME vae_monte_carlo_tuning_example_run COMMAND vae_monte_carlo_tuning_example)
+if(TARGET vae_monte_carlo_tuning_example)
+    add_test(NAME vae_monte_carlo_tuning_example_run COMMAND vae_monte_carlo_tuning_example)
+endif()
 add_test(NAME quantum_enhanced_radiation_test_run COMMAND quantum_enhanced_radiation_test)
 add_test(NAME compression_validation_test_run COMMAND compression_validation_test)
 add_test(NAME large_dataset_compression_test_run COMMAND large_dataset_compression_test)
 
 # Installation
-install(TARGETS architecture_test residual_network_test auto_arch_search_example adaptive_mutation_test adaptive_mutation_demo radiation_aware_training_example multi_particle_simulation_example vae_example vae_space_mission_test vae_validation_test vae_production_example vae_comprehensive_test vae_monte_carlo_tuning_example quantum_enhanced_radiation_test vae_production_database_example vae_simple_usage_example quick_tuning_test compression_validation_test large_dataset_compression_test modern_cpp_training_example
+install(TARGETS architecture_test residual_network_test auto_arch_search_example adaptive_mutation_test adaptive_mutation_demo radiation_aware_training_example multi_particle_simulation_example vae_example vae_space_mission_test vae_validation_test vae_production_example vae_comprehensive_test quantum_enhanced_radiation_test vae_production_database_example vae_simple_usage_example quick_tuning_test compression_validation_test large_dataset_compression_test modern_cpp_training_example
         DESTINATION bin
         COMPONENT examples)
+
+if(TARGET vae_monte_carlo_tuning_example)
+    install(TARGETS vae_monte_carlo_tuning_example
+            DESTINATION bin
+            COMPONENT examples)
+endif()
 
 # These will be enabled as they are implemented
 # add_subdirectory(fault_injection)

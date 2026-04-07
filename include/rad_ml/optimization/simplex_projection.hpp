@@ -12,6 +12,10 @@
 #include <Eigen/Dense>
 #endif
 
+#include <algorithm>
+#include <utility>
+#include <vector>
+
 namespace rad_ml {
 namespace optimization {
 
@@ -60,6 +64,45 @@ struct SimplexProjection {
         mean /= static_cast<double>(active.size());
         for (int idx : active) g(idx) = g_upstream(idx) - mean;
         return g;
+    }
+
+    // Convenience wrapper for callers using std::vector.
+    static std::vector<double> forward_vector(const std::vector<double> &x)
+    {
+        Eigen::VectorXd x_eig(static_cast<int>(x.size()));
+        for (size_t i = 0; i < x.size(); ++i) {
+            x_eig(static_cast<int>(i)) = x[i];
+        }
+
+        Eigen::VectorXd z_eig = forward(x_eig);
+        std::vector<double> z(static_cast<size_t>(z_eig.size()), 0.0);
+        for (int i = 0; i < z_eig.size(); ++i) {
+            z[static_cast<size_t>(i)] = z_eig(i);
+        }
+        return z;
+    }
+
+    // Convenience wrapper for callers using std::vector.
+    static std::vector<double> backward_vector(const std::vector<double> &x,
+                                               const std::vector<double> &g_upstream)
+    {
+        if (x.size() != g_upstream.size()) {
+            return std::vector<double>(x.size(), 0.0);
+        }
+
+        Eigen::VectorXd x_eig(static_cast<int>(x.size()));
+        Eigen::VectorXd g_eig(static_cast<int>(g_upstream.size()));
+        for (size_t i = 0; i < x.size(); ++i) {
+            x_eig(static_cast<int>(i)) = x[i];
+            g_eig(static_cast<int>(i)) = g_upstream[i];
+        }
+
+        Eigen::VectorXd d_eig = backward(x_eig, g_eig);
+        std::vector<double> d(static_cast<size_t>(d_eig.size()), 0.0);
+        for (int i = 0; i < d_eig.size(); ++i) {
+            d[static_cast<size_t>(i)] = d_eig(i);
+        }
+        return d;
     }
 };
 

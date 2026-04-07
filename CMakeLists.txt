@@ -26,6 +26,7 @@ option(ENABLE_PYTORCH "Enable PyTorch integration" OFF)
 option(ENABLE_OPTIMIZATIONS "Enable aggressive optimizations" ON)
 option(BUILD_BENCHMARKS "Build performance benchmarks" OFF)
 option(ENABLE_PROFILING "Enable profiling and performance monitoring" OFF)
+option(DOWNLOAD_LMDB "Download and build LMDB if not found" ON)
 
 # Set optimized compiler flags
 if(ENABLE_OPTIMIZATIONS)
@@ -82,6 +83,7 @@ find_library(LMDB_LIBRARY
         /opt/homebrew/lib
 )
 
+set(LMDB_FOUND FALSE)
 if(LMDB_INCLUDE_DIR AND LMDB_LIBRARY)
     set(LMDB_FOUND TRUE)
     message(STATUS "Found LMDB: ${LMDB_LIBRARY}")
@@ -94,8 +96,50 @@ if(LMDB_INCLUDE_DIR AND LMDB_LIBRARY)
         INTERFACE_INCLUDE_DIRECTORIES "${LMDB_INCLUDE_DIR}"
     )
 else()
-    set(LMDB_FOUND FALSE)
-    message(WARNING "LMDB not found. AI-native database features will be disabled.")
+    if(DOWNLOAD_LMDB)
+        if(CMAKE_VERSION VERSION_LESS "3.11")
+            message(WARNING "LMDB not found and CMake < 3.11, cannot auto-download LMDB. AI-native database features will be disabled.")
+        else()
+            message(STATUS "LMDB not found. Downloading LMDB source and building static library...")
+            include(FetchContent)
+            FetchContent_Declare(
+                lmdb_src
+                GIT_REPOSITORY https://github.com/LMDB/lmdb.git
+                GIT_TAG LMDB_0.9.31
+                GIT_SHALLOW TRUE
+            )
+            FetchContent_GetProperties(lmdb_src)
+            if(NOT lmdb_src_POPULATED)
+                FetchContent_Populate(lmdb_src)
+            endif()
+
+            set(LMDB_BUNDLED_SOURCE_DIR "${lmdb_src_SOURCE_DIR}/libraries/liblmdb")
+            set(LMDB_BUNDLED_HEADER "${LMDB_BUNDLED_SOURCE_DIR}/lmdb.h")
+            set(LMDB_BUNDLED_MDB "${LMDB_BUNDLED_SOURCE_DIR}/mdb.c")
+            set(LMDB_BUNDLED_MIDL "${LMDB_BUNDLED_SOURCE_DIR}/midl.c")
+
+            if(EXISTS "${LMDB_BUNDLED_HEADER}" AND EXISTS "${LMDB_BUNDLED_MDB}" AND EXISTS "${LMDB_BUNDLED_MIDL}")
+                add_library(lmdb_external STATIC
+                    "${LMDB_BUNDLED_MDB}"
+                    "${LMDB_BUNDLED_MIDL}"
+                )
+                target_include_directories(lmdb_external PUBLIC "${LMDB_BUNDLED_SOURCE_DIR}")
+                target_link_libraries(lmdb_external PUBLIC Threads::Threads)
+                add_library(LMDB::LMDB ALIAS lmdb_external)
+
+                set(LMDB_INCLUDE_DIR "${LMDB_BUNDLED_SOURCE_DIR}")
+                set(LMDB_LIBRARY lmdb_external)
+                set(LMDB_FOUND TRUE)
+                message(STATUS "Using bundled LMDB from: ${LMDB_BUNDLED_SOURCE_DIR}")
+            else()
+                message(WARNING "Failed to prepare bundled LMDB sources. AI-native database features will be disabled.")
+            endif()
+        endif()
+    endif()
+
+    if(NOT LMDB_FOUND)
+        message(WARNING "LMDB not found. AI-native database features will be disabled.")
+    endif()
 endif()
 
 # Find GoogleTest with multiple fallback strategies
@@ -210,35 +254,46 @@ else()
   find_package(Boost REQUIRED COMPONENTS system filesystem)
 endif()
 
-# Setup Eigen includes properly
-if(EIGEN3_INCLUDE_DIR)
-  # Include system Eigen headers with BEFORE to override any local headers
-  include_directories(BEFORE ${EIGEN3_INCLUDE_DIR})
-  message(STATUS "Using Eigen3 from: ${EIGEN3_INCLUDE_DIR}")
-else()
-  # Try to find Eigen3 in common locations
+# Setup Eigen includes robustly for all targets
+set(RADML_EIGEN_INCLUDE_DIR "")
+
+if(TARGET Eigen3::Eigen)
+  get_target_property(_eigen_iface_includes Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+  if(_eigen_iface_includes)
+    list(GET _eigen_iface_includes 0 RADML_EIGEN_INCLUDE_DIR)
+  endif()
+endif()
+
+if(NOT RADML_EIGEN_INCLUDE_DIR AND DEFINED EIGEN3_INCLUDE_DIRS AND EIGEN3_INCLUDE_DIRS)
+  list(GET EIGEN3_INCLUDE_DIRS 0 RADML_EIGEN_INCLUDE_DIR)
+endif()
+
+if(NOT RADML_EIGEN_INCLUDE_DIR AND DEFINED EIGEN3_INCLUDE_DIR AND EIGEN3_INCLUDE_DIR)
+  set(RADML_EIGEN_INCLUDE_DIR "${EIGEN3_INCLUDE_DIR}")
+endif()
+
+if(NOT RADML_EIGEN_INCLUDE_DIR)
   set(EIGEN3_SEARCH_PATHS
     "/usr/local/include/eigen3"
     "/usr/include/eigen3"
     "/opt/local/include/eigen3"
     "/opt/homebrew/include/eigen3"
     "/usr/local/opt/eigen/include/eigen3"
-    "/opt/homebrew/Cellar/eigen/*/include/eigen3"
   )
 
   foreach(SEARCH_PATH ${EIGEN3_SEARCH_PATHS})
     if(EXISTS "${SEARCH_PATH}/Eigen/Core")
-      set(EIGEN3_INCLUDE_DIR "${SEARCH_PATH}")
-      include_directories(BEFORE ${EIGEN3_INCLUDE_DIR})
-      message(STATUS "Found Eigen3 at: ${EIGEN3_INCLUDE_DIR}")
+      set(RADML_EIGEN_INCLUDE_DIR "${SEARCH_PATH}")
       break()
     endif()
   endforeach()
+endif()
 
-  if(NOT EIGEN3_INCLUDE_DIR)
-    message(WARNING "Eigen3 not found in standard locations")
-    message(STATUS "Please install Eigen3 or set EIGEN3_INCLUDE_DIR")
-  endif()
+if(RADML_EIGEN_INCLUDE_DIR)
+  include_directories(BEFORE SYSTEM "${RADML_EIGEN_INCLUDE_DIR}")
+  message(STATUS "Using Eigen3 includes from: ${RADML_EIGEN_INCLUDE_DIR}")
+else()
+  message(FATAL_ERROR "Could not determine Eigen3 include directory. Install Eigen3 and/or set EIGEN3_INCLUDE_DIR.")
 endif()
 
 # Project includes
