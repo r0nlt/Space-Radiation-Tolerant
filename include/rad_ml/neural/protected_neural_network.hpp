@@ -27,15 +27,19 @@
 #include "../core/redundancy/space_enhanced_tmr.hpp"
 #include "multi_bit_protection.hpp"
 
-// Optional optimization-layer projections
+// Optimization-layer projections (required for simplex projection path)
 #ifdef __has_include
 #if __has_include(<eigen3/Eigen/Dense>)
 #include <eigen3/Eigen/Dense>
 #elif __has_include(<Eigen/Dense>)
 #include <Eigen/Dense>
+#else
+#error "Could not find Eigen/Dense"
 #endif
+#else
+#include <Eigen/Dense>
 #endif
-#include <rad_ml/optimization/simplex_projection.hpp>
+#include "../optimization/simplex_projection.hpp"
 
 // SIMD optimizations
 #ifdef __AVX2__
@@ -1741,13 +1745,16 @@ class ProtectedNeuralNetwork : public NetworkModel {
             const std::vector<T>& raw_output = activations.back();
             std::vector<T> projected_output;
             if (use_simplex_projection_ && raw_output.size() > 1) {
-                Eigen::VectorXd x(raw_output.size());
-                for (size_t i = 0; i < raw_output.size(); ++i)
-                    x(static_cast<int>(i)) = raw_output[i];
-                Eigen::VectorXd z = rad_ml::optimization::SimplexProjection::forward(x);
-                projected_output.resize(raw_output.size());
-                for (size_t i = 0; i < raw_output.size(); ++i)
-                    projected_output[i] = static_cast<T>(z(static_cast<int>(i)));
+                std::vector<double> raw_as_double(raw_output.size(), 0.0);
+                for (size_t i = 0; i < raw_output.size(); ++i) {
+                    raw_as_double[i] = static_cast<double>(raw_output[i]);
+                }
+                const std::vector<double> projected =
+                    rad_ml::optimization::SimplexProjection::forward_vector(raw_as_double);
+                projected_output.resize(projected.size(), T{0});
+                for (size_t i = 0; i < projected.size(); ++i) {
+                    projected_output[i] = static_cast<T>(projected[i]);
+                }
             }
 
             std::vector<T> predictions_for_metrics =
@@ -1763,30 +1770,33 @@ class ProtectedNeuralNetwork : public NetworkModel {
 
             // Backward pass
             if (use_simplex_projection_ && raw_output.size() > 1) {
+                std::vector<double> raw_as_double(raw_output.size(), 0.0);
+                for (size_t i = 0; i < raw_output.size(); ++i) {
+                    raw_as_double[i] = static_cast<double>(raw_output[i]);
+                }
+
                 // Compose loss gradient through projection for output layer
-                Eigen::VectorXd a(raw_output.size());
-                for (size_t i = 0; i < raw_output.size(); ++i)
-                    a(static_cast<int>(i)) = raw_output[i];
-                Eigen::VectorXd a_proj(raw_output.size());
+                std::vector<double> a_proj(raw_output.size(), 0.0);
                 if (!projected_output.empty()) {
                     for (size_t i = 0; i < raw_output.size(); ++i)
-                        a_proj(static_cast<int>(i)) = projected_output[i];
+                        a_proj[i] = static_cast<double>(projected_output[i]);
                 }
                 else {
-                    a_proj = rad_ml::optimization::SimplexProjection::forward(a);
+                    a_proj = rad_ml::optimization::SimplexProjection::forward_vector(raw_as_double);
                 }
+
                 // dL/da_proj = (a_proj - y)
-                Eigen::VectorXd g_up(a.size());
-                for (size_t i = 0; i < raw_output.size(); ++i)
-                    g_up(static_cast<int>(i)) =
-                        static_cast<double>(a_proj(static_cast<int>(i)) - batch_targets[sample][i]);
-                Eigen::VectorXd dL_da = rad_ml::optimization::SimplexProjection::backward(a, g_up);
+                std::vector<double> g_up(raw_output.size(), 0.0);
+                for (size_t i = 0; i < raw_output.size(); ++i) {
+                    g_up[i] = a_proj[i] - static_cast<double>(batch_targets[sample][i]);
+                }
+                const std::vector<double> dL_da =
+                    rad_ml::optimization::SimplexProjection::backward_vector(raw_as_double, g_up);
 
                 // Create pseudo-target so that (a - pseudo) = dL/da
                 std::vector<T> adjusted_targets(raw_output.size());
                 for (size_t i = 0; i < raw_output.size(); ++i) {
-                    adjusted_targets[i] =
-                        static_cast<T>(raw_output[i] - dL_da(static_cast<int>(i)));
+                    adjusted_targets[i] = static_cast<T>(raw_output[i] - static_cast<T>(dL_da[i]));
                 }
 
                 backpropagation(activations, z_values, adjusted_targets, weight_gradients,

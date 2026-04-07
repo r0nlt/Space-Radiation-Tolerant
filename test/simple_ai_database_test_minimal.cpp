@@ -1,6 +1,7 @@
 #include <lmdb.h>
 
 #include <chrono>
+#include <cstring>
 #include <filesystem>
 #include <iostream>
 #include <string>

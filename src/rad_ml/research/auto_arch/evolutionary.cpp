@@ -3,6 +3,7 @@
  * @brief Evolutionary (genetic) search implementation for AutoArchSearch
  */
 
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -268,11 +269,7 @@ SearchResult AutoArchSearch::evolutionarySearch(size_t population_size, size_t g
                 if (pos != std::string::npos) {
                     std::string dir = genetics_metrics_file_.substr(0, pos);
                     if (!dir.empty()) {
-// Portable directory creation: use system command via std::system avoided.
-// Instead attempt to create with std::filesystem if available (C++17 optional).
-// Fallback: rely on user having created parent dirs.
 #if __cplusplus >= 201703L
-#include <filesystem>
                         if (!std::filesystem::exists(dir)) {
                             std::error_code ec;
                             std::filesystem::create_directories(dir, ec);

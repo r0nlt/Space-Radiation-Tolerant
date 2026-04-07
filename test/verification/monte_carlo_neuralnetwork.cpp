@@ -21,6 +21,7 @@
 #include <cmath>
 #include <map>
 #include <memory>
+#include <optional>
 #include <tuple>
 
 // Include core components
