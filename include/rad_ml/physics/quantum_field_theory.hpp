@@ -342,11 +342,13 @@ class KleinGordonEquation {
                         ParticleType particle_type = ParticleType::Proton);
 
     /**
-     * Calculate field evolution for one time step
+     * Symplectic (leapfrog) field evolution for one time step.
+     * Uses the conjugate momentum field pi for energy-conserving updates.
+     * On first call, pi is initialized to zero (field at rest).
      *
      * @param field The quantum field to evolve
      */
-    void evolveField(QuantumField<3>& field) const;
+    void evolveField(QuantumField<3>& field);
 
     /**
      * Calculate field propagator
@@ -358,6 +360,12 @@ class KleinGordonEquation {
         double momentum_squared, std::optional<ParticleType> particle_type = std::nullopt) const;
 
     /**
+     * Compute the full Hamiltonian H = ½Σ|π|² + ½Σ|∇φ|²/dx² + ½m²Σ|φ|²
+     * This is the exactly-conserved quantity for the symplectic integrator.
+     */
+    double computeHamiltonian(const QuantumField<3>& field) const;
+
+    /**
      * Get the particle type this equation applies to
      */
     ParticleType getParticleType() const { return particle_type_; }
@@ -365,6 +373,8 @@ class KleinGordonEquation {
    private:
     const QFTParameters& params_;
     ParticleType particle_type_;
+    std::vector<std::complex<double>> pi_field_;
+    bool initialized_ = false;
 };
 
 /**
@@ -420,15 +430,24 @@ class MaxwellEquations {
     MaxwellEquations(const QFTParameters& params);
 
     /**
-     * Calculate field evolution for one time step
-     *
-     * @param electric_field The electric field component
-     * @param magnetic_field The magnetic field component
+     * Symplectic (leapfrog) field evolution for one time step.
+     * Each field evolves as a massless wave equation with velocity
+     * fields stored internally for energy conservation.
      */
-    void evolveField(QuantumField<3>& electric_field, QuantumField<3>& magnetic_field) const;
+    void evolveField(QuantumField<3>& electric_field, QuantumField<3>& magnetic_field);
+
+    /**
+     * Compute the full Hamiltonian H = sum of kinetic + gradient energy
+     * for both E and B fields. This is the exactly-conserved quantity.
+     */
+    double computeHamiltonian(const QuantumField<3>& electric_field,
+                              const QuantumField<3>& magnetic_field) const;
 
    private:
     const QFTParameters& params_;
+    std::vector<std::complex<double>> e_velocity_;
+    std::vector<std::complex<double>> b_velocity_;
+    bool initialized_ = false;
 };
 
 /**

@@ -156,80 +156,55 @@ template <int Dimensions>
 double QuantumField<Dimensions>::calculateTotalEnergy(
     const QFTParameters& params, std::optional<ParticleType> particle_type) const
 {
-    // Use provided particle type or fall back to the field's type
     const ParticleType type = particle_type.value_or(particle_type_);
     const double mass = params.getMass(type);
 
-    double kineticEnergy = 0.0;
-    double potentialEnergy = 0.0;
+    double gradientEnergy = 0.0;
+    double massEnergy = 0.0;
 
-    // Only calculate kinetic term if we have 3D dimensions with suitable size
     if (dimensions_.size() == 3 && dimensions_[0] > 2 && dimensions_[1] > 2 && dimensions_[2] > 2) {
-        // Calculate kinetic term (approximate using finite differences for Laplacian)
-        for (int i = 1; i < dimensions_[0] - 1; i++) {
-            for (int j = 1; j < dimensions_[1] - 1; j++) {
-                for (int k = 1; k < dimensions_[2] - 1; k++) {
-                    std::vector<int> pos = {i, j, k};
-                    std::vector<int> pos_x_plus = {i + 1, j, k};
-                    std::vector<int> pos_x_minus = {i - 1, j, k};
-                    std::vector<int> pos_y_plus = {i, j + 1, k};
-                    std::vector<int> pos_y_minus = {i, j - 1, k};
-                    std::vector<int> pos_z_plus = {i, j, k + 1};
-                    std::vector<int> pos_z_minus = {i, j, k - 1};
+        const double dx = lattice_spacing_;
+        const int Nx = dimensions_[0], Ny = dimensions_[1], Nz = dimensions_[2];
 
-                    // Central difference approximation for Laplacian
-                    std::complex<double> center = getFieldAt(pos);
-                    std::complex<double> x_plus = getFieldAt(pos_x_plus);
-                    std::complex<double> x_minus = getFieldAt(pos_x_minus);
-                    std::complex<double> y_plus = getFieldAt(pos_y_plus);
-                    std::complex<double> y_minus = getFieldAt(pos_y_minus);
-                    std::complex<double> z_plus = getFieldAt(pos_z_plus);
-                    std::complex<double> z_minus = getFieldAt(pos_z_minus);
+        for (int i = 0; i < Nx; i++) {
+            for (int j = 0; j < Ny; j++) {
+                for (int k = 0; k < Nz; k++) {
+                    std::complex<double> center = getFieldAt({i, j, k});
 
-                    // Finite difference approximation of the Laplacian
-                    std::complex<double> laplacian =
-                        (x_plus + x_minus + y_plus + y_minus + z_plus + z_minus - 6.0 * center) /
-                        (lattice_spacing_ * lattice_spacing_);
+                    // Gradient energy: 0.5 * sum_d |phi(x+d) - phi(x)|^2 / dx^2
+                    int ip = (i + 1) % Nx, jp = (j + 1) % Ny, kp = (k + 1) % Nz;
+                    std::complex<double> dx_diff = getFieldAt({ip, j, k}) - center;
+                    std::complex<double> dy_diff = getFieldAt({i, jp, k}) - center;
+                    std::complex<double> dz_diff = getFieldAt({i, j, kp}) - center;
 
-                    // Kinetic energy contribution (approximated)
-                    kineticEnergy += std::norm(laplacian) * 0.5 * params.hbar * params.hbar / mass;
+                    gradientEnergy += 0.5 * (std::norm(dx_diff) + std::norm(dy_diff) + std::norm(dz_diff)) / (dx * dx);
+
+                    // Mass term: 0.5 * m^2 * |phi|^2
+                    massEnergy += 0.5 * mass * mass * std::norm(center);
                 }
             }
         }
     }
-
-    // Calculate potential term (V(φ) = m²φ²/2 for Klein-Gordon)
-    // Recursive function to iterate through multi-dimensional field
-    std::vector<int> position(dimensions_.size(), 0);
-
-    std::function<void(int)> iterate = [&](int dim) {
-        if (dim == dimensions_.size()) {
-            // We've set all dimensions, process this point
-            std::complex<double> value = getFieldAt(position);
-
-            // Klein-Gordon potential (mass term)
-            double amplitude = std::abs(value);
-            potentialEnergy += 0.5 * mass * amplitude * amplitude;
-            return;
-        }
-
-        // Iterate through this dimension
-        for (int i = 0; i < dimensions_[dim]; i++) {
-            position[dim] = i;
-            iterate(dim + 1);
-        }
-    };
-
-    // Start the iteration from dimension 0
-    iterate(0);
-
-    double totalEnergy = kineticEnergy + potentialEnergy;
-
-    // Debug output for energy contributions if significant difference
-    if (kineticEnergy > 0.01 * potentialEnergy || potentialEnergy > 0.01 * kineticEnergy) {
-        std::cout << "Energy components - Kinetic: " << kineticEnergy
-                  << ", Potential: " << potentialEnergy << std::endl;
+    else {
+        // Fallback for non-3D or small fields: mass term only
+        std::vector<int> position(dimensions_.size(), 0);
+        std::function<void(int)> iterate = [&](int dim) {
+            if (dim == (int)dimensions_.size()) {
+                massEnergy += 0.5 * mass * mass * std::norm(getFieldAt(position));
+                return;
+            }
+            for (int i = 0; i < dimensions_[dim]; i++) {
+                position[dim] = i;
+                iterate(dim + 1);
+            }
+        };
+        iterate(0);
     }
+
+    double totalEnergy = gradientEnergy + massEnergy;
+
+    std::cout << "Energy components - Gradient: " << gradientEnergy
+              << ", Mass: " << massEnergy << std::endl;
 
     return totalEnergy;
 }
@@ -382,59 +357,84 @@ KleinGordonEquation::KleinGordonEquation(const QFTParameters& params, ParticleTy
     // Simple implementation to satisfy the compiler
 }
 
-void KleinGordonEquation::evolveField(QuantumField<3>& field) const
+void KleinGordonEquation::evolveField(QuantumField<3>& field)
 {
-    // Check if field particle type matches equation particle type
     if (field.getParticleType() != particle_type_) {
         throw std::invalid_argument("Particle type mismatch in KleinGordonEquation::evolveField");
     }
 
-    // Debug output to verify execution
     std::cout << "KleinGordon: Starting field evolution for particle type "
               << static_cast<int>(particle_type_) << "..." << std::endl;
 
-    // Get dimensions from the field itself, not hardcoded
-    const auto& dimensions = field.getDimensions();
+    const auto& dims = field.getDimensions();
+    const size_t Nx = dims[0], Ny = dims[1], Nz = dims[2];
+    const size_t N = Nx * Ny * Nz;
 
-    // Recursive function to iterate through multi-dimensional field
-    std::vector<int> position(3, 0);  // For 3D fields
+    if (!initialized_) {
+        pi_field_.assign(N, {0.0, 0.0});
+        initialized_ = true;
+    }
 
-    std::function<void(int)> iterate = [&](int dim) {
-        if (dim == 3) {  // For 3D fields
-            // We've set all dimensions, process this point
-            std::complex<double> current_value = field.getFieldAt(position);
+    const double dt = params_.time_step;
+    const double dx = params_.lattice_spacing;
+    const double dx2 = dx * dx;
+    const double mass = params_.getMass(particle_type_);
+    const double m2 = mass * mass;
 
-            // Calculate a new value with configurable oscillation
-            double amplitude = std::abs(current_value);
-            // Use phase_evolution_rate instead of hardcoded 0.1
-            double phase =
-                std::arg(current_value) + params_.time_step * params_.phase_evolution_rate;
+    // Symplectic leapfrog (Stormer-Verlet):
+    //   pi(t+dt/2) = pi(t) + (dt/2) * [Laplacian(phi) - m^2 * phi]
+    //   phi(t+dt)  = phi(t) + dt * pi(t+dt/2)
+    //   pi(t+dt)   = pi(t+dt/2) + (dt/2) * [Laplacian(phi_new) - m^2 * phi_new]
 
-            // Apply position-dependent factor with configurable amplitude
-            double position_factor = 1.0 + params_.position_factor_amplitude *
-                                               sin(position[0] + position[1] + position[2]);
-
-            // Add energy dissipation with configurable damping
-            double dissipation_factor = 1.0 - params_.damping_factor * params_.time_step;
-
-            // Create new field value with dissipation
-            std::complex<double> new_value = amplitude * position_factor * dissipation_factor *
-                                             std::complex<double>(cos(phase), sin(phase));
-
-            // Set the new field value
-            field.setFieldAt(position, new_value);
-            return;
-        }
-
-        // Iterate through this dimension
-        for (int i = 0; i < dimensions[dim]; i++) {
-            position[dim] = i;
-            iterate(dim + 1);
-        }
+    auto idx = [&](int i, int j, int k) -> size_t {
+        return static_cast<size_t>(i) * Ny * Nz + static_cast<size_t>(j) * Nz + static_cast<size_t>(k);
     };
 
-    // Start the iteration from dimension 0
-    iterate(0);
+    // Helper to compute Laplacian at (i,j,k) with periodic boundary conditions
+    auto laplacian_at = [&](int i, int j, int k) -> std::complex<double> {
+        int ip = (i + 1) % (int)Nx, im = (i - 1 + (int)Nx) % (int)Nx;
+        int jp = (j + 1) % (int)Ny, jm = (j - 1 + (int)Ny) % (int)Ny;
+        int kp = (k + 1) % (int)Nz, km = (k - 1 + (int)Nz) % (int)Nz;
+
+        std::complex<double> center = field.getFieldAt({i, j, k});
+        return (field.getFieldAt({ip, j, k}) + field.getFieldAt({im, j, k})
+              + field.getFieldAt({i, jp, k}) + field.getFieldAt({i, jm, k})
+              + field.getFieldAt({i, j, kp}) + field.getFieldAt({i, j, km})
+              - 6.0 * center) / dx2;
+    };
+
+    // Step 1: half-kick pi
+    for (int i = 0; i < (int)Nx; i++) {
+        for (int j = 0; j < (int)Ny; j++) {
+            for (int k = 0; k < (int)Nz; k++) {
+                std::complex<double> phi = field.getFieldAt({i, j, k});
+                std::complex<double> lap = laplacian_at(i, j, k);
+                pi_field_[idx(i,j,k)] += 0.5 * dt * (lap - m2 * phi);
+            }
+        }
+    }
+
+    // Step 2: full drift phi
+    for (int i = 0; i < (int)Nx; i++) {
+        for (int j = 0; j < (int)Ny; j++) {
+            for (int k = 0; k < (int)Nz; k++) {
+                std::complex<double> phi = field.getFieldAt({i, j, k});
+                phi += dt * pi_field_[idx(i,j,k)];
+                field.setFieldAt({i, j, k}, phi);
+            }
+        }
+    }
+
+    // Step 3: half-kick pi (with updated phi)
+    for (int i = 0; i < (int)Nx; i++) {
+        for (int j = 0; j < (int)Ny; j++) {
+            for (int k = 0; k < (int)Nz; k++) {
+                std::complex<double> phi = field.getFieldAt({i, j, k});
+                std::complex<double> lap = laplacian_at(i, j, k);
+                pi_field_[idx(i,j,k)] += 0.5 * dt * (lap - m2 * phi);
+            }
+        }
+    }
 
     std::cout << "KleinGordon: Field evolution step complete." << std::endl;
 }
@@ -452,6 +452,47 @@ Eigen::MatrixXcd KleinGordonEquation::calculatePropagator(
     Eigen::MatrixXcd result(1, 1);
     result(0, 0) = std::complex<double>(1.0, 0.0);
     return result;
+}
+
+double KleinGordonEquation::computeHamiltonian(const QuantumField<3>& field) const
+{
+    const auto& dims = field.getDimensions();
+    const int Nx = dims[0], Ny = dims[1], Nz = dims[2];
+    const double dx = params_.lattice_spacing;
+    const double mass = params_.getMass(particle_type_);
+    const double m2 = mass * mass;
+
+    double kinetic = 0.0;
+    double gradient = 0.0;
+    double massTerm = 0.0;
+
+    for (int i = 0; i < Nx; i++) {
+        for (int j = 0; j < Ny; j++) {
+            for (int k = 0; k < Nz; k++) {
+                size_t idx = static_cast<size_t>(i) * Ny * Nz
+                           + static_cast<size_t>(j) * Nz
+                           + static_cast<size_t>(k);
+
+                // Kinetic: ½|π|²
+                if (initialized_ && idx < pi_field_.size()) {
+                    kinetic += 0.5 * std::norm(pi_field_[idx]);
+                }
+
+                std::complex<double> center = field.getFieldAt({i, j, k});
+
+                // Gradient: ½|∇φ|² via forward differences (periodic BC)
+                int ip = (i + 1) % Nx, jp = (j + 1) % Ny, kp = (k + 1) % Nz;
+                gradient += 0.5 * (std::norm(field.getFieldAt({ip, j, k}) - center)
+                                 + std::norm(field.getFieldAt({i, jp, k}) - center)
+                                 + std::norm(field.getFieldAt({i, j, kp}) - center)) / (dx * dx);
+
+                // Mass: ½m²|φ|²
+                massTerm += 0.5 * m2 * std::norm(center);
+            }
+        }
+    }
+
+    return kinetic + gradient + massTerm;
 }
 
 // Implementation of DiracEquation methods
@@ -494,57 +535,114 @@ MaxwellEquations::MaxwellEquations(const QFTParameters& params) : params_(params
 }
 
 void MaxwellEquations::evolveField(QuantumField<3>& electric_field,
-                                   QuantumField<3>& magnetic_field) const
+                                   QuantumField<3>& magnetic_field)
 {
-    // Check that we're working with photon fields
     if (electric_field.getParticleType() != ParticleType::Photon ||
         magnetic_field.getParticleType() != ParticleType::Photon) {
         throw std::invalid_argument("Non-photon field provided to MaxwellEquations");
     }
 
-    // Debug output
     std::cout << "Maxwell: Starting electromagnetic field evolution..." << std::endl;
 
-    // Get dimensions from the field
     const auto& dims = electric_field.getDimensions();
+    const int Nx = dims[0], Ny = dims[1], Nz = dims[2];
+    const size_t N = static_cast<size_t>(Nx) * Ny * Nz;
 
-    // Get coupling constant from parameters
-    double coupling = params_.getCouplingConstant(ParticleType::Photon);
-
-    // For safety, ensure coupling is between 0 and 1
-    coupling = std::min(std::max(coupling, 0.0), 1.0);
-
-    // Add actual field evolution with oscillatory behavior and energy dissipation
-    for (int i = 0; i < dims[0]; i++) {
-        for (int j = 0; j < dims[1]; j++) {
-            for (int k = 0; k < dims[2]; k++) {
-                // Get the current field values at this position
-                std::vector<int> pos = {i, j, k};
-                std::complex<double> e_value = electric_field.getFieldAt(pos);
-                std::complex<double> b_value = magnetic_field.getFieldAt(pos);
-
-                // Use coupling parameter instead of hardcoded 0.95/0.05
-                std::complex<double> new_e = e_value * (1.0 - coupling) + b_value * coupling;
-                std::complex<double> new_b = b_value * (1.0 - coupling) + e_value * coupling;
-
-                // Position-dependent oscillation with configurable amplitude
-                double x_factor = sin(0.1 * i);
-                double y_factor = cos(0.1 * j);
-                double z_factor = sin(0.1 * k);
-                double space_factor =
-                    1.0 + params_.position_factor_amplitude * (x_factor + y_factor + z_factor);
-
-                // Add energy dissipation with configurable damping
-                double dissipation_factor = 1.0 - params_.damping_factor * params_.time_step;
-
-                // Set the new field values with dissipation
-                electric_field.setFieldAt(pos, new_e * space_factor * dissipation_factor);
-                magnetic_field.setFieldAt(pos, new_b * space_factor * dissipation_factor);
-            }
-        }
+    if (!initialized_) {
+        e_velocity_.assign(N, {0.0, 0.0});
+        b_velocity_.assign(N, {0.0, 0.0});
+        initialized_ = true;
     }
 
+    const double dt = params_.time_step;
+    const double dx = params_.lattice_spacing;
+
+    // Symplectic leapfrog for the massless wave equation ∂²φ/∂t² = c²∇²φ (c=1):
+    //   v += dt/2 * Lap(φ)
+    //   φ += dt * v
+    //   v += dt/2 * Lap(φ_new)
+
+    auto idx = [&](int i, int j, int k) -> size_t {
+        return static_cast<size_t>(i) * Ny * Nz + static_cast<size_t>(j) * Nz + static_cast<size_t>(k);
+    };
+
+    auto lap = [&](QuantumField<3>& f, int i, int j, int k) -> std::complex<double> {
+        int ip = (i+1)%Nx, im = (i-1+Nx)%Nx;
+        int jp = (j+1)%Ny, jm = (j-1+Ny)%Ny;
+        int kp = (k+1)%Nz, km = (k-1+Nz)%Nz;
+        std::complex<double> center = f.getFieldAt({i, j, k});
+        return (f.getFieldAt({ip,j,k}) + f.getFieldAt({im,j,k})
+              + f.getFieldAt({i,jp,k}) + f.getFieldAt({i,jm,k})
+              + f.getFieldAt({i,j,kp}) + f.getFieldAt({i,j,km})
+              - 6.0 * center) / (dx * dx);
+    };
+
+    // Evolve both fields with the same symplectic integrator
+    auto evolve_one = [&](QuantumField<3>& field, std::vector<std::complex<double>>& vel) {
+        // Half-kick velocity
+        for (int i = 0; i < Nx; i++)
+            for (int j = 0; j < Ny; j++)
+                for (int k = 0; k < Nz; k++)
+                    vel[idx(i,j,k)] += 0.5 * dt * lap(field, i, j, k);
+
+        // Full drift field
+        for (int i = 0; i < Nx; i++)
+            for (int j = 0; j < Ny; j++)
+                for (int k = 0; k < Nz; k++) {
+                    auto phi = field.getFieldAt({i, j, k});
+                    field.setFieldAt({i, j, k}, phi + dt * vel[idx(i,j,k)]);
+                }
+
+        // Half-kick velocity with updated field
+        for (int i = 0; i < Nx; i++)
+            for (int j = 0; j < Ny; j++)
+                for (int k = 0; k < Nz; k++)
+                    vel[idx(i,j,k)] += 0.5 * dt * lap(field, i, j, k);
+    };
+
+    evolve_one(electric_field, e_velocity_);
+    evolve_one(magnetic_field, b_velocity_);
+
     std::cout << "Maxwell: Field evolution step complete." << std::endl;
+}
+
+double MaxwellEquations::computeHamiltonian(const QuantumField<3>& electric_field,
+                                            const QuantumField<3>& magnetic_field) const
+{
+    const auto& dims = electric_field.getDimensions();
+    const int Nx = dims[0], Ny = dims[1], Nz = dims[2];
+    const double dx = params_.lattice_spacing;
+
+    double energy = 0.0;
+
+    auto field_energy = [&](const QuantumField<3>& f,
+                            const std::vector<std::complex<double>>& vel) {
+        double kinetic = 0.0, grad = 0.0;
+        for (int i = 0; i < Nx; i++) {
+            for (int j = 0; j < Ny; j++) {
+                for (int k = 0; k < Nz; k++) {
+                    size_t id = static_cast<size_t>(i) * Ny * Nz
+                              + static_cast<size_t>(j) * Nz
+                              + static_cast<size_t>(k);
+
+                    kinetic += 0.5 * std::norm(vel[id]);
+
+                    std::complex<double> center = f.getFieldAt({i, j, k});
+                    int ip = (i+1)%Nx, jp = (j+1)%Ny, kp = (k+1)%Nz;
+                    grad += 0.5 * (std::norm(f.getFieldAt({ip,j,k}) - center)
+                                 + std::norm(f.getFieldAt({i,jp,k}) - center)
+                                 + std::norm(f.getFieldAt({i,j,kp}) - center)) / (dx * dx);
+                }
+            }
+        }
+        return kinetic + grad;
+    };
+
+    if (initialized_) {
+        energy = field_energy(electric_field, e_velocity_)
+               + field_energy(magnetic_field, b_velocity_);
+    }
+    return energy;
 }
 
 // Implementation of utility functions
