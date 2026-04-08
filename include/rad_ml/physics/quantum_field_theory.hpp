@@ -261,14 +261,46 @@ class QuantumField {
     RealMatrix calculateCorrelationFunction(int max_distance) const;
 
     /**
-     * Get field value at position
+     * Get field value at multi-dimensional position (bounds-checked).
      */
     std::complex<double> getFieldAt(const std::vector<int>& position) const;
 
     /**
-     * Set field value at position
+     * Set field value at multi-dimensional position (bounds-checked).
      */
     void setFieldAt(const std::vector<int>& position, const std::complex<double>& value);
+
+    /**
+     * Direct flat-index access (no allocation, no bounds check). Use in hot loops.
+     */
+    const std::complex<double>& operator[](size_t flat_index) const { return field_data_[flat_index]; }
+    std::complex<double>& operator[](size_t flat_index) { return field_data_[flat_index]; }
+
+    /**
+     * Convert (i,j,k) to flat index for a 3D field. No bounds check.
+     */
+    size_t flatIndex(int i, int j, int k) const {
+        return static_cast<size_t>(i) * dimensions_[1] * dimensions_[2]
+             + static_cast<size_t>(j) * dimensions_[2]
+             + static_cast<size_t>(k);
+    }
+
+    /**
+     * Total number of lattice sites.
+     */
+    size_t size() const { return field_data_.size(); }
+
+    /**
+     * Compute the discrete Laplacian at (i,j,k) with periodic BC.
+     * Returns (sum of 6 neighbors - 6*center) / dx^2.
+     */
+    std::complex<double> laplacian3D(int i, int j, int k) const;
+
+    /**
+     * Compute the gradient energy density 0.5 * sum_d |phi(x+d)-phi(x)|^2 / dx^2
+     * at site (i,j,k) using forward differences with periodic BC.
+     */
+    double gradientEnergyDensity(int i, int j, int k) const;
 
     /**
      * Get the particle type of this field
@@ -284,6 +316,8 @@ class QuantumField {
      * Get the dimensions of this field
      */
     const std::vector<int>& getDimensions() const { return dimensions_; }
+
+    double getLatticeSpacing() const { return lattice_spacing_; }
 
     /**
      * @brief Optimized quantum field computation
