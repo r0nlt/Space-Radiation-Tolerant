@@ -1,150 +1,163 @@
-# Radiation Tolerant ML - Student Guide
+# Radiation Tolerant ML - Student / Contributor Build Guide
 
-This guide provides simple instructions for building and testing the Radiation Tolerant ML framework. The provided scripts and commands are designed to make the development process easier for students.
+This guide provides straightforward instructions for building and testing the RadML framework from source.
 
 ## Version Information
 
-The current version is **v0.9.7**, which includes enhanced auto architecture search functionality for finding optimal neural network configurations for radiation environments.
+Current version: **v1.0.2.5** — includes Reed-Solomon ECC, 8 TMR variants, physics-based radiation models, VAE compression, and evolutionary architecture search.
 
-## Installation
+## Prerequisites
 
-Before you can build and run the code, you need to install some dependencies:
+| Dependency | Required | Install |
+|------------|----------|---------|
+| **CMake** 3.10+ | Yes | `sudo apt install cmake` / `brew install cmake` |
+| **C++17 compiler** (GCC 7+, Clang 5+, MSVC 2017+) | Yes | System default |
+| **Eigen3** | Yes | `sudo apt install libeigen3-dev` / `brew install eigen` |
+| **LMDB** | Optional (auto-downloaded if missing) | `sudo apt install liblmdb-dev` / `brew install lmdb` |
+| **GoogleTest** | Optional (auto-downloaded if missing) | `sudo apt install libgtest-dev` / `brew install googletest` |
+| **PyTorch/LibTorch** | Optional | See [pytorch.org](https://pytorch.org/get-started/locally/) |
 
+Or run the helper script:
 ```bash
 ./tools/install_dependencies.sh
 ```
 
-This script will detect your operating system and install the required dependencies (CMake, Eigen3, Boost, and Google Test).
-
-## Quick Start
-
-1. **Build everything**:
-   ```bash
-   make -f Makefile.simple build
-   ```
-
-2. **Run all tests**:
-   ```bash
-   make -f Makefile.simple test
-   ```
-
-3. **Run all examples**:
-   ```bash
-   make -f Makefile.simple examples
-   ```
-
-4. **Clean build artifacts**:
-   ```bash
-   make -f Makefile.simple clean
-   ```
-
-## Available Commands
-
-The simplified build system provides the following commands:
-
-| Command | Description |
-|---------|-------------|
-| `make -f Makefile.simple` | Build all components (same as `make -f Makefile.simple build`) |
-| `make -f Makefile.simple build` | Build all components |
-| `make -f Makefile.simple test` | Run all tests |
-| `make -f Makefile.simple examples` | Run all examples |
-| `make -f Makefile.simple clean` | Clean build artifacts |
-| `make -f Makefile.simple help` | Show help information |
-
-## Running Individual Tests
-
-To run a specific test, use:
-```bash
-make -f Makefile.simple test-NAME
-```
-
-For example:
-```bash
-make -f Makefile.simple test-monte_carlo_validation
-```
-
-## Running Individual Examples
-
-To run a specific example, use:
-```bash
-make -f Makefile.simple example-NAME
-```
-
-For example:
-```bash
-make -f Makefile.simple example-quantum_field_example
-```
-
-## Available Tests
-
-These are the main tests available in the framework:
-
-- `monte_carlo_validation`
-- `space_monte_carlo_validation`
-- `realistic_space_validation`
-- `framework_verification_test`
-- `enhanced_tmr_test`
-- `scientific_validation_test`
-- `radiation_stress_test`
-- `systematic_fault_test`
-- `modern_features_test`
-- `quantum_field_validation_test`
-- `neural_network_validation`
-- `monte_carlo_neuralnetwork`
-
-## Available Examples
-
-These are the main examples available in the framework:
-
-- `quantum_field_example`
-- `architecture_test`
-- `auto_arch_search_example` (New in v0.9.7 - Test the auto architecture search enhancement)
-- `residual_network_test`
-- `simple_nn`
-- `mission_simulator`
-
-## New in v0.9.7: Auto Architecture Search
-
-The v0.9.7 release adds a powerful auto architecture search capability that helps find optimal neural network architectures for specific radiation environments. To run this feature:
+## Quick Start (Out-of-Source Build)
 
 ```bash
-make -f Makefile.simple example-auto_arch_search_example
+# 1. Clone and enter the repo
+git clone https://github.com/r0nlt/Space-Radiation-Tolerant.git
+cd Space-Radiation-Tolerant
+
+# 2. Configure (out-of-source)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+# 3. Build (use number of cores available)
+cmake --build build -j$(nproc)    # Linux
+cmake --build build -j$(sysctl -n hw.ncpu)  # macOS
+cmake --build build -j4           # or just pick a number
+
+# 4. Run all tests
+cd build && ctest --output-on-failure
 ```
 
-This will demonstrate:
-- Finding optimal neural network configurations for radiation tolerance
-- Monte Carlo testing of architectures with various parameters
-- Performance comparison between different neural network designs
-- Analysis of how architecture impacts radiation tolerance
+That's it. If the build succeeds and tests pass, you're good.
 
-The results will be saved to CSV files for further analysis.
+## Build Configurations
 
-## Manual Commands
+### Minimal (core framework only, no PyTorch)
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_PYTORCH=OFF
+cmake --build build -j$(nproc)
+```
 
-If you prefer to use the scripts directly, you can use:
+### Full (with PyTorch integration)
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_PYTORCH=ON -DBUILD_TESTING=ON
+cmake --build build -j$(nproc)
+```
 
-- Install dependencies: `./tools/install_dependencies.sh`
-- Build everything: `./tools/build_all.sh`
-- Run all tests: `./tools/run_tests.sh`
-- Run specific test: `./tools/run_tests.sh TEST_NAME`
-- Clean up: `./tools/clean.sh`
+### CMake Options
 
-## Project Structure
+| Option | Default | Description |
+|--------|---------|-------------|
+| `CMAKE_BUILD_TYPE` | — | `Release` (optimized) or `Debug` (symbols) |
+| `ENABLE_PYTORCH` | OFF | Enable PyTorch/LibTorch integration |
+| `BUILD_TESTING` | ON | Build the test suite |
+| `DOWNLOAD_LMDB` | ON | Auto-download LMDB if not found |
 
-Here's a brief overview of the project structure:
+## Running Tests
 
-- `src/` - Source code for the core libraries
-- `include/` - Header files
-- `examples/` - Example applications
-- `test/` - Test files
-- `tools/` - Helper scripts and tools
-- `build/` - Build directory (created during build)
+```bash
+# Run all tests
+cd build && ctest --output-on-failure
+
+# Run a specific test by name
+ctest -R monte_carlo_validation --output-on-failure
+
+# List all available tests
+ctest -N
+```
+
+### Key Tests
+
+| Test | What it validates | Runtime |
+|------|-------------------|---------|
+| `monte_carlo_validation` | Statistical protection across 8 environments | ~3 min |
+| `monte_carlo_neuralnetwork` | Neural network under radiation | ~3 min |
+| `enhanced_tmr_test` | TMR variants and voting | seconds |
+| `framework_verification_test` | Core framework integrity | seconds |
+| `scientific_validation_test` | Physics model accuracy | seconds |
+
+## Running Examples
+
+After building, example binaries are in `build/examples/` (or `build/` depending on CMake):
+
+```bash
+ ctest -R monte_carlo_validation -V
+```
 
 ## Troubleshooting
 
-- If you encounter build errors, try running `make -f Makefile.simple clean` followed by `make -f Makefile.simple build`.
-- Make sure you have all required dependencies installed (run `./tools/install_dependencies.sh`).
-- If a test is failing, check the output for error messages and report them to your instructor.
-- On macOS, you might need to install Xcode command-line tools: `xcode-select --install`
+### Eigen3 not found
+```
+Could not find Eigen3
+```
+Install it, or point CMake to it:
+```bash
+cmake -S . -B build -DEigen3_DIR=/usr/lib/cmake/eigen3
+# or
+cmake -S . -B build -DEIGEN3_INCLUDE_DIR=/usr/include/eigen3
+```
 
-For any other issues, refer to the complete documentation or contact your instructor. 
+### LMDB not found
+The build system will auto-download LMDB via FetchContent if `DOWNLOAD_LMDB=ON` (the default). If that fails:
+```bash
+sudo apt install liblmdb-dev   # Ubuntu/Debian
+brew install lmdb              # macOS
+```
+
+### PyTorch not found (when `ENABLE_PYTORCH=ON`)
+```bash
+export PyTorch_ROOT=/path/to/libtorch
+cmake -S . -B build -DENABLE_PYTORCH=ON
+```
+
+### Clean rebuild
+```bash
+rm -rf build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+```
+
+## Project Structure
+
+```
+Space-Radiation-Tolerant/
+├── include/rad_ml/       # Headers (the library API)
+│   ├── neural/           # Neural network protection, ECC, Galois field
+│   ├── tmr/              # 8 TMR variants + adaptive protection
+│   ├── physics/          # Weibull, Bendel, SAA, transport models
+│   ├── research/         # VAE, evolutionary search
+│   └── ...
+├── src/rad_ml/           # Implementation files
+├── test/                 # Test suite
+│   └── verification/     # Monte Carlo validation tests
+├── examples/             # Example applications
+├── tools/                # Helper scripts
+├── RadML_Manualv2.tex    # Technical manual (LaTeX)
+└── CMakeLists.txt        # Root build configuration
+```
+
+## Documentation
+
+- **Technical Manual**: `RadML_Manualv2.pdf` (compile from `.tex` with `pdflatex`)
+- **Auto Arch Search**: `AUTO_ARCH_SEARCH_GUIDE.md`
+- **VAE Guide**: `VAE_TUNING_GUIDE.md`
+- **FAQ directory**: Various topic-specific guides
+
+## Contact
+
+- **Author**: Rishab Nuguru
+- **Email**: spacelabsai@gmail.com
+- **GitHub**: https://github.com/r0nlt/Space-Radiation-Tolerant

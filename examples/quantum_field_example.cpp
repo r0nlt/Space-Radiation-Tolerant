@@ -73,76 +73,108 @@ int main()
         }
     }
 
-    // Initialize a quantum field for Klein-Gordon equation
-    std::vector<int> grid_dimensions = {32, 32, 32};
-    QuantumField<3> scalar_field(grid_dimensions, qft_params.lattice_spacing, particle_type);
+    // --- Klein-Gordon lattice simulation ---
+    // Use dimensionless lattice units for a well-posed PDE simulation:
+    //   dx = 1.0 (lattice units), dt = 0.1 (CFL-stable for leapfrog)
+    //   m = 0.1  (dimensionless mass, gives Compton wavelength ~ 10 sites)
+    QFTParameters kg_params;
+    kg_params.lattice_spacing = 1.0;
+    kg_params.time_step = 0.1;
+    kg_params.masses[ParticleType::Proton] = 0.1;
+    kg_params.hbar = 1.0;
+    kg_params.dimensions = 3;
+
+    std::vector<int> grid_dimensions = {16, 16, 16};
+    QuantumField<3> scalar_field(grid_dimensions, kg_params.lattice_spacing, particle_type);
     scalar_field.initializeGaussian(0.0, 0.1);
 
-    // Record initial energy for conservation check
-    double initial_energy = scalar_field.calculateTotalEnergy(qft_params);
-    std::cout << "\nInitial field energy: " << initial_energy << std::endl;
+    KleinGordonEquation kg_equation(kg_params, particle_type);
 
-    // Create a Klein-Gordon equation solver
-    KleinGordonEquation kg_equation(qft_params, particle_type);
+    // First evolve step initializes pi, then we can compute full Hamiltonian
+    kg_equation.evolveField(scalar_field);
+    double initial_H = kg_equation.computeHamiltonian(scalar_field);
 
-    // Evolve the field for 100 steps
-    std::cout << "\nEvolving Klein-Gordon field..." << std::endl;
-    for (int step = 0; step < 100; step++) {
+    std::cout << "\n=== Klein-Gordon Field Simulation ===" << std::endl;
+    std::cout << "Grid: 16x16x16, dx=1.0, dt=0.1, m=0.1" << std::endl;
+    std::cout << "Initial Hamiltonian: " << initial_H << std::endl;
+
+    const int kg_steps = 200;
+    std::cout << "\nEvolving Klein-Gordon field for " << kg_steps << " steps..." << std::endl;
+    for (int step = 1; step <= kg_steps; step++) {
         kg_equation.evolveField(scalar_field);
 
-        // Calculate and print the total energy every 10 steps
-        if (step % 10 == 0) {
-            double energy = scalar_field.calculateTotalEnergy(qft_params);
-            std::cout << "Step " << step << ": Total energy = " << energy << std::endl;
+        if (step % 20 == 0) {
+            double H = kg_equation.computeHamiltonian(scalar_field);
+            double drift = (initial_H > 0)
+                ? (H - initial_H) / initial_H * 100.0
+                : 0.0;
+            std::cout << "Step " << step << ": H = " << H
+                      << " (drift: " << drift << "%)" << std::endl;
         }
     }
 
-    // Check energy conservation
-    double final_energy = scalar_field.calculateTotalEnergy(qft_params);
-    std::cout << "Energy conservation check: "
-              << (std::abs(final_energy - initial_energy) /
-                  (initial_energy > 0 ? initial_energy : 1.0)) *
-                     100.0
-              << "% change" << std::endl;
+    double final_H = kg_equation.computeHamiltonian(scalar_field);
+    double kg_drift = (initial_H > 0)
+        ? std::abs(final_H - initial_H) / initial_H * 100.0
+        : 0.0;
+    std::cout << "\nKlein-Gordon energy conservation: " << kg_drift << "% drift over "
+              << kg_steps << " steps" << std::endl;
+    std::cout << (kg_drift < 1.0 ? "PASS" : (kg_drift < 10.0 ? "MARGINAL" : "FAIL"))
+              << ": energy conservation" << std::endl;
 
-    // Initialize quantum fields for electromagnetic simulation with photon particle type
-    QuantumField<3> electric_field(grid_dimensions, qft_params.lattice_spacing,
+    // --- Maxwell FDTD simulation ---
+    // Same lattice units; CFL for Maxwell: dt < dx/sqrt(3) ≈ 0.577
+    QFTParameters em_params;
+    em_params.lattice_spacing = 1.0;
+    em_params.time_step = 0.1;
+    em_params.masses[ParticleType::Photon] = 1.0e-36;
+    em_params.coupling_constants[ParticleType::Photon] = 0.1;
+    em_params.hbar = 1.0;
+    em_params.dimensions = 3;
+
+    QuantumField<3> electric_field(grid_dimensions, em_params.lattice_spacing,
                                    ParticleType::Photon);
-    QuantumField<3> magnetic_field(grid_dimensions, qft_params.lattice_spacing,
+    QuantumField<3> magnetic_field(grid_dimensions, em_params.lattice_spacing,
                                    ParticleType::Photon);
 
-    // Initialize with a plane wave
-    electric_field.initializeCoherentState(1.0, 0.0);
-    magnetic_field.initializeCoherentState(1.0, 1.57);  // π/2 phase shift
+    electric_field.initializeGaussian(0.0, 0.1);
+    magnetic_field.initializeGaussian(0.0, 0.0);
 
-    // Record initial EM field energy
-    double initial_em_energy = electric_field.calculateTotalEnergy(qft_params) +
-                               magnetic_field.calculateTotalEnergy(qft_params);
+    MaxwellEquations maxwell_equations(em_params);
 
-    // Create Maxwell equations solver
-    MaxwellEquations maxwell_equations(qft_params);
+    // First step initializes velocities, then compute full Hamiltonian
+    maxwell_equations.evolveField(electric_field, magnetic_field);
+    double initial_em_H = maxwell_equations.computeHamiltonian(electric_field, magnetic_field);
 
-    // Evolve the electromagnetic field for 100 steps
-    std::cout << "\nEvolving electromagnetic field..." << std::endl;
-    for (int step = 0; step < 100; step++) {
+    const int em_steps = 200;
+    std::cout << "\n=== Maxwell Electromagnetic Simulation ===" << std::endl;
+    std::cout << "Grid: 16x16x16, dx=1.0, dt=0.1" << std::endl;
+    std::cout << "Initial EM Hamiltonian: " << initial_em_H << std::endl;
+
+    std::cout << "\nEvolving electromagnetic field for " << em_steps << " steps..." << std::endl;
+    for (int step = 1; step <= em_steps; step++) {
         maxwell_equations.evolveField(electric_field, magnetic_field);
 
-        // Calculate and print field correlation every 20 steps
         if (step % 20 == 0) {
+            double H = maxwell_equations.computeHamiltonian(electric_field, magnetic_field);
+            double drift = (initial_em_H > 0)
+                ? (H - initial_em_H) / initial_em_H * 100.0
+                : 0.0;
             auto correlation = electric_field.calculateCorrelationFunction(10);
-            std::cout << "Step " << step << ": Correlation at distance 1 = " << correlation(1, 0)
-                      << std::endl;
+            std::cout << "Step " << step << ": EM H = " << H
+                      << " (drift: " << drift << "%)"
+                      << ", correlation(1) = " << correlation(1, 0) << std::endl;
         }
     }
 
-    // Check EM field energy conservation
-    double final_em_energy = electric_field.calculateTotalEnergy(qft_params) +
-                             magnetic_field.calculateTotalEnergy(qft_params);
-    std::cout << "EM field energy conservation check: "
-              << (std::abs(final_em_energy - initial_em_energy) /
-                  (initial_em_energy > 0 ? initial_em_energy : 1.0)) *
-                     100.0
-              << "% change" << std::endl;
+    double final_em_H = maxwell_equations.computeHamiltonian(electric_field, magnetic_field);
+    double em_drift = (initial_em_H > 0)
+        ? std::abs(final_em_H - initial_em_H) / initial_em_H * 100.0
+        : 0.0;
+    std::cout << "\nMaxwell energy conservation: " << em_drift << "% drift over "
+              << em_steps << " steps" << std::endl;
+    std::cout << (em_drift < 1.0 ? "PASS" : (em_drift < 10.0 ? "MARGINAL" : "FAIL"))
+              << ": energy conservation" << std::endl;
 
     return 0;
 }
