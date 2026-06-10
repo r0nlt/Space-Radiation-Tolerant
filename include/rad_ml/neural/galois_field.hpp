@@ -10,6 +10,10 @@
 #ifndef RAD_ML_NEURAL_GALOIS_FIELD_HPP
 #define RAD_ML_NEURAL_GALOIS_FIELD_HPP
 
+#ifndef RADML_RS_BM_NOHEAP
+#define RADML_RS_BM_NOHEAP 0
+#endif
+
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -255,9 +259,10 @@ class GaloisField {
 
         for (uint8_t n = 0; n < nsym; ++n) {
             // Compute discrepancy: d = S_{n+1} + Σ_{i=1}^{L} C_i * S_{n+1-i}
+            // d = S_{n+1} + sum_{i=1}^{L} C_i S_{n+1-i}; bound by L (Massey), coeffs by C.size().
             element_t d = syndromes[n + 1];
-            for (size_t i = 1; i < C.size() && i <= L; ++i) {
-                if (n + 1 >= i) {
+            for (size_t i = 1; i <= L; ++i) {
+                if (i < C.size() && n + 1 >= i) {
                     d = add(d, multiply(C[i], syndromes[n + 1 - i]));
                 }
             }
@@ -314,6 +319,120 @@ class GaloisField {
         }
 
         return {C, omega};
+    }
+
+    /**
+     * @brief Same as rs_find_error_locator but uses fixed stack buffers (no heap in BM).
+     *
+     * Intended for parity testing against rs_find_error_locator and eventual bare-metal use.
+     * Throws std::length_error if an internal polynomial would exceed its static capacity
+     * (conservative bound; increase k_rs_bm_poly_cap if needed for larger nsym).
+     */
+    std::tuple<std::vector<element_t>, std::vector<element_t>> rs_find_error_locator_noheap(
+        const std::vector<element_t>& syndromes, uint8_t nsym) const
+    {
+        struct PolyBuf {
+            std::array<element_t, k_rs_bm_poly_cap> data{};
+            size_t len = 0;
+
+            static PolyBuf one()
+            {
+                PolyBuf p;
+                p.data[0] = 1;
+                p.len = 1;
+                return p;
+            }
+
+            void copy_from(const PolyBuf& o)
+            {
+                const size_t prev = len;
+                for (size_t i = 0; i < o.len; ++i) {
+                    data[i] = o.data[i];
+                }
+                // Clear slots we no longer own (fixed buffer); avoids stale coeffs if len grows again.
+                for (size_t i = o.len; i < prev; ++i) {
+                    data[i] = 0;
+                }
+                len = o.len;
+            }
+
+            void ensure_len_at_least(size_t new_len, element_t fill)
+            {
+                if (new_len > k_rs_bm_poly_cap) {
+                    throw std::length_error("rs_find_error_locator_noheap: polynomial capacity exceeded");
+                }
+                while (len < new_len) {
+                    data[len++] = fill;
+                }
+            }
+
+            void trim_trailing_zeros()
+            {
+                while (len > 1 && data[len - 1] == 0) {
+                    --len;
+                }
+            }
+
+            std::vector<element_t> to_vector() const
+            {
+                return std::vector<element_t>(data.begin(), data.begin() + static_cast<std::ptrdiff_t>(len));
+            }
+        };
+
+        PolyBuf C = PolyBuf::one();
+        PolyBuf B = PolyBuf::one();
+        size_t L = 0;
+        element_t b_prev = 1;
+        size_t shift = 1;
+
+        for (uint8_t n = 0; n < nsym; ++n) {
+            // d = S_{n+1} + sum_{i=1}^{L} C_i S_{n+1-i}; bound recurrence by L (Massey), coeffs by len.
+            element_t d = syndromes[n + 1];
+            for (size_t i = 1; i <= L; ++i) {
+                if (i < C.len && n + 1 >= i) {
+                    d = add(d, multiply(C.data[i], syndromes[n + 1 - i]));
+                }
+            }
+
+            if (d == 0) {
+                shift++;
+            } else {
+                PolyBuf T;
+                T.copy_from(C);
+                element_t coeff = divide(d, b_prev);
+
+                const size_t need_len = B.len + shift;
+                T.ensure_len_at_least(need_len, 0);
+
+                for (size_t i = 0; i < B.len; ++i) {
+                    T.data[i + shift] = add(T.data[i + shift], multiply(coeff, B.data[i]));
+                }
+
+                if (2 * L <= n) {
+                    L = n + 1 - L;
+                    B.copy_from(C);
+                    b_prev = d;
+                    shift = 1;
+                } else {
+                    shift++;
+                }
+
+                C.copy_from(T);
+            }
+        }
+
+        C.trim_trailing_zeros();
+
+        std::vector<element_t> omega(nsym, 0);
+        for (size_t i = 0; i < nsym; ++i) {
+            for (size_t j = 0; j < C.len && j <= i; ++j) {
+                if (i - j + 1 < syndromes.size()) {
+                    omega[i] = add(omega[i], multiply(C.data[j], syndromes[i - j + 1]));
+                }
+            }
+        }
+
+        return {C.to_vector(), omega};
     }
 
     /**
@@ -451,12 +570,9 @@ class GaloisField {
         // Calculate syndromes
         auto syndromes = rs_calc_syndromes(msg, nsym);
 
-        // Check if message has errors
-        // For Reed-Solomon codes, we check syndromes S₁ through S_(nsym-1)
-        // The generator polynomial has roots at α⁰, α¹, ..., α^(nsym-1)
-        // So syndromes at α¹, α², ..., α^(nsym-1) should be zero for valid codewords
+        // Nonzero in S_1..S_{nsym-1} indicates errors (S_nsym is not a codeword root here).
         bool has_errors = false;
-        for (size_t i = 1; i < nsym; ++i) {  // Changed from syndromes.size() to nsym
+        for (size_t i = 1; i < static_cast<size_t>(nsym); ++i) {
             if (syndromes[i] != 0) {
                 has_errors = true;
                 break;
@@ -471,8 +587,6 @@ class GaloisField {
         // For RS with polynomial c(x) = c_0*x^{n-1} + ... + c_{n-1}:
         // Error e at array position i contributes e*α^{j*(n-1-i)} to S_j
         // So S_2/S_1 = α^{n-1-i}, meaning i = n-1 - log_α(S_2/S_1)
-        bool try_multi_error = true;  // Flag to try multi-error correction
-
         if (syndromes[1] != 0 && syndromes[2] != 0) {
             element_t ratio = divide(syndromes[2], syndromes[1]);
             size_t n = msg.size();
@@ -491,13 +605,18 @@ class GaloisField {
                     element_t alpha_neg_k = exp_table[(field_size - 1 - k) % (field_size - 1)];
                     element_t magnitude = multiply(syndromes[1], alpha_neg_k);
 
-                    // Verify with S_3: should equal e * α^{3*(n-1-pos)} = e * α^{3k}
-                    if (nsym >= 3 && syndromes[3] != 0) {
-                        element_t expected_s3 =
-                            multiply(magnitude, exp_table[(3 * k) % (field_size - 1)]);
-                        if (syndromes[3] != expected_s3) {
-                            break;  // More than one error, try multi-error
+                    // Match S_1..S_{nsym-1} to one error (c(α^j)=0 there). S_nsym includes c(α^{nsym})
+                    // and must not be checked — same reason as has_errors above.
+                    bool matches_single_error = true;
+                    for (uint8_t sj = 1; sj < nsym && matches_single_error; ++sj) {
+                        element_t expected =
+                            multiply(magnitude, exp_table[(sj * k) % (field_size - 1)]);
+                        if (syndromes[sj] != expected) {
+                            matches_single_error = false;
                         }
+                    }
+                    if (!matches_single_error) {
+                        break;
                     }
 
                     // Single error confirmed - correct it
@@ -550,7 +669,7 @@ class GaloisField {
                     // Recompute syndromes for the corrected message
                     auto new_syndromes = rs_calc_syndromes(candidate, nsym);
 
-                    // Check if all syndromes are zero
+                    // Match has_errors / BM: require S_0..S_{nsym-1} zero (same indices as before)
                     bool all_zero = true;
                     for (uint8_t i = 0; i < nsym && all_zero; ++i) {
                         if (new_syndromes[i] != 0) all_zero = false;
@@ -562,8 +681,8 @@ class GaloisField {
                 }
             }
 
-            // Try 3-error correction (O(n³) - still practical for small n)
-            if (nsym >= 6 && n <= 16) {
+            // Try 3-error correction (O(n³) - still practical for small n; cap matches 2-error path)
+            if (nsym >= 6 && n <= 32) {
                 for (size_t p1 = 0; p1 < n; ++p1) {
                     for (size_t p2 = p1 + 1; p2 < n; ++p2) {
                         for (size_t p3 = p2 + 1; p3 < n; ++p3) {
@@ -642,7 +761,11 @@ class GaloisField {
 
     full_decode:
         // Fall back to full Berlekamp-Massey for multiple errors
+#if RADML_RS_BM_NOHEAP
+        auto [err_loc, err_eval] = rs_find_error_locator_noheap(syndromes, nsym);
+#else
         auto [err_loc, err_eval] = rs_find_error_locator(syndromes, nsym);
+#endif
 
         // Find error positions
         auto err_pos = rs_find_errors(err_loc, msg.size());
@@ -669,6 +792,9 @@ class GaloisField {
     }
 
    private:
+    /// Max coefficients for no-heap BM temporary polynomials (shift + degree bound).
+    static constexpr size_t k_rs_bm_poly_cap = 256;
+
     std::array<element_t, static_cast<size_t>(field_size)> exp_table;  // α^i lookup
     std::array<element_t, static_cast<size_t>(field_size)> log_table;  // log_α(i) lookup
 

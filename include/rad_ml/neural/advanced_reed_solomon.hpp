@@ -188,7 +188,11 @@ class AdvancedReedSolomon {
         for (size_t i = 1; i < syndromes.size(); ++i) {
             if (syndromes[i] != 0) {
                 // Errors detected, check if they're correctable
+#if RADML_RS_BM_NOHEAP
+                auto [err_loc, err_eval] = field_.rs_find_error_locator_noheap(syndromes, ECCSymbols);
+#else
                 auto [err_loc, err_eval] = field_.rs_find_error_locator(syndromes, ECCSymbols);
+#endif
                 auto err_pos = field_.rs_find_errors(err_loc, codeword.size());
 
                 // If we can locate all errors and there are at most t errors, it's correctable
