@@ -1,13 +1,16 @@
 /**
  * @file reed_solomon_fixed_diagnostic.cpp
- * @brief Test the CORRECTED Reed-Solomon systematic encoding algorithm
+ * @brief Manual diagnostic: RS systematic encoding, syndromes, and single-error correction
+ *
+ * Verbose step-by-step output for debugging GF(256) encode/decode. Run directly;
+ * not an automated pass/fail regression test (see galois_field_bm_noheap_parity_test).
  */
 
 #include <iomanip>
 #include <iostream>
 #include <vector>
 
-#include "include/rad_ml/neural/galois_field.hpp"
+#include "../../include/rad_ml/neural/galois_field.hpp"
 
 using namespace rad_ml::neural;
 
@@ -188,11 +191,10 @@ int main()
         }
 
         // Check if the relevant syndromes are zero
-        // For Reed-Solomon codes with generator polynomial having roots at α⁰, α¹, ..., α^(nsym-1)
-        // We check syndromes S₁ through S_(nsym-1), but NOT S_nsym
+        // Generator roots at α⁰..α^(nsym-1) → syndromes[0]..syndromes[nsym-1] must be zero
         bool all_relevant_zero = true;
-        std::cout << "    Checking relevant syndromes S₁ through S" << (nsym - 1) << ":\n";
-        for (size_t i = 1; i < nsym; ++i) {
+        std::cout << "    Checking syndromes S₀ through S" << (nsym - 1) << ":\n";
+        for (size_t i = 0; i < static_cast<size_t>(nsym); ++i) {
             std::cout << "      S" << i << " = " << std::hex << (int)syndromes[i] << std::dec;
             if (syndromes[i] != 0) {
                 all_relevant_zero = false;
@@ -214,7 +216,7 @@ int main()
             std::cout << "    ✓ SUCCESS: All relevant syndromes are zero - VALID CODEWORD!\n";
         }
         else {
-            std::cout << "    ✗ FAILURE: Non-zero syndromes detected in S₁ through S" << nsym
+            std::cout << "    ✗ FAILURE: Non-zero syndromes detected in S₀ through S" << (int)nsym - 1
                       << "\n";
         }
 
@@ -254,7 +256,6 @@ int main()
         }
         std::cout << std::dec << "\n";
 
-        // Test if error correction works (it may fail due to the S₄ issue)
         auto corrected = gf.rs_correct_errors(corrupted, nsym);
         if (corrected.has_value()) {
             std::cout << "    ✓ Error correction succeeded!\n";

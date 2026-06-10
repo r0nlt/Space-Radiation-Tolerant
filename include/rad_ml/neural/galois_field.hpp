@@ -193,7 +193,10 @@ class GaloisField {
      *
      * @param msg Message with ecc symbols
      * @param nsym Number of ecc symbols
-     * @return Syndrome values (first value is always 0)
+     * @return Syndrome values (size nsym+1). Indexing convention used by this codec:
+     *         syndromes[i] = r(α^i) for i = 0..nsym. Valid codewords have
+     *         syndromes[0]..syndromes[nsym-1] = 0 (roots of g(x)); syndromes[nsym]
+     *         may be nonzero even on valid codewords and is not used for detection.
      */
     std::vector<element_t> rs_calc_syndromes(const std::vector<element_t>& msg, uint8_t nsym) const
     {
@@ -240,7 +243,7 @@ class GaloisField {
      *
      * where S(x) = S₁x + S₂x² + … collects the nonzero syndromes.
      *
-     * @param syndromes Syndromes from rs_calc_syndromes (size nsym+1; syndromes[0]==0)
+     * @param syndromes Syndromes from rs_calc_syndromes (size nsym+1; BM uses syndromes[1..nsym])
      * @param nsym Number of ECC symbols (designed correction capacity is nsym/2)
      * @return Tuple {Λ(x), Ω(x)} as vectors of coefficients (highest degree first)
      */
@@ -570,9 +573,10 @@ class GaloisField {
         // Calculate syndromes
         auto syndromes = rs_calc_syndromes(msg, nsym);
 
-        // Nonzero in S_1..S_{nsym-1} indicates errors (S_nsym is not a codeword root here).
+        // Nonzero in syndromes[0]..syndromes[nsym-1] indicates errors.
+        // syndromes[nsym] is not a root of g(x) and may be nonzero on valid codewords.
         bool has_errors = false;
-        for (size_t i = 1; i < static_cast<size_t>(nsym); ++i) {
+        for (size_t i = 0; i < static_cast<size_t>(nsym); ++i) {
             if (syndromes[i] != 0) {
                 has_errors = true;
                 break;

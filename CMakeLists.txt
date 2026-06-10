@@ -404,6 +404,14 @@ add_executable(galois_field_bm_noheap_parity_test test/neural/galois_field_bm_no
 target_include_directories(galois_field_bm_noheap_parity_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME galois_field_bm_noheap_parity_test COMMAND galois_field_bm_noheap_parity_test)
 
+add_executable(hamming_secded_test test/neural/hamming_secded_test.cpp)
+target_include_directories(hamming_secded_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME hamming_secded_test COMMAND hamming_secded_test)
+
+# Verbose RS systematic-encoding diagnostic (manual inspection; not a strict regression test)
+add_executable(reed_solomon_fixed_diagnostic test/neural/reed_solomon_fixed_diagnostic.cpp)
+target_include_directories(reed_solomon_fixed_diagnostic PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # Add executable for MultibitProtection RS integration testing
 add_executable(multibit_rs_test test/neural/multibit_rs_test.cpp)
 target_include_directories(multibit_rs_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
