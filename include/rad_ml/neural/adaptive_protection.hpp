@@ -41,6 +41,13 @@ enum class AdaptiveProtectionLevel {
     ADAPTIVE    // Dynamically adjusted based on radiation conditions
 };
 
+/** Result of extended Hamming(8,4) SECDED decode for one 4-bit nibble */
+struct HammingDecodeResult {
+    uint8_t value = 0;
+    bool corrected = false;      ///< A single-bit error (including overall parity) was fixed
+    bool uncorrectable = false;  ///< Double-bit error detected; value is not trusted
+};
+
 // Note: Do NOT use 'using AdaptiveProtectionLevel = ...' here as it conflicts with
 // protected_neural_network.hpp
 
@@ -593,7 +600,7 @@ class AdaptiveProtection {
 
     /**
      * Apply Hamming protection - stores encoded data separately for full byte protection
-     * Uses two Hamming(7,4) codes per byte to protect all 8 bits
+     * Uses two Hamming(8,4) SECDED codes per byte to protect all 8 bits
      */
     template <typename U>
     U apply_hamming_protection(const U& value) const
@@ -617,8 +624,8 @@ class AdaptiveProtection {
     }
 
     /**
-     * Recover with Hamming error correction
-     * Uses stored encoded data to detect and correct single-bit errors per nibble
+     * Recover with Hamming SECDED error correction
+     * Uses stored encoded data to correct single-bit errors and detect double-bit errors
      */
     template <typename U>
     std::tuple<U, bool> recover_with_hamming(const U& value) const
@@ -640,20 +647,27 @@ class AdaptiveProtection {
             return {value, false};  // Size mismatch
         }
 
+        const uint8_t* value_bytes = reinterpret_cast<const uint8_t*>(&value);
         U result;
         uint8_t* result_bytes = reinterpret_cast<uint8_t*>(&result);
-        bool correction_applied = false;
+        bool event_detected = false;
 
         // Decode each byte
         for (size_t i = 0; i < sizeof(U); ++i) {
-            auto [decoded_byte, was_corrected] = hamming_decode_byte_full(encoded[i]);
-            result_bytes[i] = decoded_byte;
-            if (was_corrected) {
-                correction_applied = true;
+            auto [decoded_byte, was_corrected, uncorrectable] = hamming_decode_byte_full(encoded[i]);
+            if (uncorrectable) {
+                result_bytes[i] = value_bytes[i];
+                event_detected = true;
+            }
+            else {
+                result_bytes[i] = decoded_byte;
+                if (was_corrected) {
+                    event_detected = true;
+                }
             }
         }
 
-        return {result, correction_applied};
+        return {result, event_detected};
     }
 
     /**
@@ -667,65 +681,96 @@ class AdaptiveProtection {
     }
 
     /**
-     * Encode a single nibble (4 bits) using Hamming(7,4) code
-     * @param nibble Lower 4 bits of input
-     * @return 7-bit codeword
+     * Encode a single nibble (4 bits) using Hamming(7,4) core (7 data/parity bits)
+     * Layout: p1 p2 d1 p3 d2 d3 d4
      */
-    static uint8_t hamming_encode_nibble(uint8_t nibble)
+    static uint8_t hamming_encode_nibble_7_4(uint8_t nibble)
     {
         uint8_t d1 = (nibble >> 0) & 1;
         uint8_t d2 = (nibble >> 1) & 1;
         uint8_t d3 = (nibble >> 2) & 1;
         uint8_t d4 = (nibble >> 3) & 1;
 
-        // Calculate parity bits
         uint8_t p1 = d1 ^ d2 ^ d4;
         uint8_t p2 = d1 ^ d3 ^ d4;
         uint8_t p3 = d2 ^ d3 ^ d4;
 
-        // Construct codeword: p1 p2 d1 p3 d2 d3 d4 (7 bits)
         return (p1 << 0) | (p2 << 1) | (d1 << 2) | (p3 << 3) | (d2 << 4) | (d3 << 5) | (d4 << 6);
     }
 
-    /**
-     * Decode a 7-bit Hamming(7,4) codeword
-     * @param codeword 7-bit encoded value
-     * @return Tuple of (decoded 4-bit nibble, was_corrected)
-     */
-    static std::tuple<uint8_t, bool> hamming_decode_nibble(uint8_t codeword)
+    static uint8_t extract_nibble_from_codeword_7_4(uint8_t cw7)
     {
-        uint8_t p1 = (codeword >> 0) & 1;
-        uint8_t p2 = (codeword >> 1) & 1;
-        uint8_t d1 = (codeword >> 2) & 1;
-        uint8_t p3 = (codeword >> 3) & 1;
-        uint8_t d2 = (codeword >> 4) & 1;
-        uint8_t d3 = (codeword >> 5) & 1;
-        uint8_t d4 = (codeword >> 6) & 1;
-
-        // Calculate syndrome
-        uint8_t s1 = p1 ^ d1 ^ d2 ^ d4;
-        uint8_t s2 = p2 ^ d1 ^ d3 ^ d4;
-        uint8_t s3 = p3 ^ d2 ^ d3 ^ d4;
-
-        uint8_t error_pos = (s3 << 2) | (s2 << 1) | s1;
-
-        if (error_pos != 0 && error_pos <= 7) {
-            codeword ^= (1 << (error_pos - 1));
-            d1 = (codeword >> 2) & 1;
-            d2 = (codeword >> 4) & 1;
-            d3 = (codeword >> 5) & 1;
-            d4 = (codeword >> 6) & 1;
-        }
-
-        return {static_cast<uint8_t>((d1 << 0) | (d2 << 1) | (d3 << 2) | (d4 << 3)),
-                error_pos != 0};
+        uint8_t d1 = (cw7 >> 2) & 1;
+        uint8_t d2 = (cw7 >> 4) & 1;
+        uint8_t d3 = (cw7 >> 5) & 1;
+        uint8_t d4 = (cw7 >> 6) & 1;
+        return static_cast<uint8_t>((d1 << 0) | (d2 << 1) | (d3 << 2) | (d4 << 3));
     }
 
     /**
-     * Encode a full byte using two Hamming(7,4) codes
-     * Produces a 16-bit codeword (2 bytes) to protect all 8 bits
+     * Encode a single nibble using extended Hamming(8,4) SECDED
+     * @param nibble Lower 4 bits of input
+     * @return 8-bit codeword (bit 7 = overall parity of bits 0-6)
+     */
+    static uint8_t hamming_encode_nibble(uint8_t nibble)
+    {
+        uint8_t cw7 = hamming_encode_nibble_7_4(nibble);
+        uint8_t p0 = 0;
+        for (int i = 0; i < 7; ++i) {
+            p0 ^= static_cast<uint8_t>((cw7 >> i) & 1);
+        }
+        return static_cast<uint8_t>(cw7 | (p0 << 7));
+    }
+
+    /**
+     * Decode an 8-bit Hamming(8,4) SECDED codeword
+     * Corrects single-bit errors; detects (does not miscorrect) double-bit errors
+     */
+    static HammingDecodeResult hamming_decode_nibble(uint8_t codeword)
+    {
+        uint8_t overall = 0;
+        for (int i = 0; i < 8; ++i) {
+            overall ^= static_cast<uint8_t>((codeword >> i) & 1);
+        }
+
+        uint8_t cw7 = codeword & 0x7F;
+        uint8_t p1 = (cw7 >> 0) & 1;
+        uint8_t p2 = (cw7 >> 1) & 1;
+        uint8_t d1 = (cw7 >> 2) & 1;
+        uint8_t p3 = (cw7 >> 3) & 1;
+        uint8_t d2 = (cw7 >> 4) & 1;
+        uint8_t d3 = (cw7 >> 5) & 1;
+        uint8_t d4 = (cw7 >> 6) & 1;
+
+        uint8_t s1 = static_cast<uint8_t>(p1 ^ d1 ^ d2 ^ d4);
+        uint8_t s2 = static_cast<uint8_t>(p2 ^ d1 ^ d3 ^ d4);
+        uint8_t s3 = static_cast<uint8_t>(p3 ^ d2 ^ d3 ^ d4);
+        uint8_t syndrome = static_cast<uint8_t>((s3 << 2) | (s2 << 1) | s1);
+
+        if (syndrome == 0 && overall == 0) {
+            return {extract_nibble_from_codeword_7_4(cw7), false, false};
+        }
+
+        if (syndrome != 0 && overall == 1) {
+            if (syndrome <= 7) {
+                cw7 ^= static_cast<uint8_t>(1u << (syndrome - 1));
+            }
+            return {extract_nibble_from_codeword_7_4(cw7), true, false};
+        }
+
+        if (syndrome == 0 && overall == 1) {
+            // Error confined to overall parity bit (position 8); data bits are intact
+            return {extract_nibble_from_codeword_7_4(cw7), true, false};
+        }
+
+        // syndrome != 0 && overall == 0: double-bit error
+        return {extract_nibble_from_codeword_7_4(cw7), false, true};
+    }
+
+    /**
+     * Encode a full byte using two Hamming(8,4) SECDED codes
      * @param data Full 8-bit byte to encode
-     * @return 16-bit codeword (lower 7 bits = lower nibble, upper 7 bits = upper nibble)
+     * @return 16-bit codeword (low/high bytes each hold one 8-bit SECDED nibble code)
      */
     static uint16_t hamming_encode_byte_full(uint8_t data)
     {
@@ -739,29 +784,28 @@ class AdaptiveProtection {
     }
 
     /**
-     * Decode a 16-bit Hamming-encoded byte
-     * @param codeword 16-bit encoded value
-     * @return Tuple of (decoded byte, was_corrected)
+     * Decode a 16-bit SECDED Hamming-encoded byte
+     * @return Tuple of (decoded byte, single-bit corrected, double-bit detected)
      */
-    static std::tuple<uint8_t, bool> hamming_decode_byte_full(uint16_t codeword)
+    static std::tuple<uint8_t, bool, bool> hamming_decode_byte_full(uint16_t codeword)
     {
-        auto [low_nibble, low_corrected] = hamming_decode_nibble(codeword & 0x7F);
-        auto [high_nibble, high_corrected] = hamming_decode_nibble((codeword >> 8) & 0x7F);
+        auto low = hamming_decode_nibble(static_cast<uint8_t>(codeword & 0xFF));
+        auto high = hamming_decode_nibble(static_cast<uint8_t>((codeword >> 8) & 0xFF));
 
-        uint8_t data = low_nibble | (high_nibble << 4);
-        return {data, low_corrected || high_corrected};
+        uint8_t data = static_cast<uint8_t>(low.value | (high.value << 4));
+        return {data, low.corrected || high.corrected, low.uncorrectable || high.uncorrectable};
     }
 
-    // Legacy single-nibble functions for backward compatibility
+    // Legacy single-nibble API (lower 4 bits only)
     static uint8_t hamming_encode_byte(uint8_t data)
     {
-        // Note: This only protects lower 4 bits - use hamming_encode_byte_full for full protection
         return hamming_encode_nibble(data & 0x0F);
     }
 
     static std::tuple<uint8_t, bool> hamming_decode_byte(uint8_t codeword)
     {
-        return hamming_decode_nibble(codeword);
+        auto result = hamming_decode_nibble(codeword);
+        return {result.value, result.corrected};
     }
 
    private:

@@ -124,8 +124,8 @@ static bool round_trip_decode(std::mt19937& rng, int trials, const char* label)
             codew[i] = enc[i];
         }
 
-        // Random error count: small codes use k < min(t,4); long RS(8,16)+ uses k in {0,1,2} only
-        // (this decoder + random XOR/positions is not reliable for higher weight on long codewords).
+        // Random error count. RS(8,16) on short codewords (e.g. uint8_t → 17 symbols): BM path
+        // is validated through k<=3 in random XOR trials; k>=4 can fail (trial 0 k=4 reproduces).
         unsigned k_cap;
         if constexpr (Ecc >= 16) {
             k_cap = 3u;
@@ -248,7 +248,7 @@ int main()
     if (!round_trip_exactly_t_errors<uint8_t, 16>("uint8_t RS(8,16)")) {
         return 1;
     }
-    std::cout << "OK decode RS(8,16) tail stress (<=3 tail flips; long-code cap)\n";
+    std::cout << "OK decode RS(8,16) tail stress (<=3 tail flips; short-codecap)\n";
 
     if (!round_trip_decode<uint32_t, 8>(rng, 2000, "uint32_t RS(8,8)")) {
         return 1;

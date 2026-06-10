@@ -184,8 +184,8 @@ class AdvancedReedSolomon {
         // Calculate syndromes
         auto syndromes = field_.rs_calc_syndromes(codeword, ECCSymbols);
 
-        // Check if all syndromes are zero (no errors)
-        for (size_t i = 1; i < syndromes.size(); ++i) {
+        // Check codeword syndromes at roots α^0..α^{nsym-1} (exclude syndromes[nsym])
+        for (size_t i = 0; i < static_cast<size_t>(ECCSymbols); ++i) {
             if (syndromes[i] != 0) {
                 // Errors detected, check if they're correctable
 #if RADML_RS_BM_NOHEAP
