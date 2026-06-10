@@ -241,9 +241,9 @@ class GaloisField {
      *
      *   Ω(x) = (S(x) · Λ(x)) mod x^{nsym},
      *
-     * where S(x) = S₁x + S₂x² + … collects the nonzero syndromes.
+     * where S(x) = S₀ + S₁x + S₂x² + … with S_i = syndromes[i].
      *
-     * @param syndromes Syndromes from rs_calc_syndromes (size nsym+1; BM uses syndromes[1..nsym])
+     * @param syndromes Syndromes from rs_calc_syndromes (size nsym+1; BM uses syndromes[0..nsym-1])
      * @param nsym Number of ECC symbols (designed correction capacity is nsym/2)
      * @return Tuple {Λ(x), Ω(x)} as vectors of coefficients (highest degree first)
      */
@@ -261,12 +261,11 @@ class GaloisField {
         size_t shift = 1;                // Number of iterations since L changed
 
         for (uint8_t n = 0; n < nsym; ++n) {
-            // Compute discrepancy: d = S_{n+1} + Σ_{i=1}^{L} C_i * S_{n+1-i}
-            // d = S_{n+1} + sum_{i=1}^{L} C_i S_{n+1-i}; bound by L (Massey), coeffs by C.size().
-            element_t d = syndromes[n + 1];
+            // Compute discrepancy: d = S_n + Σ_{i=1}^{L} C_i * S_{n-i}
+            element_t d = syndromes[n];
             for (size_t i = 1; i <= L; ++i) {
-                if (i < C.size() && n + 1 >= i) {
-                    d = add(d, multiply(C[i], syndromes[n + 1 - i]));
+                if (i < C.size() && n >= i) {
+                    d = add(d, multiply(C[i], syndromes[n - i]));
                 }
             }
 
@@ -310,13 +309,12 @@ class GaloisField {
         }
 
         // Compute error evaluator Ω(x) = S(x) * Λ(x) mod x^nsym
-        // where S(x) = S_1 + S_2*x + S_3*x^2 + ...
+        // where S(x) = S_0 + S_1*x + S_2*x^2 + ...
         std::vector<element_t> omega(nsym, 0);
         for (size_t i = 0; i < nsym; ++i) {
             for (size_t j = 0; j < C.size() && j <= i; ++j) {
-                // S(x) has S_1 at x^0, S_2 at x^1, etc., so syndromes[j+1]
-                if (i - j + 1 < syndromes.size()) {
-                    omega[i] = add(omega[i], multiply(C[j], syndromes[i - j + 1]));
+                if (i >= j) {
+                    omega[i] = add(omega[i], multiply(C[j], syndromes[i - j]));
                 }
             }
         }
@@ -389,11 +387,11 @@ class GaloisField {
         size_t shift = 1;
 
         for (uint8_t n = 0; n < nsym; ++n) {
-            // d = S_{n+1} + sum_{i=1}^{L} C_i S_{n+1-i}; bound recurrence by L (Massey), coeffs by len.
-            element_t d = syndromes[n + 1];
+            // d = S_n + sum_{i=1}^{L} C_i S_{n-i}
+            element_t d = syndromes[n];
             for (size_t i = 1; i <= L; ++i) {
-                if (i < C.len && n + 1 >= i) {
-                    d = add(d, multiply(C.data[i], syndromes[n + 1 - i]));
+                if (i < C.len && n >= i) {
+                    d = add(d, multiply(C.data[i], syndromes[n - i]));
                 }
             }
 
@@ -429,8 +427,8 @@ class GaloisField {
         std::vector<element_t> omega(nsym, 0);
         for (size_t i = 0; i < nsym; ++i) {
             for (size_t j = 0; j < C.len && j <= i; ++j) {
-                if (i - j + 1 < syndromes.size()) {
-                    omega[i] = add(omega[i], multiply(C.data[j], syndromes[i - j + 1]));
+                if (i >= j) {
+                    omega[i] = add(omega[i], multiply(C.data[j], syndromes[i - j]));
                 }
             }
         }

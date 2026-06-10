@@ -412,6 +412,10 @@ add_test(NAME hamming_secded_test COMMAND hamming_secded_test)
 add_executable(reed_solomon_fixed_diagnostic test/neural/reed_solomon_fixed_diagnostic.cpp)
 target_include_directories(reed_solomon_fixed_diagnostic PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# Syndrome-indexing / RS(8,16) k=4 probe (manual; not CTest)
+add_executable(syndrome_index_probe test/neural/syndrome_index_probe.cpp)
+target_include_directories(syndrome_index_probe PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # Add executable for MultibitProtection RS integration testing
 add_executable(multibit_rs_test test/neural/multibit_rs_test.cpp)
 target_include_directories(multibit_rs_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
