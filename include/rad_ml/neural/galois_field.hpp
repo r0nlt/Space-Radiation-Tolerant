@@ -241,87 +241,20 @@ class GaloisField {
      *
      *   Ω(x) = (S(x) · Λ(x)) mod x^{nsym},
      *
-     * where S(x) = S₁x + S₂x² + … collects the nonzero syndromes.
+     * where S(x) = S₀ + S₁x + S₂x² + … with S_i = syndromes[i].
      *
-     * @param syndromes Syndromes from rs_calc_syndromes (size nsym+1; BM uses syndromes[1..nsym])
+     * @param syndromes Syndromes from rs_calc_syndromes (size nsym+1; BM uses syndromes[0..nsym-1])
      * @param nsym Number of ECC symbols (designed correction capacity is nsym/2)
      * @return Tuple {Λ(x), Ω(x)} as vectors of coefficients (highest degree first)
      */
     std::tuple<std::vector<element_t>, std::vector<element_t>> rs_find_error_locator(
         const std::vector<element_t>& syndromes, uint8_t nsym) const
     {
-        // Berlekamp-Massey algorithm (standard lowest-degree-first convention)
-        // Λ(x) = Λ_0 + Λ_1*x + Λ_2*x^2 + ..., stored as [Λ_0, Λ_1, Λ_2, ...]
-        // Initial: Λ = [1] (constant 1)
-
-        std::vector<element_t> C = {1};  // Current error locator Λ(x)
-        std::vector<element_t> B = {1};  // Previous error locator (backup)
-        size_t L = 0;                    // Current number of assumed errors
-        element_t b_prev = 1;            // Previous discrepancy
-        size_t shift = 1;                // Number of iterations since L changed
-
-        for (uint8_t n = 0; n < nsym; ++n) {
-            // Compute discrepancy: d = S_{n+1} + Σ_{i=1}^{L} C_i * S_{n+1-i}
-            // d = S_{n+1} + sum_{i=1}^{L} C_i S_{n+1-i}; bound by L (Massey), coeffs by C.size().
-            element_t d = syndromes[n + 1];
-            for (size_t i = 1; i <= L; ++i) {
-                if (i < C.size() && n + 1 >= i) {
-                    d = add(d, multiply(C[i], syndromes[n + 1 - i]));
-                }
-            }
-
-            if (d == 0) {
-                // No change needed
-                shift++;
-            }
-            else {
-                // T(x) = C(x) - (d/b) * x^shift * B(x)
-                std::vector<element_t> T = C;
-                element_t coeff = divide(d, b_prev);
-
-                // Ensure T is large enough
-                if (T.size() < B.size() + shift) {
-                    T.resize(B.size() + shift, 0);
-                }
-
-                // T = C - coeff * x^shift * B
-                for (size_t i = 0; i < B.size(); ++i) {
-                    T[i + shift] = add(T[i + shift], multiply(coeff, B[i]));
-                }
-
-                if (2 * L <= n) {
-                    // Increase L
-                    L = n + 1 - L;
-                    B = C;
-                    b_prev = d;
-                    shift = 1;
-                }
-                else {
-                    shift++;
-                }
-
-                C = T;
-            }
-        }
-
-        // Trim trailing zeros from C
-        while (C.size() > 1 && C.back() == 0) {
-            C.pop_back();
-        }
-
-        // Compute error evaluator Ω(x) = S(x) * Λ(x) mod x^nsym
-        // where S(x) = S_1 + S_2*x + S_3*x^2 + ...
-        std::vector<element_t> omega(nsym, 0);
-        for (size_t i = 0; i < nsym; ++i) {
-            for (size_t j = 0; j < C.size() && j <= i; ++j) {
-                // S(x) has S_1 at x^0, S_2 at x^1, etc., so syndromes[j+1]
-                if (i - j + 1 < syndromes.size()) {
-                    omega[i] = add(omega[i], multiply(C[j], syndromes[i - j + 1]));
-                }
-            }
-        }
-
-        return {C, omega};
+        BmHeapPoly C;
+        BmHeapPoly B;
+        rs_bm_locator_loop(syndromes, nsym, C, B);
+        auto locator = C.to_vector();
+        return {locator, rs_bm_compute_omega(locator, syndromes, nsym)};
     }
 
     /**
@@ -334,108 +267,11 @@ class GaloisField {
     std::tuple<std::vector<element_t>, std::vector<element_t>> rs_find_error_locator_noheap(
         const std::vector<element_t>& syndromes, uint8_t nsym) const
     {
-        struct PolyBuf {
-            std::array<element_t, k_rs_bm_poly_cap> data{};
-            size_t len = 0;
-
-            static PolyBuf one()
-            {
-                PolyBuf p;
-                p.data[0] = 1;
-                p.len = 1;
-                return p;
-            }
-
-            void copy_from(const PolyBuf& o)
-            {
-                const size_t prev = len;
-                for (size_t i = 0; i < o.len; ++i) {
-                    data[i] = o.data[i];
-                }
-                // Clear slots we no longer own (fixed buffer); avoids stale coeffs if len grows again.
-                for (size_t i = o.len; i < prev; ++i) {
-                    data[i] = 0;
-                }
-                len = o.len;
-            }
-
-            void ensure_len_at_least(size_t new_len, element_t fill)
-            {
-                if (new_len > k_rs_bm_poly_cap) {
-                    throw std::length_error("rs_find_error_locator_noheap: polynomial capacity exceeded");
-                }
-                while (len < new_len) {
-                    data[len++] = fill;
-                }
-            }
-
-            void trim_trailing_zeros()
-            {
-                while (len > 1 && data[len - 1] == 0) {
-                    --len;
-                }
-            }
-
-            std::vector<element_t> to_vector() const
-            {
-                return std::vector<element_t>(data.begin(), data.begin() + static_cast<std::ptrdiff_t>(len));
-            }
-        };
-
-        PolyBuf C = PolyBuf::one();
-        PolyBuf B = PolyBuf::one();
-        size_t L = 0;
-        element_t b_prev = 1;
-        size_t shift = 1;
-
-        for (uint8_t n = 0; n < nsym; ++n) {
-            // d = S_{n+1} + sum_{i=1}^{L} C_i S_{n+1-i}; bound recurrence by L (Massey), coeffs by len.
-            element_t d = syndromes[n + 1];
-            for (size_t i = 1; i <= L; ++i) {
-                if (i < C.len && n + 1 >= i) {
-                    d = add(d, multiply(C.data[i], syndromes[n + 1 - i]));
-                }
-            }
-
-            if (d == 0) {
-                shift++;
-            } else {
-                PolyBuf T;
-                T.copy_from(C);
-                element_t coeff = divide(d, b_prev);
-
-                const size_t need_len = B.len + shift;
-                T.ensure_len_at_least(need_len, 0);
-
-                for (size_t i = 0; i < B.len; ++i) {
-                    T.data[i + shift] = add(T.data[i + shift], multiply(coeff, B.data[i]));
-                }
-
-                if (2 * L <= n) {
-                    L = n + 1 - L;
-                    B.copy_from(C);
-                    b_prev = d;
-                    shift = 1;
-                } else {
-                    shift++;
-                }
-
-                C.copy_from(T);
-            }
-        }
-
-        C.trim_trailing_zeros();
-
-        std::vector<element_t> omega(nsym, 0);
-        for (size_t i = 0; i < nsym; ++i) {
-            for (size_t j = 0; j < C.len && j <= i; ++j) {
-                if (i - j + 1 < syndromes.size()) {
-                    omega[i] = add(omega[i], multiply(C.data[j], syndromes[i - j + 1]));
-                }
-            }
-        }
-
-        return {C.to_vector(), omega};
+        BmStackPoly C;
+        BmStackPoly B;
+        rs_bm_locator_loop(syndromes, nsym, C, B);
+        auto locator = C.to_vector();
+        return {locator, rs_bm_compute_omega(locator, syndromes, nsym)};
     }
 
     /**
@@ -798,6 +634,131 @@ class GaloisField {
    private:
     /// Max coefficients for no-heap BM temporary polynomials (shift + degree bound).
     static constexpr size_t k_rs_bm_poly_cap = 256;
+
+    /** Heap-backed Λ(x) buffer for Berlekamp–Massey (lowest-degree-first). */
+    struct BmHeapPoly {
+        std::vector<element_t> data{1};
+
+        size_t len() const { return data.size(); }
+        element_t at(size_t i) const { return data[i]; }
+        void ensure_len(size_t n)
+        {
+            if (data.size() < n) {
+                data.resize(n, 0);
+            }
+        }
+        void add_at(size_t i, element_t v) { data[i] = static_cast<element_t>(data[i] ^ v); }
+        void copy_from(const BmHeapPoly& o) { data = o.data; }
+        void trim()
+        {
+            while (data.size() > 1 && data.back() == 0) {
+                data.pop_back();
+            }
+        }
+        std::vector<element_t> to_vector() const { return data; }
+    };
+
+    /** Stack-backed Λ(x) buffer for bare-metal / no-heap BM. */
+    struct BmStackPoly {
+        std::array<element_t, k_rs_bm_poly_cap> data{};
+        size_t coeff_len = 1;
+
+        BmStackPoly() { data[0] = 1; }
+
+        size_t len() const { return coeff_len; }
+        element_t at(size_t i) const { return data[i]; }
+        void ensure_len(size_t n)
+        {
+            if (n > k_rs_bm_poly_cap) {
+                throw std::length_error("rs_find_error_locator_noheap: polynomial capacity exceeded");
+            }
+            while (coeff_len < n) {
+                data[coeff_len++] = 0;
+            }
+        }
+        void add_at(size_t i, element_t v) { data[i] = static_cast<element_t>(data[i] ^ v); }
+        void copy_from(const BmStackPoly& o)
+        {
+            const size_t prev = coeff_len;
+            for (size_t i = 0; i < o.coeff_len; ++i) {
+                data[i] = o.data[i];
+            }
+            for (size_t i = o.coeff_len; i < prev; ++i) {
+                data[i] = 0;
+            }
+            coeff_len = o.coeff_len;
+        }
+        void trim()
+        {
+            while (coeff_len > 1 && data[coeff_len - 1] == 0) {
+                --coeff_len;
+            }
+        }
+        std::vector<element_t> to_vector() const
+        {
+            return std::vector<element_t>(data.begin(),
+                                          data.begin() + static_cast<std::ptrdiff_t>(coeff_len));
+        }
+    };
+
+    /**
+     * Shared Berlekamp–Massey locator step (heap and stack buffers use the same logic).
+     * Consumes syndromes[0..nsym-1] from rs_calc_syndromes.
+     */
+    template <typename BmPoly>
+    void rs_bm_locator_loop(const std::vector<element_t>& syndromes, uint8_t nsym, BmPoly& C,
+                            BmPoly& B) const
+    {
+        size_t L = 0;
+        element_t b_prev = 1;
+        size_t shift = 1;
+
+        for (uint8_t n = 0; n < nsym; ++n) {
+            element_t d = syndromes[n];
+            for (size_t i = 1; i <= L; ++i) {
+                if (i < C.len() && n >= i) {
+                    d = add(d, multiply(C.at(i), syndromes[n - i]));
+                }
+            }
+
+            if (d == 0) {
+                shift++;
+            } else {
+                BmPoly T;
+                T.copy_from(C);
+                const element_t coeff = divide(d, b_prev);
+                T.ensure_len(B.len() + shift);
+                for (size_t i = 0; i < B.len(); ++i) {
+                    T.add_at(i + shift, multiply(coeff, B.at(i)));
+                }
+
+                if (2 * L <= n) {
+                    L = n + 1 - L;
+                    B.copy_from(C);
+                    b_prev = d;
+                    shift = 1;
+                } else {
+                    shift++;
+                }
+                C.copy_from(T);
+            }
+        }
+        C.trim();
+    }
+
+    /** Ω(x) = S(x)·Λ(x) mod x^nsym with S_i = syndromes[i]. */
+    std::vector<element_t> rs_bm_compute_omega(const std::vector<element_t>& locator,
+                                                 const std::vector<element_t>& syndromes,
+                                                 uint8_t nsym) const
+    {
+        std::vector<element_t> omega(nsym, 0);
+        for (size_t i = 0; i < nsym; ++i) {
+            for (size_t j = 0; j < locator.size() && j <= i; ++j) {
+                omega[i] = add(omega[i], multiply(locator[j], syndromes[i - j]));
+            }
+        }
+        return omega;
+    }
 
     std::array<element_t, static_cast<size_t>(field_size)> exp_table;  // α^i lookup
     std::array<element_t, static_cast<size_t>(field_size)> log_table;  // log_α(i) lookup

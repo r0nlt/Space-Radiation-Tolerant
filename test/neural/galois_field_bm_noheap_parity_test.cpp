@@ -53,8 +53,7 @@ static bool test_random_syndromes(GF256& gf, uint8_t nsym, int trials, std::mt19
     std::uniform_int_distribution<int> dist(0, 255);
     for (int t = 0; t < trials; ++t) {
         std::vector<uint8_t> synd(static_cast<size_t>(nsym) + 1, 0);
-        synd[0] = 0;
-        for (uint8_t i = 1; i <= nsym; ++i) {
+        for (uint8_t i = 0; i < nsym; ++i) {
             synd[i] = static_cast<uint8_t>(dist(rng));
         }
         auto heap = gf.rs_find_error_locator(synd, nsym);
@@ -124,14 +123,8 @@ static bool round_trip_decode(std::mt19937& rng, int trials, const char* label)
             codew[i] = enc[i];
         }
 
-        // Random error count. RS(8,16) on short codewords (e.g. uint8_t → 17 symbols): BM path
-        // is validated through k<=3 in random XOR trials; k>=4 can fail (trial 0 k=4 reproduces).
-        unsigned k_cap;
-        if constexpr (Ecc >= 16) {
-            k_cap = 3u;
-        } else {
-            k_cap = static_cast<unsigned>(std::clamp(static_cast<int>(t), 1, 4));
-        }
+        // Random error count up to rated t (BM uses syndromes[0..nsym-1] from rs_calc_syndromes).
+        const unsigned k_cap = static_cast<unsigned>(std::clamp(static_cast<int>(t), 1, 8));
         const int k = static_cast<int>(rng() % k_cap);
         std::set<size_t> used;
         for (int e = 0; e < k; ++e) {
@@ -163,8 +156,7 @@ static bool round_trip_exactly_t_errors(const char* label)
         return true;
     }
 
-    const size_t n_err = (Ecc >= 16) ? (std::min(t - 1, static_cast<size_t>(3)))
-                                     : ((t >= 4) ? (t - 1) : t);
+    const size_t n_err = (t >= 4) ? (t - 1) : t;
     if (n_err == 0) {
         return true;
     }
@@ -244,11 +236,11 @@ int main()
     if (!round_trip_decode<uint8_t, 16>(rng, 1500, "uint8_t RS(8,16)")) {
         return 1;
     }
-    std::cout << "OK decode round-trip RS(8,16) (random k in 0..2)\n";
+    std::cout << "OK decode round-trip RS(8,16) (random k <= t)\n";
     if (!round_trip_exactly_t_errors<uint8_t, 16>("uint8_t RS(8,16)")) {
         return 1;
     }
-    std::cout << "OK decode RS(8,16) tail stress (<=3 tail flips; short-codecap)\n";
+    std::cout << "OK decode RS(8,16) tail stress (t-1 tail flips)\n";
 
     if (!round_trip_decode<uint32_t, 8>(rng, 2000, "uint32_t RS(8,8)")) {
         return 1;
