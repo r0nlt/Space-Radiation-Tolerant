@@ -26,7 +26,16 @@ option(ENABLE_PYTORCH "Enable PyTorch integration" OFF)
 option(ENABLE_OPTIMIZATIONS "Enable aggressive optimizations" ON)
 option(BUILD_BENCHMARKS "Build performance benchmarks" OFF)
 option(ENABLE_PROFILING "Enable profiling and performance monitoring" OFF)
+option(RADML_RS_BM_NOHEAP "Use stack-only Berlekamp-Massey in RS decode (see rs_find_error_locator_noheap)" ON)
+
 option(DOWNLOAD_LMDB "Download and build LMDB if not found" ON)
+
+if(RADML_RS_BM_NOHEAP)
+  add_compile_definitions(RADML_RS_BM_NOHEAP=1)
+  message(STATUS "RADML_RS_BM_NOHEAP: ON (Berlekamp-Massey uses fixed stack buffers)")
+else()
+  message(STATUS "RADML_RS_BM_NOHEAP: OFF (Berlekamp-Massey uses std::vector)")
+endif()
 
 # Set optimized compiler flags
 if(ENABLE_OPTIMIZATIONS)
@@ -389,6 +398,11 @@ add_test(NAME fine_tuning_test COMMAND fine_tuning_test)
 add_executable(rs_comprehensive_test test/neural/rs_comprehensive_test.cpp)
 target_include_directories(rs_comprehensive_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME rs_comprehensive_test COMMAND rs_comprehensive_test)
+
+# Parity: heap vs stack-only Berlekamp–Massey (run before switching decode path)
+add_executable(galois_field_bm_noheap_parity_test test/neural/galois_field_bm_noheap_parity_test.cpp)
+target_include_directories(galois_field_bm_noheap_parity_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME galois_field_bm_noheap_parity_test COMMAND galois_field_bm_noheap_parity_test)
 
 # Add executable for MultibitProtection RS integration testing
 add_executable(multibit_rs_test test/neural/multibit_rs_test.cpp)

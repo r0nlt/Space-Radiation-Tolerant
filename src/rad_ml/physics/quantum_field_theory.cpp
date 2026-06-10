@@ -328,32 +328,40 @@ void QuantumField<Dimensions>::setFieldAt(const std::vector<int>& position,
 template <int Dimensions>
 std::complex<double> QuantumField<Dimensions>::laplacian3D(int i, int j, int k) const
 {
-    const int Nx = dimensions_[0], Ny = dimensions_[1], Nz = dimensions_[2];
-    const double dx2 = lattice_spacing_ * lattice_spacing_;
+    if constexpr (Dimensions != 3) {
+        throw std::logic_error("laplacian3D requires a 3-dimensional field");
+    } else {
+        const int Nx = dimensions_[0], Ny = dimensions_[1], Nz = dimensions_[2];
+        const double dx2 = lattice_spacing_ * lattice_spacing_;
 
-    int ip = (i + 1) % Nx, im = (i - 1 + Nx) % Nx;
-    int jp = (j + 1) % Ny, jm = (j - 1 + Ny) % Ny;
-    int kp = (k + 1) % Nz, km = (k - 1 + Nz) % Nz;
+        int ip = (i + 1) % Nx, im = (i - 1 + Nx) % Nx;
+        int jp = (j + 1) % Ny, jm = (j - 1 + Ny) % Ny;
+        int kp = (k + 1) % Nz, km = (k - 1 + Nz) % Nz;
 
-    std::complex<double> center = field_data_[flatIndex(i, j, k)];
-    return (field_data_[flatIndex(ip, j, k)] + field_data_[flatIndex(im, j, k)]
-          + field_data_[flatIndex(i, jp, k)] + field_data_[flatIndex(i, jm, k)]
-          + field_data_[flatIndex(i, j, kp)] + field_data_[flatIndex(i, j, km)]
-          - 6.0 * center) / dx2;
+        std::complex<double> center = field_data_[flatIndex(i, j, k)];
+        return (field_data_[flatIndex(ip, j, k)] + field_data_[flatIndex(im, j, k)]
+              + field_data_[flatIndex(i, jp, k)] + field_data_[flatIndex(i, jm, k)]
+              + field_data_[flatIndex(i, j, kp)] + field_data_[flatIndex(i, j, km)]
+              - 6.0 * center) / dx2;
+    }
 }
 
 template <int Dimensions>
 double QuantumField<Dimensions>::gradientEnergyDensity(int i, int j, int k) const
 {
-    const int Nx = dimensions_[0], Ny = dimensions_[1], Nz = dimensions_[2];
-    const double dx2 = lattice_spacing_ * lattice_spacing_;
+    if constexpr (Dimensions != 3) {
+        throw std::logic_error("gradientEnergyDensity requires a 3-dimensional field");
+    } else {
+        const int Nx = dimensions_[0], Ny = dimensions_[1], Nz = dimensions_[2];
+        const double dx2 = lattice_spacing_ * lattice_spacing_;
 
-    int ip = (i + 1) % Nx, jp = (j + 1) % Ny, kp = (k + 1) % Nz;
-    std::complex<double> center = field_data_[flatIndex(i, j, k)];
+        int ip = (i + 1) % Nx, jp = (j + 1) % Ny, kp = (k + 1) % Nz;
+        std::complex<double> center = field_data_[flatIndex(i, j, k)];
 
-    return 0.5 * (std::norm(field_data_[flatIndex(ip, j, k)] - center)
-                + std::norm(field_data_[flatIndex(i, jp, k)] - center)
-                + std::norm(field_data_[flatIndex(i, j, kp)] - center)) / dx2;
+        return 0.5 * (std::norm(field_data_[flatIndex(ip, j, k)] - center)
+                    + std::norm(field_data_[flatIndex(i, jp, k)] - center)
+                    + std::norm(field_data_[flatIndex(i, j, kp)] - center)) / dx2;
+    }
 }
 
 // Implementation of KleinGordonEquation methods
@@ -378,7 +386,8 @@ void KleinGordonEquation::evolveField(QuantumField<3>& field)
     }
 
     const double dt = params_.time_step;
-    const double m2 = params_.getMass(particle_type_) * params_.getMass(particle_type_);
+    const double mass = params_.getMass(particle_type_);
+    const double m2 = mass * mass;
 
     // Symplectic leapfrog (Stormer-Verlet):
     //   pi  += (dt/2) * [Lap(phi) - m^2 * phi]
@@ -425,7 +434,8 @@ double KleinGordonEquation::computeHamiltonian(const QuantumField<3>& field) con
 {
     const auto& dims = field.getDimensions();
     const int Nx = dims[0], Ny = dims[1], Nz = dims[2];
-    const double m2 = params_.getMass(particle_type_) * params_.getMass(particle_type_);
+    const double mass = params_.getMass(particle_type_);
+    const double m2 = mass * mass;
 
     double kinetic = 0.0;
     double gradient = 0.0;
@@ -495,6 +505,11 @@ void MaxwellEquations::evolveField(QuantumField<3>& electric_field,
         throw std::invalid_argument("Non-photon field provided to MaxwellEquations");
     }
 
+    if (electric_field.getDimensions() != magnetic_field.getDimensions()) {
+        throw std::invalid_argument(
+            "Electric and magnetic field dimensions must match in MaxwellEquations::evolveField");
+    }
+
     const auto& dims = electric_field.getDimensions();
     const int Nx = dims[0], Ny = dims[1], Nz = dims[2];
 
@@ -532,6 +547,11 @@ void MaxwellEquations::evolveField(QuantumField<3>& electric_field,
 double MaxwellEquations::computeHamiltonian(const QuantumField<3>& electric_field,
                                             const QuantumField<3>& magnetic_field) const
 {
+    if (electric_field.getDimensions() != magnetic_field.getDimensions()) {
+        throw std::invalid_argument(
+            "Electric and magnetic field dimensions must match in MaxwellEquations::computeHamiltonian");
+    }
+
     const auto& dims = electric_field.getDimensions();
     const int Nx = dims[0], Ny = dims[1], Nz = dims[2];
 
