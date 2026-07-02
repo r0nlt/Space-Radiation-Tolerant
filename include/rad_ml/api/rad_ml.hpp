@@ -423,25 +423,50 @@ inline error::Result<T> makeError(error::ErrorCode code, error::ErrorCategory ca
  */
 namespace neural {
 /**
+ * @brief A neural network paired with its selective-hardening engine
+ *
+ * SelectiveHardening does not wrap the network transparently: the caller
+ * describes the network's components (weights, biases, ...) as
+ * neural::NetworkComponent entries, runs hardening->analyzeAndProtect(...) once,
+ * and then protects/verifies individual values with hardening->applyProtection(...)
+ * using the returned analysis.
+ *
+ * @tparam Network Neural network type
+ */
+template <typename Network>
+struct ProtectedNetwork {
+    std::unique_ptr<Network> network;                       ///< The network being protected
+    std::unique_ptr<neural::SelectiveHardening> hardening;  ///< Hardening engine
+    neural::ProtectionLevel requested_level;                ///< Protection level requested at creation
+};
+
+/**
  * @brief Create a neural network with selective hardening
+ *
+ * The hardening engine is configured with the given strategy. The requested
+ * protection level is recorded on the returned pair; the effective per-component
+ * levels are decided by the strategy when analyzeAndProtect() is run.
  *
  * @tparam Network Neural network type
  * @tparam Args Constructor argument types (these are forwarded to the network's constructor)
  * @param strategy Hardening strategy
- * @param protection_level Protection level
+ * @param protection_level Requested protection level
  * @param args Arguments forwarded to the network constructor (e.g., layer sizes, input/output dims,
  * etc.)
- * @return Protected neural network instance
+ * @return The network together with its configured hardening engine
  */
 template <typename Network, typename... Args>
-inline std::unique_ptr<neural::SelectiveHardening> createProtectedNetwork(
+inline ProtectedNetwork<Network> createProtectedNetwork(
     neural::HardeningStrategy strategy, neural::ProtectionLevel protection_level, Args&&... args)
 {
-    auto network = std::make_unique<Network>(std::forward<Args>(args)...);
-    auto protected_network =
-        std::make_unique<neural::SelectiveHardening>(neural::HardeningConfig::defaultConfig());
+    auto config = neural::HardeningConfig::defaultConfig();
+    config.strategy = strategy;
 
-    return protected_network;
+    ProtectedNetwork<Network> result;
+    result.network = std::make_unique<Network>(std::forward<Args>(args)...);
+    result.hardening = std::make_unique<neural::SelectiveHardening>(config);
+    result.requested_level = protection_level;
+    return result;
 }
 
 /**
@@ -476,10 +501,11 @@ namespace simulation {
  * @return Radiation simulator instance
  */
 inline std::unique_ptr<sim::PhysicsRadiationSimulator> createRadiationSimulator(
-    sim::RadiationEnvironment environment = sim::RadiationEnvironment::EARTH_ORBIT,
+    sim::SpaceEnvironment environment = sim::SpaceEnvironment::EARTH_ORBIT,
     double intensity = 0.5)
 {
-    auto simulator = std::make_unique<sim::PhysicsRadiationSimulator>(environment);
+    auto simulator =
+        std::make_unique<sim::PhysicsRadiationSimulator>(sim::EnvironmentParams(environment));
     simulator->setIntensity(intensity);
 
     return simulator;

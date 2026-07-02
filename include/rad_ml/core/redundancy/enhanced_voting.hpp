@@ -286,6 +286,93 @@ public:
     }
     
     /**
+     * CRC-32 checksum (polynomial 0xEDB88320), bitwise implementation.
+     *
+     * Intended for computing a write-time checksum of a value so that voting
+     * can later distinguish intact copies from corrupted ones.
+     *
+     * @param data Pointer to the data
+     * @param length Length of the data in bytes
+     * @return CRC-32 checksum
+     */
+    static uint32_t crc32(const void* data, size_t length) noexcept {
+        uint32_t crc = 0xFFFFFFFF;
+        const uint8_t* bytes = static_cast<const uint8_t*>(data);
+        for (size_t i = 0; i < length; i++) {
+            crc ^= bytes[i];
+            for (int j = 0; j < 8; j++) {
+                crc = (crc >> 1) ^ (0xEDB88320u & (~(crc & 1u) + 1u));
+            }
+        }
+        return ~crc;
+    }
+
+    /**
+     * Convenience overload: CRC-32 of a trivially copyable value.
+     */
+    template <typename T>
+    static uint32_t crc32(const T& value) noexcept {
+        static_assert(std::is_trivially_copyable<T>::value,
+                      "crc32 requires a trivially copyable type");
+        return crc32(&value, sizeof(T));
+    }
+
+    /**
+     * Checksum-assisted adaptive voting.
+     *
+     * @param expected_checksum CRC-32 of the value computed at write time
+     *        (before any corruption), e.g. the per-copy checksums EnhancedTMR
+     *        stores on set(). It is used as an oracle in two ways:
+     *        1. A copy whose current CRC matches is provably unmodified since
+     *           the write (modulo a ~2^-32 collision) and is returned
+     *           directly. This resolves cases plain voting gets wrong, such
+     *           as correlated corruption of two copies outvoting the single
+     *           intact copy at the bit level.
+     *        2. If every copy is corrupted, reconstruction candidates from
+     *           bit-level, word-error and burst-error voting are validated
+     *           against the checksum; a validating candidate recovered the
+     *           original value exactly.
+     *        If neither applies, falls back to plain pattern-based
+     *        adaptiveVote().
+     *
+     * @param a First copy
+     * @param b Second copy
+     * @param c Third copy
+     * @param pattern The detected or expected fault pattern
+     * @return Best value based on checksum validation and specialized voting
+     */
+#if __cplusplus >= 202002L
+    template<VotableType T>
+#else
+    template<typename T>
+#endif
+    static T adaptiveVote(const T& a, const T& b, const T& c, FaultPattern pattern,
+                          uint32_t expected_checksum) {
+        // Fast path: all copies agree
+        if (a == b && b == c) return a;
+
+        // 1. Trust any copy that still matches its write-time checksum. This
+        //    intentionally precedes pairwise agreement: two agreeing copies
+        //    can both be corrupted by a correlated upset, while a validating
+        //    copy is known-good.
+        if (crc32(a) == expected_checksum) return a;
+        if (crc32(b) == expected_checksum) return b;
+        if (crc32(c) == expected_checksum) return c;
+
+        // 2. All copies corrupted: try to reconstruct the original and
+        //    validate each candidate against the checksum.
+        const T bit_result = bitLevelVote(a, b, c);
+        if (crc32(bit_result) == expected_checksum) return bit_result;
+        const T word_result = wordErrorVote(a, b, c);
+        if (crc32(word_result) == expected_checksum) return word_result;
+        const T burst_result = burstErrorVote(a, b, c);
+        if (crc32(burst_result) == expected_checksum) return burst_result;
+
+        // 3. Nothing validates: fall back to pattern-based voting
+        return adaptiveVote(a, b, c, pattern);
+    }
+
+    /**
      * Detect the most likely fault pattern based on bit differences
      * 
      * @param a First copy
