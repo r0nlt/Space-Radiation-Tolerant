@@ -14,10 +14,11 @@
 #include <random>
 #include <map>
 #include <cstdint>
-#include <bitset>
+#include <cstring>
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <type_traits>
 
 namespace rad_ml {
 namespace testing {
@@ -141,43 +142,64 @@ private:
     std::mt19937 gen;  // Mersenne Twister random generator
 };
 
+namespace detail {
+
+/// Unsigned integer type with the same size as T, used as a bit container
+template<typename T>
+using BitsOf = typename std::conditional<
+    sizeof(T) == 1, std::uint8_t,
+    typename std::conditional<
+        sizeof(T) == 2, std::uint16_t,
+        typename std::conditional<
+            sizeof(T) == 4, std::uint32_t,
+            std::uint64_t
+        >::type
+    >::type>::type;
+
+} // namespace detail
+
 /**
  * Template implementation for injectFault
+ *
+ * Bit manipulation is done on an unsigned integer copy of the value's object
+ * representation (via std::memcpy) to avoid strict-aliasing undefined
+ * behavior; bit i corresponds to bit i of the value's memory representation.
  */
 template<typename T>
 T SystematicFaultInjector::injectFault(T value, FaultPattern pattern, int bit_position) {
     static_assert(std::is_arithmetic<T>::value, "Only arithmetic types are supported");
-    
+    static_assert(sizeof(T) <= 8, "Types larger than 64 bits are not supported");
+
+    using Bits = detail::BitsOf<T>;
     constexpr int total_bits = sizeof(T) * 8;
-    
+
     // For random bit position
     if (bit_position < 0) {
         std::uniform_int_distribution<> dis(0, total_bits - 1);
         bit_position = dis(gen);
     }
-    
+
     // Get the bits to flip based on the pattern
     std::vector<int> bits_to_flip = getBitsToFlip(pattern, total_bits, bit_position);
-    
-    // Convert to bitset for manipulation
-    std::bitset<sizeof(T) * 8> bits = 
-        *reinterpret_cast<std::bitset<sizeof(T) * 8>*>(&value);
-    
+
+    Bits bits = 0;
+    std::memcpy(&bits, &value, sizeof(T));
+
     // Apply the bit flips
     for (int bit : bits_to_flip) {
         if (bit >= 0 && bit < total_bits) {
+            const Bits mask = Bits{1} << bit;
             if (pattern == STUCK_AT_ZERO) {
-                bits.reset(bit);  // Set to 0
+                bits &= static_cast<Bits>(~mask);  // Set to 0
             } else if (pattern == STUCK_AT_ONE) {
-                bits.set(bit);    // Set to 1
+                bits |= mask;                      // Set to 1
             } else {
-                bits.flip(bit);   // Flip bit
+                bits ^= mask;                      // Flip bit
             }
         }
     }
-    
-    // Convert back to the original type
-    value = *reinterpret_cast<T*>(&bits);
+
+    std::memcpy(&value, &bits, sizeof(T));
     return value;
 }
 

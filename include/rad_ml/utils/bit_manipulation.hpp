@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <cmath>
 #include <limits>
 #include <type_traits>
@@ -33,18 +34,15 @@ public:
             return value; // Invalid bit position
         }
         
-        // Use union to reinterpret float as uint32_t for bit manipulation
-        union {
-            float f;
-            uint32_t i;
-        } converter;
-        
-        converter.f = value;
+        // Copy bits into an integer via memcpy (union punning is UB in C++)
+        uint32_t bits;
+        std::memcpy(&bits, &value, sizeof(value));
         
         // Flip the specified bit using XOR
-        converter.i ^= (1u << bit_position);
+        bits ^= (1u << bit_position);
         
-        return converter.f;
+        std::memcpy(&value, &bits, sizeof(value));
+        return value;
     }
     
     /**
@@ -59,18 +57,15 @@ public:
             return value; // Invalid bit position
         }
         
-        // Use union to reinterpret double as uint64_t for bit manipulation
-        union {
-            double d;
-            uint64_t i;
-        } converter;
-        
-        converter.d = value;
+        // Copy bits into an integer via memcpy (union punning is UB in C++)
+        uint64_t bits;
+        std::memcpy(&bits, &value, sizeof(value));
         
         // Flip the specified bit using XOR
-        converter.i ^= (1ULL << bit_position);
+        bits ^= (1ULL << bit_position);
         
-        return converter.d;
+        std::memcpy(&value, &bits, sizeof(value));
+        return value;
     }
     
     /**
@@ -84,7 +79,7 @@ public:
     template<typename T>
     static typename std::enable_if<std::is_integral<T>::value, T>::type
     flipBit(T value, int bit_position) {
-        if (bit_position < 0 || bit_position >= sizeof(T) * 8) {
+        if (bit_position < 0 || bit_position >= static_cast<int>(sizeof(T) * 8)) {
             return value; // Invalid bit position
         }
         
@@ -114,16 +109,16 @@ public:
             >::type
         >::type;
         
-        union {
-            T value;
-            UIntType bits;
-        } a_conv, b_conv;
+        static_assert(sizeof(UIntType) == sizeof(T),
+                      "Only 1, 2, 4, and 8 byte types are supported");
         
-        a_conv.value = a;
-        b_conv.value = b;
+        UIntType a_bits = 0;
+        UIntType b_bits = 0;
+        std::memcpy(&a_bits, &a, sizeof(T));
+        std::memcpy(&b_bits, &b, sizeof(T));
         
         // XOR the values to get bits that differ
-        UIntType diff = a_conv.bits ^ b_conv.bits;
+        UIntType diff = a_bits ^ b_bits;
         
         // Count the bits set in the difference
         int count = 0;
@@ -145,7 +140,7 @@ public:
      */
     template<typename T>
     static bool isBitSet(T value, int bit_position) {
-        if (bit_position < 0 || bit_position >= sizeof(T) * 8) {
+        if (bit_position < 0 || bit_position >= static_cast<int>(sizeof(T) * 8)) {
             return false; // Invalid bit position
         }
         
@@ -154,14 +149,12 @@ public:
             using UIntType = typename std::conditional<
                 sizeof(T) == 8, uint64_t, uint32_t
             >::type;
+            static_assert(sizeof(UIntType) == sizeof(T),
+                          "Unsupported floating-point size");
             
-            union {
-                T value;
-                UIntType bits;
-            } converter;
-            
-            converter.value = value;
-            return (converter.bits & (static_cast<UIntType>(1) << bit_position)) != 0;
+            UIntType bits;
+            std::memcpy(&bits, &value, sizeof(T));
+            return (bits & (static_cast<UIntType>(1) << bit_position)) != 0;
         }
         else {
             return (value & (static_cast<T>(1) << bit_position)) != 0;

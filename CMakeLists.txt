@@ -38,15 +38,18 @@ else()
 endif()
 
 # Set optimized compiler flags
+# NOTE: -ffast-math is deliberately NOT used. It implies -ffinite-math-only,
+# which breaks std::isnan/NaN propagation and silently disables the IEEE-754
+# NaN/Inf-aware TMR voting (ieee754_tmr_test fails under -ffast-math).
 if(ENABLE_OPTIMIZATIONS)
   if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -flto -DNDEBUG -ffast-math")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -march=native -flto -DNDEBUG -ffast-math")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -flto -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -march=native -flto -DNDEBUG")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O1 -g -DDEBUG")
   endif()
 
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvectorize -fslp-vectorize -ffast-math -funroll-loops")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvectorize -fslp-vectorize -funroll-loops")
   endif()
 endif()
 
@@ -407,6 +410,27 @@ add_test(NAME galois_field_bm_noheap_parity_test COMMAND galois_field_bm_noheap_
 add_executable(hamming_secded_test test/neural/hamming_secded_test.cpp)
 target_include_directories(hamming_secded_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME hamming_secded_test COMMAND hamming_secded_test)
+
+# Protection lifecycle regression test for UnifiedMemoryManager
+# (allocate -> corrupt -> verify -> deallocate for CANARY/CRC/ECC/TMR)
+add_executable(unified_memory_test test/unit/core/memory/unified_memory_test.cpp)
+target_include_directories(unified_memory_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(unified_memory_test PRIVATE Threads::Threads)
+add_test(NAME unified_memory_test COMMAND unified_memory_test)
+
+# Checksum-assisted adaptive voting regression test
+# (EnhancedVoting::adaptiveVote with write-time CRC + EnhancedTMR CRC-assisted selection)
+add_executable(checksum_voting_test test/unit/core/redundancy/checksum_voting_test.cpp)
+target_include_directories(checksum_voting_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(checksum_voting_test PRIVATE Threads::Threads)
+add_test(NAME checksum_voting_test COMMAND checksum_voting_test)
+
+# Bit-exact semantics regression test for SystematicFaultInjector::injectFault
+add_executable(fault_injection_bits_test
+    test/unit/testing/fault_injection_bits_test.cpp
+    src/testing/fault_injection.cpp)
+target_include_directories(fault_injection_bits_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME fault_injection_bits_test COMMAND fault_injection_bits_test)
 
 # Verbose RS systematic-encoding diagnostic (manual inspection; not a strict regression test)
 add_executable(reed_solomon_fixed_diagnostic test/neural/reed_solomon_fixed_diagnostic.cpp)

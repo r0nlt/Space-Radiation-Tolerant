@@ -336,6 +336,24 @@ class EnhancedTMR {
     }
 
     /**
+     * @brief Corrupt a specific copy without re-arming its CRC (for testing)
+     *
+     * Unlike setRawCopy(), this models a radiation upset: the in-memory copy
+     * changes but the stored write-time CRC does not, so CRC verification and
+     * checksum-assisted voting can detect the corruption.
+     *
+     * @param index Index of the copy (0-2)
+     * @param value Corrupted value
+     */
+    void corruptCopy(size_t index, const T& value)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (index < num_copies_) {
+            copies_[index] = value;
+        }
+    }
+
+    /**
      * @brief Force verification of all copies
      *
      * @return True if verification passed, false if errors detected
@@ -585,6 +603,41 @@ class EnhancedTMR {
 
         // We have a disagreement
         voting_disagreements_++;
+
+        // Checksum-assisted selection: a copy whose current CRC still matches
+        // its stored write-time CRC is provably unmodified, so prefer it over
+        // agreement heuristics (two agreeing copies can both be corrupted by
+        // a correlated upset). Only applies when the CRCs discriminate
+        // between copies; if all copies validate (e.g. every change went
+        // through set()/setRawCopy(), which re-arm the CRC) the checksum
+        // carries no information and we fall through to regular voting.
+        {
+            bool crc_ok[num_copies_];
+            size_t ok_count = 0;
+            for (size_t i = 0; i < num_copies_; i++) {
+                crc_ok[i] = (crc_calculator_.calculate(&copies_[i], sizeof(T)) == crcs_[i]);
+                if (crc_ok[i]) ok_count++;
+            }
+
+            if (ok_count > 0 && ok_count < num_copies_) {
+                size_t best_idx = num_copies_;
+                for (size_t i = 0; i < num_copies_; i++) {
+                    if (crc_ok[i] &&
+                        (best_idx == num_copies_ || health_scores_[i] > health_scores_[best_idx])) {
+                        best_idx = i;
+                    }
+                }
+                for (size_t i = 0; i < num_copies_; i++) {
+                    if (crc_ok[i]) {
+                        health_scores_[i] = std::min(1.0, health_scores_[i] + 0.05);
+                    }
+                    else {
+                        health_scores_[i] = std::max(0.1, health_scores_[i] - 0.2);
+                    }
+                }
+                return copies_[best_idx];
+            }
+        }
 
         if (use_health_weighted_voting_) {
             // Health-weighted voting

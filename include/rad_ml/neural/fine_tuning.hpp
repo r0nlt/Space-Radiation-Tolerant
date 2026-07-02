@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -1289,9 +1290,11 @@ private:
                 size_t weight_idx = weight_dist(gen);
                 int bit_idx = bit_dist(gen);
 
-                // Flip bit
-                uint32_t* bits = reinterpret_cast<uint32_t*>(&corrupted_weights[weight_idx]);
-                *bits ^= (1U << bit_idx);
+                // Flip bit via memcpy to avoid strict-aliasing UB
+                uint32_t bits;
+                std::memcpy(&bits, &corrupted_weights[weight_idx], sizeof(bits));
+                bits ^= (1U << bit_idx);
+                std::memcpy(&corrupted_weights[weight_idx], &bits, sizeof(bits));
             }
 
             // Calculate error rate (fraction of weights corrupted)

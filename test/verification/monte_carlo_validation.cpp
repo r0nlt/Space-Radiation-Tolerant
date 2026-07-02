@@ -762,11 +762,16 @@ void runMonteCarloValidation(std::mt19937& gen,
                     test_results.burst_error_success++;
                 }
 
-                // 5. Adaptive Voting
+                // 5. Adaptive Voting (checksum-assisted). The CRC-32 models
+                // the write-time checksum a protection container stores when
+                // the value is written (as EnhancedTMR does per copy); the
+                // voter uses it to identify intact copies or validate
+                // reconstruction candidates when all copies are corrupted.
                 FaultPattern detected_pattern =
                     EnhancedVoting::detectFaultPattern(copy1, copy2, copy3);
-                T adaptive_result =
-                    EnhancedVoting::adaptiveVote(copy1, copy2, copy3, detected_pattern);
+                const uint32_t write_time_crc = EnhancedVoting::crc32(original_value);
+                T adaptive_result = EnhancedVoting::adaptiveVote(copy1, copy2, copy3,
+                                                                 detected_pattern, write_time_crc);
                 if (adaptive_result == original_value) {
                     test_results.adaptive_success++;
                 }
@@ -1527,6 +1532,235 @@ void printSummaryResults(const std::map<std::string, std::map<std::string, TestR
     std::cout << "---------------------------------------------------------\n";
 }
 
+// ============================================================================
+// Threshold gates
+//
+// The process exits non-zero if any headline protection metric regresses, so
+// CTest actually defends the published numbers. Thresholds are set with
+// margin below the rates measured after the July 2026 correctness fixes
+// (voting methods ~99.999%, recovery correction 100%, best challenging-
+// scenario method 100%) so Monte Carlo noise does not cause flaky failures,
+// while real regressions (e.g. re-enabling -ffast-math, breaking voting or
+// repair logic) trip the gate.
+// ============================================================================
+
+namespace {
+
+struct GateAggregates {
+    std::map<std::string, double> method_avg;  // Average rate per method (standard scenarios)
+    double recovery_detection = 0.0;
+    double recovery_correction = 0.0;
+    double recovery_uncorrectable = 0.0;
+    double multi_corruption_best = 0.0;       // Best method under multi-copy corruption
+    double correlated_errors_best = 0.0;      // Best method under correlated errors
+    double multi_corruption_adaptive = 0.0;   // Adaptive voting under multi-copy corruption
+    double correlated_errors_adaptive = 0.0;  // Adaptive voting under correlated errors
+    double edge_cases_adaptive = 0.0;
+    bool has_data = false;
+};
+
+GateAggregates computeGateAggregates(
+    const std::map<std::string, std::map<std::string, TestResults>>& results)
+{
+    GateAggregates agg;
+
+    const std::vector<std::string> actual_types = {typeid(float).name(), typeid(double).name(),
+                                                   typeid(int32_t).name(), typeid(int64_t).name()};
+    const std::vector<std::string> error_types = {"SINGLE_BIT", "MULTI_BIT", "BURST", "WORD",
+                                                  "COMBINED"};
+
+    int standard_count = 0;
+    int recovery_count = 0;
+    int multi_count = 0;
+    int correlated_count = 0;
+    int edge_count = 0;
+
+    for (const auto& actual_type : actual_types) {
+        auto type_it = results.find(actual_type);
+        if (type_it == results.end()) continue;
+        const auto& per_key = type_it->second;
+
+        for (const auto& env : ENVIRONMENTS) {
+            // Standard scenarios: per-method average rates
+            for (const auto& error_type : error_types) {
+                auto it = per_key.find(env.name + "_" + error_type);
+                if (it == per_key.end() || it->second.total_trials == 0) continue;
+                const auto& r = it->second;
+                const double n = static_cast<double>(r.total_trials);
+
+                agg.method_avg["Standard"] += r.standard_success / n;
+                agg.method_avg["Bit-Level"] += r.bit_level_success / n;
+                agg.method_avg["Word-Error"] += r.word_error_success / n;
+                agg.method_avg["Burst-Error"] += r.burst_error_success / n;
+                agg.method_avg["Adaptive"] += r.adaptive_success / n;
+                agg.method_avg["Weighted Voting"] += r.weighted_voting_success / n;
+                agg.method_avg["Fast Bit Correction"] += r.fast_bit_correction_success / n;
+                agg.method_avg["Pattern Detection"] += r.pattern_detection_success / n;
+                agg.method_avg["Protected Value"] += r.protected_value_success / n;
+                agg.method_avg["Aligned Memory"] += r.aligned_memory_success / n;
+                standard_count++;
+            }
+
+            // Recovery scenario
+            if (auto it = per_key.find(env.name + "_RECOVERY_TEST");
+                it != per_key.end() && it->second.total_trials > 0) {
+                const auto& r = it->second;
+                const double n = static_cast<double>(r.total_trials);
+                agg.recovery_detection += r.recovery_detected / n;
+                // Two recovery phases per trial (see RECOVERY_TEST implementation)
+                agg.recovery_correction += r.recovery_corrected / (2.0 * n);
+                agg.recovery_uncorrectable += r.recovery_uncorrectable / (2.0 * n);
+                recovery_count++;
+            }
+
+            // Challenging scenarios: gate on the best method, since plain
+            // majority voting is expected to degrade under multi-copy and
+            // correlated corruption
+            auto best_rate = [](const TestResults& r) {
+                const double n = static_cast<double>(r.total_trials);
+                double best = 0.0;
+                for (double rate :
+                     {r.weighted_voting_success / n, r.pattern_detection_success / n,
+                      r.protected_value_success / n, r.aligned_memory_success / n,
+                      r.adaptive_success / n}) {
+                    best = std::max(best, rate);
+                }
+                return best;
+            };
+
+            if (auto it = per_key.find(env.name + "_MULTI_CORRUPTION");
+                it != per_key.end() && it->second.total_trials > 0) {
+                const auto& r = it->second;
+                agg.multi_corruption_best += best_rate(r);
+                agg.multi_corruption_adaptive +=
+                    r.adaptive_success / static_cast<double>(r.total_trials);
+                multi_count++;
+            }
+            if (auto it = per_key.find(env.name + "_CORRELATED_ERRORS");
+                it != per_key.end() && it->second.total_trials > 0) {
+                const auto& r = it->second;
+                agg.correlated_errors_best += best_rate(r);
+                agg.correlated_errors_adaptive +=
+                    r.adaptive_success / static_cast<double>(r.total_trials);
+                correlated_count++;
+            }
+            if (auto it = per_key.find(env.name + "_EDGE_CASES");
+                it != per_key.end() && it->second.total_trials > 0) {
+                const auto& r = it->second;
+                agg.edge_cases_adaptive +=
+                    r.adaptive_success / static_cast<double>(r.total_trials);
+                edge_count++;
+            }
+        }
+    }
+
+    if (standard_count > 0) {
+        for (auto& [name, sum] : agg.method_avg) {
+            sum /= standard_count;
+        }
+        agg.has_data = true;
+    }
+    if (recovery_count > 0) {
+        agg.recovery_detection /= recovery_count;
+        agg.recovery_correction /= recovery_count;
+        agg.recovery_uncorrectable /= recovery_count;
+    }
+    if (multi_count > 0) {
+        agg.multi_corruption_best /= multi_count;
+        agg.multi_corruption_adaptive /= multi_count;
+    }
+    if (correlated_count > 0) {
+        agg.correlated_errors_best /= correlated_count;
+        agg.correlated_errors_adaptive /= correlated_count;
+    }
+    if (edge_count > 0) agg.edge_cases_adaptive /= edge_count;
+
+    return agg;
+}
+
+/// Returns the number of failed gates (0 = all pass)
+int evaluateThresholdGates(
+    const std::map<std::string, std::map<std::string, TestResults>>& results)
+{
+    const GateAggregates agg = computeGateAggregates(results);
+
+    std::cout << "\n=== Threshold Gates ===\n";
+
+    if (!agg.has_data) {
+        std::cout << "GATE FAILURE: no test results were collected\n";
+        return 1;
+    }
+
+    int failures = 0;
+    auto gate_min = [&failures](const std::string& name, double measured, double threshold) {
+        const bool ok = measured >= threshold;
+        std::cout << (ok ? "  [PASS] " : "  [FAIL] ") << name << ": " << std::fixed
+                  << std::setprecision(4) << measured * 100 << "% (required >= "
+                  << threshold * 100 << "%)\n";
+        if (!ok) failures++;
+    };
+    auto gate_max = [&failures](const std::string& name, double measured, double threshold) {
+        const bool ok = measured <= threshold;
+        std::cout << (ok ? "  [PASS] " : "  [FAIL] ") << name << ": " << std::fixed
+                  << std::setprecision(4) << measured * 100 << "% (required <= "
+                  << threshold * 100 << "%)\n";
+        if (!ok) failures++;
+    };
+    auto gate_band = [&failures](const std::string& name, double measured, double lo, double hi) {
+        const bool ok = measured >= lo && measured <= hi;
+        std::cout << (ok ? "  [PASS] " : "  [FAIL] ") << name << ": " << std::fixed
+                  << std::setprecision(4) << measured * 100 << "% (required "
+                  << lo * 100 << "% - " << hi * 100 << "%)\n";
+        if (!ok) failures++;
+    };
+
+    // Voting methods on standard scenarios (measured ~99.999%)
+    for (const char* method : {"Standard", "Bit-Level", "Word-Error", "Burst-Error", "Adaptive",
+                               "Weighted Voting", "Fast Bit Correction", "Pattern Detection",
+                               "Protected Value", "Aligned Memory"}) {
+        gate_min(std::string(method) + " (standard scenarios)", agg.method_avg.at(method), 0.999);
+    }
+
+    // Recovery pipeline (measured: detection 100%, correction 100%)
+    gate_min("Recovery detection", agg.recovery_detection, 0.999);
+    gate_min("Recovery correction", agg.recovery_correction, 0.995);
+    gate_max("Recovery uncorrectable", agg.recovery_uncorrectable, 0.005);
+
+    // Challenging scenarios: at least one protection method must hold up
+    gate_min("Multi-copy corruption (best method)", agg.multi_corruption_best, 0.99);
+    gate_min("Correlated errors (best method)", agg.correlated_errors_best, 0.99);
+    gate_min("Edge cases (adaptive voting)", agg.edge_cases_adaptive, 0.99);
+
+    // Adaptive voting under multi-copy corruption is band-gated: measured
+    // ~56% as of July 2026. A drop means the voting logic regressed; a jump
+    // above the band most likely means the scenario stopped injecting real
+    // multi-copy corruption (a broken test reading as an improvement).
+    // Checksum-assisted voting does NOT move this number: all three copies
+    // are corrupted, so no copy CRC-validates, and the residual failures are
+    // same-bit collisions across copies that no reconstruction can undo. If a
+    // genuine algorithmic improvement raises this rate, re-baseline the band
+    // deliberately.
+    gate_band("Multi-copy corruption (adaptive voting)", agg.multi_corruption_adaptive, 0.45,
+              0.70);
+
+    // Re-baselined July 2026: checksum-assisted adaptive voting (write-time
+    // CRC identifies the intact copy) raised correlated-error recovery from
+    // ~21% to ~100%; the scenario always leaves one copy intact, and that
+    // copy now provably wins the vote. Previously band-gated at 12%-35%.
+    gate_min("Correlated errors (adaptive voting)", agg.correlated_errors_adaptive, 0.99);
+
+    if (failures == 0) {
+        std::cout << "All threshold gates passed.\n";
+    }
+    else {
+        std::cout << failures << " threshold gate(s) FAILED - validation regressed.\n";
+    }
+
+    return failures;
+}
+
+}  // namespace
+
 int main()
 {
     std::cout << "=================================================================\n";
@@ -1578,5 +1812,7 @@ int main()
     // Generate NASA-style verification report
     generateVerificationReport(all_results);
 
-    return 0;
+    // Fail the process if headline metrics regressed, so CTest can gate on it
+    const int gate_failures = evaluateThresholdGates(all_results);
+    return gate_failures == 0 ? 0 : 1;
 }

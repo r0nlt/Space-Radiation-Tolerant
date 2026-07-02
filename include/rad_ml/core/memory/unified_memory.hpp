@@ -3,6 +3,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -18,8 +19,10 @@
 namespace rad_ml {
 namespace memory {
 
-// Canary value for memory protection
-constexpr uint32_t CANARY_VALUE = 0xDEADBEEF;
+// Canary value for memory protection (read/written via std::memcpy because the
+// trailing canary is not guaranteed to be aligned for uint64_t access)
+using CanaryType = std::uint64_t;
+constexpr CanaryType CANARY_VALUE = 0xDEADBEEFDEADBEEFULL;
 
 /**
  * @brief Memory protection level
@@ -184,11 +187,10 @@ class UnifiedMemoryManager {
     {
         std::lock_guard<std::mutex> lock(mutex_);
 
-        // Adjust size for protection if needed
-        size_t adjusted_size = size;
-        if (protection_level != MemoryProtectionLevel::NONE) {
-            adjusted_size = calculateProtectedSize(size, protection_level);
-        }
+        // Extra space required before/after the user region for this protection level
+        const size_t header = protectionHeaderSize(protection_level, flags, alignment);
+        const size_t trailer = protectionTrailerSize(protection_level, size);
+        const size_t adjusted_size = header + size + trailer;
 
         // Perform allocation
         void* allocated_ptr = nullptr;
@@ -216,34 +218,28 @@ class UnifiedMemoryManager {
                 std::memset(allocated_ptr, 0, adjusted_size);
             }
 
-            // Set the return pointer based on protection level
-            return_ptr = allocated_ptr;
+            // The user-facing pointer is offset past any protection header
+            return_ptr = static_cast<uint8_t*>(allocated_ptr) + header;
 
-            // Adjust return pointer based on protection scheme
-            if (protection_level == MemoryProtectionLevel::CANARY) {
-                // Skip the first canary value
-                return_ptr = static_cast<uint8_t*>(allocated_ptr) + sizeof(uint64_t);
-            }
+            // Track by the user-facing pointer, since that is what callers hand
+            // back to deallocate()/verifyMemoryIntegrity()
+            MemoryAllocationInfo& info = trackAllocation(return_ptr, allocated_ptr, size, location);
+            info.protection_level = protection_level;
 
-            // Setup protection if needed
-            if (protection_level != MemoryProtectionLevel::NONE) {
-                setupMemoryProtection(allocated_ptr, adjusted_size, protection_level);
-            }
-
-            // Track allocation - store the allocated pointer, but return the adjusted one
-            trackAllocation(allocated_ptr, size, location);
-
-            // Update allocation info to include both pointers
-            auto it = allocations_.find(allocated_ptr);
-            if (it != allocations_.end()) {
-                it->second.ptr = return_ptr;              // User-facing pointer
-                it->second.original_ptr = allocated_ptr;  // Original allocation pointer
+            if (isConcreteProtection(protection_level)) {
+                setupProtectionLocked(info);
+                info.is_protected.store(true);
+                stats_.protected_allocations++;
+                stats_.protected_bytes += size;
             }
 
             return return_ptr;
         }
         catch (const std::exception& e) {
             if (allocated_ptr) {
+                if (return_ptr) {
+                    allocations_.erase(return_ptr);
+                }
                 std::free(allocated_ptr);
             }
 
@@ -347,9 +343,7 @@ class UnifiedMemoryManager {
 
         // Check for corruption before freeing
         if (it->second.is_protected.load()) {
-            if (!verifyMemoryIntegrity(ptr)) {
-                stats_.detected_corruption++;
-
+            if (!verifyIntegrityLocked(it->second)) {
                 error::ErrorHandler::logError(error::ErrorInfo(
                     error::ErrorCode::MEMORY_CORRUPTION_DETECTED, error::ErrorCategory::MEMORY,
                     error::ErrorSeverity::ERROR, "Memory corruption detected during deallocation",
@@ -357,7 +351,7 @@ class UnifiedMemoryManager {
                     "Address: " + std::to_string(reinterpret_cast<uintptr_t>(ptr))));
 
                 // Attempt to repair if possible
-                if (tryRepairMemory(ptr)) {
+                if (tryRepairMemoryLocked(it->second)) {
                     stats_.repaired_corruption++;
                 }
             }
@@ -373,11 +367,14 @@ class UnifiedMemoryManager {
             stats_.protected_bytes -= it->second.size;
         }
 
+        // Free the underlying allocation (may differ from the user-facing
+        // pointer when a protection header precedes the user region)
+        void* original_ptr = it->second.original_ptr;
+
         // Remove from tracking
         allocations_.erase(it);
 
-        // Free the memory
-        std::free(ptr);
+        std::free(original_ptr);
 
         return true;
     }
@@ -504,20 +501,36 @@ class UnifiedMemoryManager {
             return false;
         }
 
-        // If already protected, remove old protection first
-        if (it->second.is_protected.load()) {
-            removeMemoryProtection(ptr);
+        MemoryAllocationInfo& info = it->second;
+
+        // Protection metadata space (canaries, CRC, parity bits, TMR copies) is
+        // reserved at allocation time. Applying a different concrete protection
+        // level after the fact would write past the allocation, so it is
+        // rejected instead of corrupting the heap.
+        if (isConcreteProtection(level) && level != info.protection_level) {
+            error::ErrorHandler::logError(error::ErrorInfo(
+                error::ErrorCode::MEMORY_ACCESS_VIOLATION, error::ErrorCategory::MEMORY,
+                error::ErrorSeverity::ERROR,
+                "Cannot change protection level after allocation; allocate with the desired level",
+                error::SourceLocation(__FILE__, __LINE__, __func__),
+                "Address: " + std::to_string(reinterpret_cast<uintptr_t>(ptr))));
+            return false;
         }
 
-        // Setup protection
-        if (setupMemoryProtection(ptr, it->second.size, level)) {
-            it->second.is_protected.store(true);
+        if (!isConcreteProtection(level)) {
+            return false;
+        }
+
+        // Re-arm protection (refresh canaries/CRC/parity/TMR copies from the
+        // current contents of the user region)
+        setupProtectionLocked(info);
+
+        if (!info.is_protected.load()) {
+            info.is_protected.store(true);
             stats_.protected_allocations++;
-            stats_.protected_bytes += it->second.size;
-            return true;
+            stats_.protected_bytes += info.size;
         }
-
-        return false;
+        return true;
     }
 
     /**
@@ -539,14 +552,11 @@ class UnifiedMemoryManager {
             return true;  // Already unprotected
         }
 
-        if (removeMemoryProtection(ptr)) {
-            it->second.is_protected.store(false);
-            stats_.protected_allocations--;
-            stats_.protected_bytes -= it->second.size;
-            return true;
-        }
-
-        return false;
+        // Protection metadata is left in place; it is simply no longer checked.
+        it->second.is_protected.store(false);
+        stats_.protected_allocations--;
+        stats_.protected_bytes -= it->second.size;
+        return true;
     }
 
     /**
@@ -559,95 +569,13 @@ class UnifiedMemoryManager {
     {
         std::lock_guard<std::mutex> lock(mutex_);
 
-        // Find allocation info
-        auto it = std::find_if(allocations_.begin(), allocations_.end(),
-                               [ptr](const auto& pair) { return pair.second.ptr == ptr; });
-
+        auto it = allocations_.find(ptr);
         if (it == allocations_.end()) {
             // Not found - not our memory
             return false;
         }
 
-        // Use original_ptr for verification since that's where protection is applied
-        void* mem_ptr = it->second.original_ptr;
-        size_t size = it->second.size;
-
-        // Get the protection level for this allocation
-        auto protection_level = getDefaultProtectionLevel();
-
-        // Verify based on protection type
-        switch (protection_level) {
-            case MemoryProtectionLevel::CANARY: {
-                // Check canary values at beginning and end
-                uint64_t* start_canary = reinterpret_cast<uint64_t*>(mem_ptr);
-                uint64_t* end_canary = reinterpret_cast<uint64_t*>(
-                    reinterpret_cast<uint8_t*>(mem_ptr) + size + sizeof(uint64_t));
-
-                bool start_valid = (*start_canary == CANARY_VALUE);
-                bool end_valid = (*end_canary == CANARY_VALUE);
-
-                if (!start_valid || !end_valid) {
-                    stats_.detected_corruption++;
-
-                    // Report memory corruption
-                    for (const auto& [id, callback] : corruption_callbacks_) {
-                        callback(ptr, size, "Memory corruption detected: canary value modified");
-                    }
-
-                    return false;
-                }
-                return true;
-            }
-
-            case MemoryProtectionLevel::CRC: {
-                // Calculate CRC for the memory block
-                uint32_t crc = calculateCRC32(static_cast<const uint8_t*>(mem_ptr), size);
-
-                // Store the CRC in the metadata
-                auto it = allocations_.find(mem_ptr);
-                if (it != allocations_.end()) {
-                    it->second.is_protected = true;
-                    // In a real implementation, we would store the CRC somewhere
-                    // For now, we'll just set the protected flag
-                }
-                return true;
-            }
-
-            case MemoryProtectionLevel::ECC: {
-                // Simplified ECC check
-                // In a real implementation, this would use proper ECC algorithms
-                // such as Hamming code or Reed-Solomon
-                uint8_t* ecc_data = static_cast<uint8_t*>(mem_ptr) + size;
-                bool is_valid = verifyECC(static_cast<uint8_t*>(mem_ptr), size, ecc_data);
-                return is_valid;
-            }
-
-            case MemoryProtectionLevel::TMR: {
-                // Triple Modular Redundancy - compare three copies
-                size_t chunk_size = size;
-                uint8_t* copy1 = static_cast<uint8_t*>(mem_ptr);
-                uint8_t* copy2 = static_cast<uint8_t*>(mem_ptr) + chunk_size;
-                uint8_t* copy3 = static_cast<uint8_t*>(mem_ptr) + 2 * chunk_size;
-
-                // Compare byte by byte
-                for (size_t i = 0; i < chunk_size; ++i) {
-                    // Majority voting
-                    int correct_value = majorityVote(copy1[i], copy2[i], copy3[i]);
-
-                    // If any copy is corrupt, the memory is corrupt
-                    if (copy1[i] != correct_value || copy2[i] != correct_value ||
-                        copy3[i] != correct_value) {
-                        stats_.detected_corruption++;
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            default:
-                // No additional checks for unknown protection types
-                return true;
-        }
+        return verifyIntegrityLocked(it->second);
     }
 
     /**
@@ -713,15 +641,20 @@ class UnifiedMemoryManager {
     UnifiedMemoryManager& operator=(UnifiedMemoryManager&&) = delete;
 
     /**
-     * @brief Track a new allocation
+     * @brief Track a new allocation (caller must hold mutex_)
      *
-     * @param ptr Memory pointer
-     * @param size Size in bytes
+     * @param user_ptr User-facing pointer (map key)
+     * @param original_ptr Pointer returned by malloc/aligned_alloc
+     * @param size User-visible size in bytes
      * @param location Source location
+     * @return Reference to the new tracking entry
      */
-    void trackAllocation(void* ptr, size_t size, const std::string& location)
+    MemoryAllocationInfo& trackAllocation(void* user_ptr, void* original_ptr, size_t size,
+                                          const std::string& location)
     {
-        allocations_.emplace(ptr, MemoryAllocationInfo(ptr, size, location));
+        auto result = allocations_.emplace(user_ptr, MemoryAllocationInfo(user_ptr, size, location));
+        MemoryAllocationInfo& info = result.first->second;
+        info.original_ptr = original_ptr;
 
         // Update stats
         stats_.current_allocations++;
@@ -735,261 +668,251 @@ class UnifiedMemoryManager {
         if (stats_.current_bytes > stats_.peak_bytes) {
             stats_.peak_bytes = stats_.current_bytes;
         }
+
+        return info;
     }
 
     /**
-     * @brief Calculate size needed for protected allocation
+     * @brief Whether a protection level has a concrete in-memory scheme
      *
-     * @param original_size Original size
-     * @param level Protection level
-     * @return Adjusted size
+     * The abstract levels (MINIMAL..ADAPTIVE) are policy hints with no
+     * metadata layout of their own.
      */
-    size_t calculateProtectedSize(size_t original_size, MemoryProtectionLevel level)
+    static bool isConcreteProtection(MemoryProtectionLevel level)
     {
         switch (level) {
-            case MemoryProtectionLevel::NONE:
-                return original_size;
-
             case MemoryProtectionLevel::CANARY:
-                // Need space for canary values at start and end
-                return original_size + 2 * sizeof(uint64_t);
-
             case MemoryProtectionLevel::CRC:
-                // Need space for the CRC value
-                return original_size + sizeof(uint32_t);
-
             case MemoryProtectionLevel::ECC:
-                // ECC typically requires ~12.5% overhead (simplified for demonstration)
-                return original_size + (original_size / 8);
-
             case MemoryProtectionLevel::TMR:
-                // Triple the size for TMR
-                return original_size * 3;
-
+                return true;
             default:
-                return original_size;
+                return false;
         }
     }
 
     /**
-     * @brief Setup memory protection for an allocation
+     * @brief Bytes reserved before the user region for this protection level
      *
-     * @param ptr Memory pointer
-     * @param size Size in bytes
-     * @param level Protection level
-     * @return True if protection was set up successfully
+     * Only CANARY uses a header (the leading canary). The header is padded so
+     * the user pointer keeps the alignment guarantee of the allocator.
      */
-    bool setupMemoryProtection(void* ptr, size_t size, MemoryProtectionLevel level)
+    static size_t protectionHeaderSize(MemoryProtectionLevel level, MemoryFlags flags,
+                                       size_t alignment)
     {
-        if (!ptr) {
-            return false;
+        if (level != MemoryProtectionLevel::CANARY) {
+            return 0;
         }
 
-        switch (level) {
-            case MemoryProtectionLevel::CANARY: {
-                // Add canary values at beginning and end of allocation
-                // Fix: Properly place canaries by adjusting the returned pointer
-                uint64_t* memory_start = reinterpret_cast<uint64_t*>(ptr);
-                uint64_t* memory_end = reinterpret_cast<uint64_t*>(reinterpret_cast<uint8_t*>(ptr) +
-                                                                   size - sizeof(uint64_t));
+        const size_t min_header =
+            (flags & MemoryFlags::ALIGNED) ? alignment : alignof(std::max_align_t);
+        return ((sizeof(CanaryType) + min_header - 1) / min_header) * min_header;
+    }
 
-                // Set canary values
-                *memory_start = CANARY_VALUE;
-                *memory_end = CANARY_VALUE;
-                return true;
+    /**
+     * @brief Bytes reserved after the user region for this protection level
+     */
+    static size_t protectionTrailerSize(MemoryProtectionLevel level, size_t size)
+    {
+        switch (level) {
+            case MemoryProtectionLevel::CANARY:
+                return sizeof(CanaryType);
+            case MemoryProtectionLevel::CRC:
+                return sizeof(uint32_t);
+            case MemoryProtectionLevel::ECC:
+                return (size + 7) / 8;  // 1 parity bit per byte
+            case MemoryProtectionLevel::TMR:
+                return 2 * size;  // Two extra copies
+            default:
+                return 0;
+        }
+    }
+
+    /**
+     * @brief Write protection metadata from the current user-region contents
+     * (caller must hold mutex_)
+     *
+     * Layout, relative to the user pointer P with user size S:
+     * - CANARY: canary at [P - 8, P) and [P + S, P + S + 8)
+     * - CRC:    stored CRC32 at [P + S, P + S + 4)
+     * - ECC:    parity bits at [P + S, P + S + ceil(S/8))
+     * - TMR:    copies at [P + S, P + 2S) and [P + 2S, P + 3S)
+     */
+    void setupProtectionLocked(MemoryAllocationInfo& info)
+    {
+        uint8_t* user = static_cast<uint8_t*>(info.ptr);
+        const size_t size = info.size;
+
+        switch (info.protection_level) {
+            case MemoryProtectionLevel::CANARY: {
+                std::memcpy(user - sizeof(CanaryType), &CANARY_VALUE, sizeof(CanaryType));
+                std::memcpy(user + size, &CANARY_VALUE, sizeof(CanaryType));
+                break;
             }
 
             case MemoryProtectionLevel::CRC: {
-                // Calculate CRC for the memory block
-                uint32_t crc = calculateCRC32(static_cast<const uint8_t*>(ptr), size);
-
-                // Store the CRC in the metadata
-                auto it = allocations_.find(ptr);
-                if (it != allocations_.end()) {
-                    it->second.is_protected = true;
-                    // In a real implementation, we would store the CRC somewhere
-                    // For now, we'll just set the protected flag
-                }
-                return true;
+                const uint32_t crc = calculateCRC32(user, size);
+                std::memcpy(user + size, &crc, sizeof(crc));
+                break;
             }
 
             case MemoryProtectionLevel::ECC: {
-                // Calculate and store ECC data
-                uint8_t* ecc_data = static_cast<uint8_t*>(ptr) + size;
-                size_t ecc_size = (size + 7) / 8;  // 1 bit per byte
+                uint8_t* ecc_data = user + size;
+                const size_t ecc_size = (size + 7) / 8;
 
-                // Clear ECC data area
                 std::memset(ecc_data, 0, ecc_size);
 
-                // Calculate and store parity bits
                 for (size_t i = 0; i < size; ++i) {
-                    uint8_t byte = static_cast<uint8_t*>(ptr)[i];
-                    uint8_t parity = 0;
-
-                    // Calculate parity
-                    for (int bit = 0; bit < 8; ++bit) {
-                        parity ^= ((byte >> bit) & 1);
-                    }
-
-                    // Store parity bit
-                    if (parity) {
+                    if (byteParity(user[i])) {
                         ecc_data[i / 8] |= (1 << (i % 8));
                     }
                 }
-                return true;
+                break;
             }
 
             case MemoryProtectionLevel::TMR: {
-                // Triplicate the data
-                size_t chunk_size = size;
-
-                // Make two additional copies
-                std::memcpy(static_cast<uint8_t*>(ptr) + chunk_size, ptr, chunk_size);
-                std::memcpy(static_cast<uint8_t*>(ptr) + 2 * chunk_size, ptr, chunk_size);
-                return true;
+                std::memcpy(user + size, user, size);
+                std::memcpy(user + 2 * size, user, size);
+                break;
             }
 
-            case MemoryProtectionLevel::NONE:
             default:
-                // No protection
+                break;
+        }
+    }
+
+    /**
+     * @brief Verify integrity of one allocation (caller must hold mutex_)
+     *
+     * Uses the protection level the allocation was created with. On failure,
+     * updates corruption stats and fires corruption callbacks. Callbacks are
+     * invoked while the lock is held and must not call back into the manager.
+     *
+     * @return True if memory is intact
+     */
+    bool verifyIntegrityLocked(MemoryAllocationInfo& info)
+    {
+        uint8_t* user = static_cast<uint8_t*>(info.ptr);
+        const size_t size = info.size;
+
+        bool intact = true;
+        std::string failure_reason;
+
+        switch (info.protection_level) {
+            case MemoryProtectionLevel::CANARY: {
+                CanaryType start_canary = 0;
+                CanaryType end_canary = 0;
+                std::memcpy(&start_canary, user - sizeof(CanaryType), sizeof(CanaryType));
+                std::memcpy(&end_canary, user + size, sizeof(CanaryType));
+
+                if (start_canary != CANARY_VALUE || end_canary != CANARY_VALUE) {
+                    intact = false;
+                    failure_reason = "canary value modified";
+                }
+                break;
+            }
+
+            case MemoryProtectionLevel::CRC: {
+                uint32_t stored_crc = 0;
+                std::memcpy(&stored_crc, user + size, sizeof(stored_crc));
+
+                if (calculateCRC32(user, size) != stored_crc) {
+                    intact = false;
+                    failure_reason = "CRC mismatch";
+                }
+                break;
+            }
+
+            case MemoryProtectionLevel::ECC: {
+                if (!verifyECC(user, size, user + size)) {
+                    intact = false;
+                    failure_reason = "parity mismatch";
+                }
+                break;
+            }
+
+            case MemoryProtectionLevel::TMR: {
+                const uint8_t* copy1 = user;
+                const uint8_t* copy2 = user + size;
+                const uint8_t* copy3 = user + 2 * size;
+
+                for (size_t i = 0; i < size; ++i) {
+                    if (copy1[i] != copy2[i] || copy1[i] != copy3[i]) {
+                        intact = false;
+                        failure_reason = "TMR copies disagree";
+                        break;
+                    }
+                }
+                break;
+            }
+
+            default:
+                // No concrete protection - nothing to check
                 return true;
         }
-    }
 
-    /**
-     * @brief Remove memory protection from an allocation
-     *
-     * @param ptr Memory pointer
-     * @return True if protection was removed successfully
-     */
-    bool removeMemoryProtection(void* ptr)
-    {
-        if (!ptr) {
-            return false;
-        }
+        if (!intact) {
+            stats_.detected_corruption++;
 
-        auto it = allocations_.find(ptr);
-        if (it == allocations_.end()) {
-            return false;
-        }
-
-        // If already unprotected, nothing to do
-        if (!it->second.is_protected.load()) {
-            return true;
-        }
-
-        // Update protection status
-        it->second.is_protected.store(false);
-
-        // Update statistics
-        stats_.protected_allocations--;
-        stats_.protected_bytes -= it->second.size;
-
-        // No need to clear the protection data as it will be overwritten
-        // by future allocations, and the space is already accounted for
-
-        return true;
-    }
-
-    /**
-     * @brief Try to repair corrupted memory
-     *
-     * @param ptr Memory pointer
-     * @return True if repair was successful
-     */
-    bool tryRepairMemory(void* ptr)
-    {
-        // Implementation of memory repair logic based on protection level
-        auto it = allocations_.find(ptr);
-        if (it == allocations_.end()) {
-            return false;
-        }
-
-        // Notify all callbacks
-        for (const auto& callback_pair : corruption_callbacks_) {
-            try {
-                callback_pair.second(ptr, it->second.size, it->second.type_name);
-            }
-            catch (...) {
-                // Ignore callback errors
+            for (const auto& [id, callback] : corruption_callbacks_) {
+                try {
+                    callback(info.ptr, size, "Memory corruption detected: " + failure_reason);
+                }
+                catch (...) {
+                    // Ignore callback errors
+                }
             }
         }
 
-        if (!it->second.is_protected.load()) {
+        return intact;
+    }
+
+    /**
+     * @brief Try to repair corrupted memory (caller must hold mutex_)
+     *
+     * @return True if a repair was performed
+     */
+    bool tryRepairMemoryLocked(MemoryAllocationInfo& info)
+    {
+        if (!info.is_protected.load()) {
             // Cannot repair unprotected memory
             return false;
         }
 
-        uint8_t* mem_ptr = static_cast<uint8_t*>(ptr);
-        size_t size = it->second.size;
+        uint8_t* user = static_cast<uint8_t*>(info.ptr);
+        const size_t size = info.size;
         bool repaired = false;
-        auto protection_level = getDefaultProtectionLevel();
 
-        switch (protection_level) {
-            case MemoryProtectionLevel::CANARY: {
-                // For canary, we can't actually repair the data,
-                // we can only detect the corruption
+        switch (info.protection_level) {
+            case MemoryProtectionLevel::CANARY:
+            case MemoryProtectionLevel::CRC:
+                // Detection-only schemes - cannot repair
                 return false;
-            }
-
-            case MemoryProtectionLevel::CRC: {
-                // For CRC, we can only detect, not repair
-                return false;
-            }
 
             case MemoryProtectionLevel::ECC: {
-                // For ECC, we can repair single-bit errors
-                uint8_t* ecc_data = mem_ptr + size;
+                // Parity can detect single-bit errors per byte but cannot
+                // locate the flipped bit; restoring parity by guessing a bit
+                // would corrupt data further, so only report.
+                uint8_t* ecc_data = user + size;
 
-                // Check each byte's parity and try to repair
                 for (size_t i = 0; i < size; ++i) {
-                    uint8_t parity = 0;
-                    uint8_t byte = mem_ptr[i];
-
-                    // Calculate parity
-                    for (int bit = 0; bit < 8; ++bit) {
-                        parity ^= ((byte >> bit) & 1);
-                    }
-
-                    // Compare with stored parity
-                    uint8_t stored_parity = (ecc_data[i / 8] >> (i % 8)) & 1;
-
-                    if (parity != stored_parity) {
-                        // Try to find the flipped bit
-                        for (int bit = 0; bit < 8; ++bit) {
-                            // Flip this bit and see if parity matches
-                            uint8_t test_byte = byte ^ (1 << bit);
-                            uint8_t test_parity = 0;
-
-                            for (int j = 0; j < 8; ++j) {
-                                test_parity ^= ((test_byte >> j) & 1);
-                            }
-
-                            if (test_parity == stored_parity) {
-                                // Found the likely bit flip, repair it
-                                mem_ptr[i] = test_byte;
-                                repaired = true;
-                                break;
-                            }
-                        }
+                    const uint8_t stored_parity = (ecc_data[i / 8] >> (i % 8)) & 1;
+                    if (byteParity(user[i]) != stored_parity) {
+                        return false;  // Corruption present but not repairable
                     }
                 }
-                return repaired;
+                return false;
             }
 
             case MemoryProtectionLevel::TMR: {
                 // TMR can repair using majority voting
-                size_t chunk_size = size;
-                uint8_t* copy1 = mem_ptr;
-                uint8_t* copy2 = mem_ptr + chunk_size;
-                uint8_t* copy3 = mem_ptr + 2 * chunk_size;
+                uint8_t* copy1 = user;
+                uint8_t* copy2 = user + size;
+                uint8_t* copy3 = user + 2 * size;
 
-                // Repair using majority voting
-                for (size_t i = 0; i < chunk_size; ++i) {
-                    // Find correct value using majority voting
-                    uint8_t correct_value = majorityVote(copy1[i], copy2[i], copy3[i]);
+                for (size_t i = 0; i < size; ++i) {
+                    const uint8_t correct_value = majorityVote(copy1[i], copy2[i], copy3[i]);
 
-                    // Repair any copies that differ from majority
                     if (copy1[i] != correct_value) {
                         copy1[i] = correct_value;
                         repaired = true;
@@ -1011,6 +934,18 @@ class UnifiedMemoryManager {
             default:
                 return false;
         }
+    }
+
+    /**
+     * @brief Compute the parity of a byte (1 if odd number of set bits)
+     */
+    static uint8_t byteParity(uint8_t byte)
+    {
+        uint8_t parity = 0;
+        for (int bit = 0; bit < 8; ++bit) {
+            parity ^= ((byte >> bit) & 1);
+        }
+        return parity;
     }
 
     /**
@@ -1207,6 +1142,7 @@ class RadiationTolerantPtr {
     void reset(T* ptr = nullptr) noexcept
     {
         if (ptr_ != nullptr) {
+            ptr_->~T();  // Objects are placement-constructed in make()/makeProtected()
             UnifiedMemoryManager::getInstance().deallocate(ptr_);
         }
         ptr_ = ptr;
@@ -1297,6 +1233,11 @@ class RadiationTolerantPtr {
             throw;
         }
 
+        // Re-arm protection so CRC/TMR/ECC metadata reflects the constructed
+        // object rather than the uninitialized allocation
+        auto level = UnifiedMemoryManager::getInstance().getDefaultProtectionLevel();
+        UnifiedMemoryManager::getInstance().protectMemory(ptr, level);
+
         return RadiationTolerantPtr<U>(ptr);
     }
 
@@ -1328,6 +1269,10 @@ class RadiationTolerantPtr {
             UnifiedMemoryManager::getInstance().deallocate(ptr);
             throw;
         }
+
+        // Re-arm protection so CRC/TMR/ECC metadata reflects the constructed
+        // object rather than the uninitialized allocation
+        UnifiedMemoryManager::getInstance().protectMemory(ptr, protection_level);
 
         return RadiationTolerantPtr<U>(ptr);
     }
