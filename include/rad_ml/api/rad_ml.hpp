@@ -9,8 +9,8 @@
  */
 
 // Core headers
-#include "../core/memory/memory_scrubber.hpp"
 #include "../core/memory/unified_memory.hpp"
+#include "../memory/memory_scrubber.hpp"
 #include "../error/error_handling.hpp"
 #include "../tmr/enhanced_tmr.hpp"
 

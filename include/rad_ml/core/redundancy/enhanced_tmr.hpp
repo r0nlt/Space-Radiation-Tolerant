@@ -9,6 +9,7 @@
 #ifndef RAD_ML_ENHANCED_TMR_HPP
 #define RAD_ML_ENHANCED_TMR_HPP
 
+#include <rad_ml/core/crc32.hpp>
 #include <rad_ml/core/redundancy/tmr.hpp>
 #include <array>
 #include <atomic>
@@ -43,17 +44,7 @@ public:
      * @return CRC32 checksum
      */
     static uint32_t calculate(const void* data, size_t size) {
-        const uint8_t* bytes = static_cast<const uint8_t*>(data);
-        uint32_t crc = 0xFFFFFFFF;
-        
-        for (size_t i = 0; i < size; ++i) {
-            crc ^= bytes[i];
-            for (int j = 0; j < 8; ++j) {
-                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
-            }
-        }
-        
-        return ~crc;
+        return core::Crc32::compute(data, size);
     }
     
     /**

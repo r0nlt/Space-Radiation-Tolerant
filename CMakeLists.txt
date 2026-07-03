@@ -418,6 +418,12 @@ target_include_directories(unified_memory_test PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 target_link_libraries(unified_memory_test PRIVATE Threads::Threads)
 add_test(NAME unified_memory_test COMMAND unified_memory_test)
 
+# Unified memory scrubber test (callback-repaired and CRC-verified regions)
+add_executable(memory_scrubber_test test/unit/core/memory/memory_scrubber_test.cpp)
+target_include_directories(memory_scrubber_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(memory_scrubber_test PRIVATE Threads::Threads)
+add_test(NAME memory_scrubber_test COMMAND memory_scrubber_test)
+
 # Checksum-assisted adaptive voting regression test
 # (EnhancedVoting::adaptiveVote with write-time CRC + EnhancedTMR CRC-assisted selection)
 add_executable(checksum_voting_test test/unit/core/redundancy/checksum_voting_test.cpp)

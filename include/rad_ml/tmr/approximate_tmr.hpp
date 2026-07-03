@@ -1,5 +1,6 @@
 #pragma once
 
+#include "rad_ml/core/crc32.hpp"
 #include "rad_ml/core/redundancy/enhanced_tmr.hpp"
 #include <array>
 #include <cstdint>
@@ -265,19 +266,7 @@ private:
      * @return Checksum value
      */
     uint32_t calculateChecksum(const T& value) const {
-        // CRC-32 implementation (simplified for example)
-        const uint8_t* data = reinterpret_cast<const uint8_t*>(&value);
-        uint32_t crc = 0xFFFFFFFF;
-        
-        for (size_t i = 0; i < sizeof(T); ++i) {
-            uint8_t byte = data[i];
-            crc ^= byte;
-            for (size_t j = 0; j < 8; ++j) {
-                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
-            }
-        }
-        
-        return ~crc;
+        return core::Crc32::compute(value);
     }
     
     /**

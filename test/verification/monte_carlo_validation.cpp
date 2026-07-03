@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "../../include/rad_ml/core/memory/aligned_memory.hpp"
-#include "../../include/rad_ml/core/memory/memory_scrubber.hpp"
 #include "../../include/rad_ml/core/memory/protected_value.hpp"
 #include "../../include/rad_ml/core/redundancy/enhanced_voting.hpp"
 #include "../../include/rad_ml/neural/protected_neural_network.hpp"

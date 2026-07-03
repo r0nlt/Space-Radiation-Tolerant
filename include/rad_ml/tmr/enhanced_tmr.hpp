@@ -13,6 +13,7 @@
 #include <string>
 #include <type_traits>
 
+#include "rad_ml/core/crc32.hpp"
 #include "rad_ml/tmr/tmr.hpp"
 
 namespace rad_ml {
@@ -21,30 +22,11 @@ namespace tmr {
 /**
  * @brief CRC-32 calculator
  *
- * Implements CRC-32 calculation for data integrity verification
+ * Thin wrapper kept for API compatibility; delegates to the framework-wide
+ * rad_ml::core::Crc32 implementation.
  */
 class CRC32 {
    public:
-    /**
-     * @brief Initialize the CRC lookup table
-     */
-    CRC32()
-    {
-        uint32_t polynomial = 0xEDB88320;
-        for (uint32_t i = 0; i < 256; i++) {
-            uint32_t c = i;
-            for (size_t j = 0; j < 8; j++) {
-                if (c & 1) {
-                    c = polynomial ^ (c >> 1);
-                }
-                else {
-                    c >>= 1;
-                }
-            }
-            table_[i] = c;
-        }
-    }
-
     /**
      * @brief Calculate the CRC-32 checksum of data
      *
@@ -54,19 +36,8 @@ class CRC32 {
      */
     uint32_t calculate(const void* data, size_t length) const
     {
-        uint32_t crc = 0xFFFFFFFF;
-        const uint8_t* bytes = static_cast<const uint8_t*>(data);
-
-        for (size_t i = 0; i < length; i++) {
-            uint8_t index = (crc ^ bytes[i]) & 0xFF;
-            crc = (crc >> 8) ^ table_[index];
-        }
-
-        return ~crc;
+        return core::Crc32::compute(data, length);
     }
-
-   private:
-    uint32_t table_[256];
 };
 
 // Forward declare for the factory
