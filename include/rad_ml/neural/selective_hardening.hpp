@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "../common/types.hpp"
+#include "../core/crc32.hpp"
 #include "../error/error_handling.hpp"
 #include "../neural/multi_bit_protection.hpp"
 #include "../physics/radiation_physics.hpp"
@@ -46,37 +47,25 @@
 #include <optional>
 #include <stdexcept>
 
-// CRC Checksum helper class to reduce duplication
+// CRC checksum helper kept for API compatibility; delegates to the
+// framework-wide rad_ml::core::Crc32 implementation
 class CRC32Helper {
    public:
     static uint32_t calculateCRC32(const void* data, size_t size) noexcept
     {
-        const std::byte* bytes = static_cast<const std::byte*>(data);
-        uint32_t crc = 0xFFFFFFFF;
-
-        for (size_t i = 0; i < size; i++) {
-            crc ^= static_cast<uint32_t>(std::to_integer<uint8_t>(bytes[i]));
-            for (int j = 0; j < 8; j++) {
-                crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
-            }
-        }
-        return ~crc;
+        return rad_ml::core::Crc32::compute(data, size);
     }
 
     template <typename T>
     static uint32_t calculateCRC32(const T& value) noexcept
     {
-        static_assert(std::is_trivially_copyable_v<T>,
-                      "CRC32Helper::calculateCRC32 requires T to be trivially copyable");
-        return calculateCRC32(&value, sizeof(T));
+        return rad_ml::core::Crc32::compute(value);
     }
 
     template <typename T>
     static bool verifyCRC32(const T& value, uint32_t expected_checksum) noexcept
     {
-        static_assert(std::is_trivially_copyable_v<T>,
-                      "CRC32Helper::verifyCRC32 requires T to be trivially copyable");
-        return calculateCRC32(value) == expected_checksum;
+        return rad_ml::core::Crc32::verify(value, expected_checksum);
     }
 };
 

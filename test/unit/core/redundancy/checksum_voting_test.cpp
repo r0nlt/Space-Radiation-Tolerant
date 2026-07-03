@@ -54,6 +54,17 @@ T adaptiveWithChecksum(const T& original, const T& a, const T& b, const T& c)
     return EnhancedVoting::adaptiveVote(a, b, c, pattern, EnhancedVoting::crc32(original));
 }
 
+void test_crc32_known_answer()
+{
+    // Pins the framework-wide CRC-32 (rad_ml::core::Crc32, reached here via
+    // EnhancedVoting::crc32) to the standard CRC-32/ISO-HDLC check value.
+    // Every integrity subsystem delegates to the same implementation, so this
+    // guards all of them against divergence.
+    const char data[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
+    check(EnhancedVoting::crc32(data, sizeof(data)) == 0xCBF43926u,
+          "CRC-32 of \"123456789\" matches the standard check value 0xCBF43926");
+}
+
 void test_all_agree_fast_path()
 {
     const float value = 3.14159f;
@@ -158,6 +169,7 @@ void test_enhanced_tmr_crc_assisted_voting()
 
 int main()
 {
+    test_crc32_known_answer();
     test_all_agree_fast_path();
     test_intact_copy_beats_correlated_majority();
     test_identical_corruption_of_two_copies();

@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <typeindex>
@@ -15,6 +16,7 @@
 #include <vector>
 
 #include "../../error/error_handling.hpp"
+#include "../crc32.hpp"
 
 namespace rad_ml {
 namespace memory {
@@ -186,6 +188,19 @@ class UnifiedMemoryManager {
                    const std::string& location = "unknown", size_t alignment = 64)
     {
         std::lock_guard<std::mutex> lock(mutex_);
+
+        // Validate alignment at the API boundary: header-size rounding divides
+        // by it and std::aligned_alloc requires a power of two
+        if (flags & MemoryFlags::ALIGNED) {
+            const bool power_of_two = alignment != 0 && (alignment & (alignment - 1)) == 0;
+            if (!power_of_two) {
+                if (flags & MemoryFlags::NO_THROW) {
+                    return nullptr;
+                }
+                throw std::invalid_argument(
+                    "UnifiedMemoryManager::allocate: alignment must be a non-zero power of two");
+            }
+        }
 
         // Extra space required before/after the user region for this protection level
         const size_t header = protectionHeaderSize(protection_level, flags, alignment);
@@ -957,18 +972,7 @@ class UnifiedMemoryManager {
      */
     uint32_t calculateCRC32(const uint8_t* data, size_t size) const
     {
-        // Basic CRC-32 implementation
-        constexpr uint32_t CRC32_POLYNOMIAL = 0xEDB88320;
-        uint32_t crc = 0xFFFFFFFF;
-
-        for (size_t i = 0; i < size; ++i) {
-            crc ^= data[i];
-            for (int j = 0; j < 8; ++j) {
-                crc = (crc >> 1) ^ ((crc & 1) ? CRC32_POLYNOMIAL : 0);
-            }
-        }
-
-        return ~crc;
+        return core::Crc32::compute(data, size);
     }
 
     /**

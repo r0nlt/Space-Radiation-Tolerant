@@ -19,6 +19,8 @@
 #include <array>
 #include <span>
 
+#include "rad_ml/core/crc32.hpp"
+
 #if __cplusplus >= 202002L
 #include <ranges>
 #include <concepts>
@@ -286,7 +288,7 @@ public:
     }
     
     /**
-     * CRC-32 checksum (polynomial 0xEDB88320), bitwise implementation.
+     * CRC-32 checksum (delegates to the framework-wide rad_ml::core::Crc32).
      *
      * Intended for computing a write-time checksum of a value so that voting
      * can later distinguish intact copies from corrupted ones.
@@ -296,15 +298,7 @@ public:
      * @return CRC-32 checksum
      */
     static uint32_t crc32(const void* data, size_t length) noexcept {
-        uint32_t crc = 0xFFFFFFFF;
-        const uint8_t* bytes = static_cast<const uint8_t*>(data);
-        for (size_t i = 0; i < length; i++) {
-            crc ^= bytes[i];
-            for (int j = 0; j < 8; j++) {
-                crc = (crc >> 1) ^ (0xEDB88320u & (~(crc & 1u) + 1u));
-            }
-        }
-        return ~crc;
+        return ::rad_ml::core::Crc32::compute(data, length);
     }
 
     /**
@@ -312,9 +306,7 @@ public:
      */
     template <typename T>
     static uint32_t crc32(const T& value) noexcept {
-        static_assert(std::is_trivially_copyable<T>::value,
-                      "crc32 requires a trivially copyable type");
-        return crc32(&value, sizeof(T));
+        return ::rad_ml::core::Crc32::compute(value);
     }
 
     /**

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rad_ml/core/memory/memory_scrubber.hpp>
+#include <rad_ml/memory/memory_scrubber.hpp>
 #include <functional>
 #include <memory>
 #include <chrono>
@@ -62,7 +62,7 @@ public:
      * @param interval_ms How often to perform scrubbing in milliseconds
      */
     void enableAutoScrubbing(unsigned long interval_ms = 1000) {
-        scrubber_ = std::make_unique<core::memory::MemoryScrubber>(interval_ms);
+        scrubber_ = std::make_unique<rad_ml::memory::MemoryScrubber>(interval_ms);
         scrubber_->registerMemoryRegion<RadiationTolerantModel>(
             this,
             sizeof(*this),
@@ -85,7 +85,7 @@ public:
     
 private:
     // Memory scrubber for automatic repair
-    std::unique_ptr<core::memory::MemoryScrubber> scrubber_;
+    std::unique_ptr<rad_ml::memory::MemoryScrubber> scrubber_;
 };
 
 } // namespace inference

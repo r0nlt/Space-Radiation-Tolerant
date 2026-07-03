@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
 
 using rad_ml::memory::MemoryFlags;
 using rad_ml::memory::MemoryProtectionLevel;
@@ -99,6 +100,30 @@ void test_canary_aligned_allocation()
           "aligned CANARY user pointer honors the requested alignment");
     check(manager().verifyMemoryIntegrity(ptr), "aligned CANARY verify passes");
     check(manager().deallocate(ptr), "aligned CANARY deallocate succeeds");
+}
+
+void test_invalid_alignment_is_rejected()
+{
+    // Zero or non-power-of-two alignments previously caused a division by
+    // zero in the header-size computation (and are invalid for
+    // std::aligned_alloc); they must be rejected at the API boundary
+    void* ptr = manager().allocate(32, MemoryFlags::ALIGNED | MemoryFlags::NO_THROW,
+                                   MemoryProtectionLevel::CANARY, "zero alignment test", 0);
+    check(ptr == nullptr, "alignment 0 with NO_THROW returns nullptr");
+
+    ptr = manager().allocate(32, MemoryFlags::ALIGNED | MemoryFlags::NO_THROW,
+                             MemoryProtectionLevel::NONE, "non-pow2 alignment test", 24);
+    check(ptr == nullptr, "non-power-of-two alignment with NO_THROW returns nullptr");
+
+    bool threw = false;
+    try {
+        (void)manager().allocate(32, MemoryFlags::ALIGNED, MemoryProtectionLevel::NONE,
+                                 "throwing alignment test", 0);
+    }
+    catch (const std::invalid_argument&) {
+        threw = true;
+    }
+    check(threw, "alignment 0 without NO_THROW throws std::invalid_argument");
 }
 
 void test_crc_detects_bit_flip()
@@ -238,6 +263,7 @@ int main()
     test_unprotected_roundtrip();
     test_canary_roundtrip_and_detection();
     test_canary_aligned_allocation();
+    test_invalid_alignment_is_rejected();
     test_crc_detects_bit_flip();
     test_ecc_detects_bit_flip();
     test_tmr_detects_divergent_copy();

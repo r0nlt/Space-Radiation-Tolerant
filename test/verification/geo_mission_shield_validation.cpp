@@ -36,7 +36,7 @@
 #include <vector>
 
 #include "../../include/rad_ml/core/memory/aligned_memory.hpp"
-#include "../../include/rad_ml/core/memory/memory_scrubber.hpp"
+#include "../../include/rad_ml/memory/memory_scrubber.hpp"
 #include "../../include/rad_ml/core/memory/protected_value.hpp"
 // #include "../../include/rad_ml/core/memory/unified_memory.hpp"  // Commented out - appears
 // unfinished
@@ -1257,7 +1257,7 @@ void runGEOMonteCarloValidation(
                     }
 
                     // Initialize scrubber with 200ms interval for GEO missions
-                    rad_ml::core::memory::MemoryScrubber scrubber(200);
+                    rad_ml::memory::MemoryScrubber scrubber(200);
 
                     // Register memory region using exact pattern from working test
                     size_t handle = scrubber.registerMemoryRegion<
