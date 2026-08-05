@@ -58,10 +58,15 @@ class RectangularChordDistribution {
         // This resolves the rare long-chord tail on the small top/bottom face
         // of a deep, narrow sensitive volume. Face-area weights recover the
         // physical isotropic-entry distribution.
+        std::array<std::size_t, 3> samples_by_axis{};
         const std::size_t samples_per_axis = sample_count / 3;
-        for (auto& chords : chords_by_axis_) chords.reserve(samples_per_axis);
+        const std::size_t remainder = sample_count % 3;
+        for (std::size_t axis = 0; axis < samples_by_axis.size(); ++axis) {
+            samples_by_axis[axis] = samples_per_axis + (axis < remainder ? 1 : 0);
+            chords_by_axis_[axis].reserve(samples_by_axis[axis]);
+        }
         for (std::size_t axis = 0; axis < 3; ++axis) {
-            for (std::size_t index = 1; index <= samples_per_axis; ++index) {
+            for (std::size_t index = 1; index <= samples_by_axis[axis]; ++index) {
                 const double cos_theta = std::sqrt(halton(index, 2));
                 const double sin_theta = std::sqrt(1.0 - cos_theta * cos_theta);
                 const double phi = 2.0 * pi * halton(index, 3);
@@ -116,6 +121,9 @@ class RectangularChordDistribution {
         double probability = 0;
         for (std::size_t axis = 0; axis < 3; ++axis) {
             const auto& chords = chords_by_axis_[axis];
+            if (chords.empty()) {
+                throw std::logic_error("RPP chord distribution contains an empty axis");
+            }
             const auto first_greater =
                 std::upper_bound(chords.begin(), chords.end(), distance_um);
             probability +=
@@ -129,6 +137,9 @@ class RectangularChordDistribution {
     {
         double mean = 0;
         for (std::size_t axis = 0; axis < 3; ++axis) {
+            if (chords_by_axis_[axis].empty()) {
+                throw std::logic_error("RPP chord distribution contains an empty axis");
+            }
             double axis_total = 0;
             for (const double chord : chords_by_axis_[axis]) axis_total += chord;
             mean += face_weights_[axis] * axis_total /
@@ -354,6 +365,55 @@ struct IrppNumerics {
         SpectrumIntegration::DifferentialLinearSimpson;
 };
 
+inline void validateIrppSpectrum(const OmereLetSpectrum& spectrum,
+                                 double consistency_tolerance = 0.02)
+{
+    if (spectrum.points.size() < 2 || !std::isfinite(consistency_tolerance) ||
+        consistency_tolerance < 0) {
+        throw std::invalid_argument("IRPP calculation requires a valid LET spectrum");
+    }
+
+    double integrated_differential_flux = 0;
+    for (std::size_t i = 0; i < spectrum.points.size(); ++i) {
+        const auto& point = spectrum.points[i];
+        if (!std::isfinite(point.let_mev_cm2_mg) || point.let_mev_cm2_mg < 0 ||
+            !std::isfinite(point.integral_flux_cm2_s) ||
+            point.integral_flux_cm2_s < 0 ||
+            !std::isfinite(point.differential_flux_per_cm2_s_per_let) ||
+            point.differential_flux_per_cm2_s_per_let < 0) {
+            throw std::invalid_argument("IRPP LET spectrum contains an invalid value");
+        }
+        if (i == 0) continue;
+
+        const auto& previous = spectrum.points[i - 1];
+        const double bin_width =
+            point.let_mev_cm2_mg - previous.let_mev_cm2_mg;
+        if (!(bin_width > 0)) {
+            throw std::invalid_argument(
+                "IRPP LET spectrum must have strictly increasing LET");
+        }
+        if (point.integral_flux_cm2_s > previous.integral_flux_cm2_s) {
+            throw std::invalid_argument(
+                "IRPP integral LET flux must be non-increasing");
+        }
+        integrated_differential_flux +=
+            0.5 * (previous.differential_flux_per_cm2_s_per_let +
+                   point.differential_flux_per_cm2_s_per_let) *
+            bin_width;
+    }
+
+    const double integral_flux_span =
+        spectrum.points.front().integral_flux_cm2_s -
+        spectrum.points.back().integral_flux_cm2_s;
+    const double scale =
+        std::max({integral_flux_span, integrated_differential_flux, 1.0e-30});
+    if (std::abs(integrated_differential_flux - integral_flux_span) >
+        consistency_tolerance * scale) {
+        throw std::invalid_argument(
+            "IRPP differential and integral LET flux columns are inconsistent");
+    }
+}
+
 inline double irppGeometryFactor(const RectangularSensitiveVolume& volume)
 {
     return volume.totalSurfaceAreaUm2() / (4.0 * volume.planarAreaUm2());
@@ -377,9 +437,7 @@ inline double rppEffectiveFlux(const OmereLetSpectrum& spectrum,
                                    IrppNumerics::SpectrumIntegration::
                                        DifferentialLinearSimpson)
 {
-    if (spectrum.points.size() < 2) {
-        throw std::invalid_argument("IRPP calculation requires an LET spectrum");
-    }
+    validateIrppSpectrum(spectrum);
     if (!std::isfinite(sensitive_depth_um) || sensitive_depth_um <= 0 ||
         !std::isfinite(threshold_let) || threshold_let < 0) {
         throw std::invalid_argument("Invalid RPP flux inputs");

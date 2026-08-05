@@ -25,11 +25,27 @@ void requireNear(double actual, double expected, double relative_tolerance,
     }
 }
 
+template <typename Callable>
+void requireInvalidArgument(Callable&& callable, const char* message)
+{
+    try {
+        callable();
+    }
+    catch (const std::invalid_argument&) {
+        return;
+    }
+    throw std::runtime_error(message);
+}
+
 void validateChordGeometry(
     const rad_ml::physics::RectangularSensitiveVolume& volume)
 {
     const rad_ml::physics::ExactRectangularChordDistribution exact(volume, 32);
-    const rad_ml::physics::RectangularChordDistribution sampled(volume, 524288);
+    constexpr std::size_t sampled_chord_count = 524288;
+    const rad_ml::physics::RectangularChordDistribution sampled(
+        volume, sampled_chord_count);
+    require(sampled.sampleCount() == sampled_chord_count,
+            "Sampled RPP chord distribution dropped remainder samples");
     const double analytic_mean =
         4.0 * volume.length_um * volume.width_um * volume.depth_um /
         volume.totalSurfaceAreaUm2();
@@ -77,6 +93,7 @@ void validateChordGeometry(
 
 void validateSpectrumColumns(const rad_ml::physics::OmereLetSpectrum& spectrum)
 {
+    rad_ml::physics::validateIrppSpectrum(spectrum, 1.0e-4);
     double integrated_flux = 0;
     for (std::size_t i = 1; i < spectrum.points.size(); ++i) {
         const auto& left = spectrum.points[i - 1];
@@ -89,6 +106,25 @@ void validateSpectrumColumns(const rad_ml::physics::OmereLetSpectrum& spectrum)
     requireNear(integrated_flux, spectrum.points.front().integral_flux_cm2_s,
                 1.0e-4,
                 "OMERE differential and integral LET columns are inconsistent");
+}
+
+void validateMalformedSpectraAreRejected()
+{
+    rad_ml::physics::OmereLetSpectrum malformed;
+    malformed.points = {{1.0, 2.0, 1.0}, {1.0, 1.0, 1.0}};
+    requireInvalidArgument(
+        [&] { rad_ml::physics::validateIrppSpectrum(malformed); },
+        "IRPP accepted a degenerate LET bin");
+
+    malformed.points = {{1.0, 1.0, 1.0}, {2.0, 2.0, 1.0}};
+    requireInvalidArgument(
+        [&] { rad_ml::physics::validateIrppSpectrum(malformed); },
+        "IRPP accepted increasing integral LET flux");
+
+    malformed.points = {{1.0, 2.0, 0.0}, {2.0, 0.0, 0.0}};
+    requireInvalidArgument(
+        [&] { rad_ml::physics::validateIrppSpectrum(malformed); },
+        "IRPP accepted inconsistent integral and differential LET columns");
 }
 
 std::string filename(const std::string& path)
@@ -107,6 +143,7 @@ int main(int argc, char** argv)
                 "[uniform.let low_band.let high_band.let]");
         const auto spectrum = rad_ml::physics::loadOmereLetSpectrum(argv[1]);
         const auto result = rad_ml::physics::loadOmereSeeResult(argv[2]);
+        validateMalformedSpectraAreRejected();
         validateSpectrumColumns(spectrum);
         for (int argument = 3; argument < argc; ++argument) {
             validateSpectrumColumns(
