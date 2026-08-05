@@ -538,6 +538,9 @@ add_test(
     COMMAND omere_import_validation_test
             ${CMAKE_SOURCE_DIR}/test/data/physics/omere_sample.let
             ${CMAKE_SOURCE_DIR}/test/data/physics/omere_sample.see
+            ${CMAKE_SOURCE_DIR}/test/data/physics/omere_irpp_uniform.let
+            ${CMAKE_SOURCE_DIR}/test/data/physics/omere_irpp_low_band.let
+            ${CMAKE_SOURCE_DIR}/test/data/physics/omere_irpp_high_band.let
 )
 
 add_executable(radiation_stress_test test/verification/radiation_stress_test.cpp)
