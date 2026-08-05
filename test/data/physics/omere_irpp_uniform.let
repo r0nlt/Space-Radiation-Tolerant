@@ -1,12 +1,13 @@
 #==================================================================
-# OMERE 5.9.5.test - LET SPECTRUM
+# OMERE 5.9.5.control - LET SPECTRUM
+# Synthetic constant differential spectrum for IRPP equivalence
 #==================================================================
 # Shielding thickness applied: 1.000 g/cm²
-# Model : GCR ISO 15390 (test fixture)
+# Model : GCR ISO 15390 (synthetic uniform control)
 # Solar activity : Min
 # Cutoff model : None
-# Name : Fixture GEO
-# Duration : 15 year(s)
+# Name : IRPP uniform control
+# Duration : 1 year(s)
 # Energy spectrum :
 #       LET      Integral fluxDifferential flux
 #MeV.cm2.g-1         cm-2.s-1   cm-2.s-1.MeV-1
