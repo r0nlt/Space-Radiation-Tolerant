@@ -11,6 +11,7 @@
 #include <cmath>
 #include <random>
 
+#include "rad_ml/physics/critical_charge.hpp"
 #include "rad_ml/physics/quantum_field_theory.hpp"
 #include "rad_ml/radiation/environment.hpp"
 #include "rad_ml/utils/bit_manipulation.hpp"
@@ -41,6 +42,21 @@ struct SemiconductorProperties {
     double lattice_constant_nm = 0.543;  // Silicon lattice constant
     double critical_charge_fc = 15.0;    // Critical charge for bit flip (femtocoulombs)
     double temperature_k = 300.0;        // Operating temperature
+    double density_g_cm3 = 2.329;         // Silicon mass density
+    double sensitive_depth_um = 1.0;      // Effective charge-deposition path length
+    double pair_creation_energy_ev = 3.6; // Mean energy per electron-hole pair in silicon
+};
+
+/**
+ * @brief Circuit parameters kept separate from semiconductor transport inputs
+ */
+struct CircuitProperties {
+    double feature_size_nm = 130.0;
+    double reference_temperature_k = 300.0;
+
+    // Optional measured coefficient for a specific circuit/process. Zero means
+    // no unvalidated temperature correction is applied.
+    double qcrit_temperature_coefficient_per_k = 0.0;
 };
 
 /**
@@ -52,6 +68,7 @@ struct SemiconductorProperties {
 class QuantumEnhancedRadiation {
    private:
     SemiconductorProperties material_;
+    CircuitProperties circuit_;
     QFTParameters qft_params_;
     std::mt19937 rng_;
 
@@ -61,7 +78,31 @@ class QuantumEnhancedRadiation {
     static constexpr double HBAR_EV_S = 6.582119569e-16;        // eV⋅s
 
    public:
-    QuantumEnhancedRadiation(const SemiconductorProperties& material = {});
+    QuantumEnhancedRadiation(const SemiconductorProperties& material = {},
+                             const CircuitProperties& circuit = {});
+
+    /**
+     * @brief Calculate generated charge from LET using explicit semiconductor units
+     *
+     * LET [MeV cm²/mg] is integrated over the configured material density and
+     * sensitive depth. Deposited energy is capped at the incident particle
+     * energy and converted to electron-hole pairs using pair_creation_energy_ev.
+     *
+     * @param particle_energy Incident kinetic energy in MeV
+     * @param let Linear energy transfer in MeV cm²/mg
+     * @return Generated charge in femtocoulombs, before collection corrections
+     */
+    double calculateClassicalChargeDeposition(double particle_energy, double let) const;
+
+    /**
+     * @brief Calculate circuit critical charge independently from particle inputs
+     *
+     * Standard SRAM values use the power-law model calibrated from Table III
+     * of Kobayashi et al., IRPS 2009 (DOI 10.1109/IRPS.2009.5173252).
+     * Other memory types retain the explicitly configured fallback Qcrit.
+     */
+    double calculateCircuitCriticalCharge(MemoryDeviceType device_type,
+                                          double temperature_k) const;
 
     /**
      * @brief Calculate quantum-corrected charge deposition

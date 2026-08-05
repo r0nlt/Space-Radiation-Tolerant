@@ -1,0 +1,13 @@
+#==================================================================
+# OMERE 5.9.5.test - SEE rate
+#==================================================================
+# FROM FILE
+# LET File: omere_sample.let
+# Cell depth : 2.000 µm
+# Heavy ions method: WEIBULL
+# Heavy ions let threshold : 2.57e+00 MeV.cm²/mg
+# Heavy ions limit cross section : 5.72e-11 cm² /bit
+# Weibull W : 17.90
+# Weibull S : 0.97
+# Cross section type: From File
+# Heavy ions rate                               3.71e-13  /bit /day

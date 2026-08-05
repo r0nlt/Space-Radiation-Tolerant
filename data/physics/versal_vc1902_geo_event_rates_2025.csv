@@ -1,0 +1,5 @@
+mission,environment,multiplicity,event_rate_per_day_per_bit,calculation_tool,environment_model,source_doi,source_locator
+15-year GEO,galactic cosmic rays steady contribution,SBU,1.21e-12,OMERE,CREME96 heavy ions and GCR,10.1109/TNS.2025.3531510,Table VI
+15-year GEO,galactic cosmic rays steady contribution,2-bit MCU,1.50e-14,OMERE,CREME96 heavy ions and GCR,10.1109/TNS.2025.3531510,Table VI
+15-year GEO,solar flare worst week October 1989,SBU,1.07e-10,OMERE,CREME96 heavy ions and GCR,10.1109/TNS.2025.3531510,Table VI
+15-year GEO,solar flare worst week October 1989,2-bit MCU,1.35e-12,OMERE,CREME96 heavy ions and GCR,10.1109/TNS.2025.3531510,Table VI

@@ -9,6 +9,14 @@
 #include <memory>
 #include <vector>
 #include <cstdint>
+#include <algorithm>
+#include <array>
+#include <limits>
+#include <stdexcept>
+
+#include "rad_ml/physics/see_event_rate.hpp"
+#include "rad_ml/physics/versal_mcu_topology.hpp"
+#include "rad_ml/testing/fault_injection.hpp"
 
 namespace rad_ml {
 namespace testing {
@@ -47,6 +55,8 @@ public:
         size_t memory_offset;       ///< Offset in the memory region
         uint32_t bits_affected;     ///< Number of bits affected
         std::string description;    ///< Human-readable description
+        double time_offset_seconds = 0.0; ///< Time from the start of this simulation step
+        std::array<std::uint64_t, 4> bit_offsets{}; ///< Readback-bit indices affected
     };
     
     /// Event rates for different effect types
@@ -68,6 +78,51 @@ public:
           random_engine_(std::random_device{}()) {
         // Initialize based on environment parameters
         updateRates();
+    }
+
+    /**
+     * @brief Use multiplicity-specific SEE rates instead of heuristic rates
+     *
+     * Rates remain per bit and are scaled to each simulated memory region.
+     * reference_bit_count is used only for rate reporting and adaptive
+     * protection thresholds.
+     */
+    void useMissionEventRates(
+        const physics::MissionEventRate<double>& single_bit_rate,
+        const physics::MissionEventRate<double>& two_bit_rate,
+        std::uint64_t reference_bit_count) {
+        if (single_bit_rate.multiplicity != physics::UpsetMultiplicity::SingleBit ||
+            two_bit_rate.multiplicity != physics::UpsetMultiplicity::TwoBit ||
+            reference_bit_count == 0) {
+            throw std::invalid_argument("Mission SEE rates have invalid multiplicity or bit count");
+        }
+
+        // Validate values before changing simulator state.
+        const double sbu_per_second =
+            single_bit_rate.eventsPerDeviceSecond(reference_bit_count);
+        const double mcu_per_second =
+            two_bit_rate.eventsPerDeviceSecond(reference_bit_count);
+        single_bit_mission_rate_ = single_bit_rate;
+        two_bit_mission_rate_ = two_bit_rate;
+        mission_rate_reference_bits_ = reference_bit_count;
+        uses_mission_event_rates_ = true;
+        event_rates_ = {sbu_per_second, mcu_per_second, 0.0, 0.0,
+                        sbu_per_second + mcu_per_second};
+    }
+
+    void clearMissionEventRates() {
+        uses_mission_event_rates_ = false;
+        mission_rate_reference_bits_ = 0;
+        updateRates();
+    }
+
+    bool usesMissionEventRates() const noexcept {
+        return uses_mission_event_rates_;
+    }
+
+    void setSeed(unsigned int seed) {
+        random_engine_.seed(seed);
+        systematic_injector_.setSeed(seed ^ 0x5241444Du);
     }
     
     /**
@@ -163,6 +218,13 @@ public:
         T* memory, 
         size_t memory_size, 
         std::chrono::milliseconds duration) {
+        if (memory == nullptr || memory_size == 0 || duration.count() < 0) {
+            throw std::invalid_argument("Simulation memory and duration must be valid");
+        }
+
+        if (uses_mission_event_rates_) {
+            return simulateMissionRateEffects(memory, memory_size, duration);
+        }
         
         std::vector<RadiationEvent> events;
         
@@ -188,7 +250,16 @@ public:
      */
     void updateEnvironment(const EnvironmentParams& new_params) {
         env_params_ = new_params;
-        updateRates();
+        if (uses_mission_event_rates_) {
+            const double sbu_per_second =
+                single_bit_mission_rate_.eventsPerDeviceSecond(mission_rate_reference_bits_);
+            const double mcu_per_second =
+                two_bit_mission_rate_.eventsPerDeviceSecond(mission_rate_reference_bits_);
+            event_rates_ = {sbu_per_second, mcu_per_second, 0.0, 0.0,
+                            sbu_per_second + mcu_per_second};
+        } else {
+            updateRates();
+        }
     }
     
     /**
@@ -241,6 +312,85 @@ private:
     EnvironmentParams env_params_;
     EventRates event_rates_;
     std::default_random_engine random_engine_;
+    physics::MissionEventRate<double> single_bit_mission_rate_;
+    physics::MissionEventRate<double> two_bit_mission_rate_;
+    bool uses_mission_event_rates_ = false;
+    std::uint64_t mission_rate_reference_bits_ = 0;
+    SystematicFaultInjector systematic_injector_;
+
+    template <typename T>
+    std::vector<RadiationEvent> simulateMissionRateEffects(
+        T* memory, size_t memory_size, std::chrono::milliseconds duration) {
+        const double duration_seconds = duration.count() / 1000.0;
+        if (memory_size > std::numeric_limits<std::uint64_t>::max() / 8) {
+            throw std::overflow_error("Memory region is too large for per-bit SEE scaling");
+        }
+        const std::uint64_t region_bits = static_cast<std::uint64_t>(memory_size) * 8;
+
+        struct ScheduledEvent {
+            double time_seconds;
+            RadiationEffectType type;
+        };
+        std::vector<ScheduledEvent> schedule;
+        const auto sbu_times = physics::samplePoissonArrivalTimes(
+            single_bit_mission_rate_.eventsPerDeviceSecond(region_bits),
+            duration_seconds, random_engine_);
+        const auto mcu_times = physics::samplePoissonArrivalTimes(
+            two_bit_mission_rate_.eventsPerDeviceSecond(region_bits),
+            duration_seconds, random_engine_);
+        schedule.reserve(sbu_times.size() + mcu_times.size());
+        for (double time : sbu_times) {
+            schedule.push_back({time, RadiationEffectType::SINGLE_BIT_FLIP});
+        }
+        for (double time : mcu_times) {
+            schedule.push_back({time, RadiationEffectType::MULTI_BIT_UPSET});
+        }
+        std::sort(schedule.begin(), schedule.end(),
+                  [](const auto& left, const auto& right) {
+                      return left.time_seconds < right.time_seconds;
+                  });
+
+        std::vector<RadiationEvent> events;
+        events.reserve(schedule.size());
+        std::uniform_int_distribution<std::uint64_t> bit_distribution(0, region_bits - 1);
+        for (const auto& scheduled : schedule) {
+            RadiationEvent event;
+            event.type = scheduled.type;
+            event.time_offset_seconds = scheduled.time_seconds;
+
+            if (event.type == RadiationEffectType::SINGLE_BIT_FLIP) {
+                const std::uint64_t bit_index = bit_distribution(random_engine_);
+                event.bit_offsets[0] = bit_index;
+                event.memory_offset = static_cast<size_t>(bit_index / 8);
+                auto* byte = reinterpret_cast<std::uint8_t*>(memory) + event.memory_offset;
+                const int bit_in_byte = static_cast<int>(bit_index % 8);
+                *byte = systematic_injector_.injectFault(
+                    *byte, SystematicFaultInjector::SINGLE_BIT, bit_in_byte);
+                event.bits_affected = 1;
+                event.description = "Mission-rate SBU at offset " +
+                                    std::to_string(event.memory_offset) + ", bit " +
+                                    std::to_string(bit_in_byte);
+            } else {
+                const auto indices = physics::VersalConfigurationMcuTopology::sampleBitIndices(
+                    region_bits, random_engine_);
+                event.bit_offsets[0] = indices[0];
+                event.bit_offsets[1] = indices[1];
+                event.memory_offset = static_cast<size_t>(indices[0] / 8);
+                for (const auto bit_index : indices) {
+                    auto* byte = reinterpret_cast<std::uint8_t*>(memory) + bit_index / 8;
+                    *byte = systematic_injector_.injectFault(
+                        *byte, SystematicFaultInjector::SINGLE_BIT,
+                        static_cast<int>(bit_index % 8));
+                }
+                event.bits_affected = 2;
+                event.description = "Mission-rate 2-bit Versal MCU at readback bits " +
+                                    std::to_string(indices[0]) + " and " +
+                                    std::to_string(indices[1]);
+            }
+            events.push_back(event);
+        }
+        return events;
+    }
     
     /**
      * @brief Update event rates based on current environment parameters
