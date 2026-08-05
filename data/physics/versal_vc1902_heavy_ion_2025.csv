@@ -1,0 +1,7 @@
+facility,ion,let_surface_mev_cm2_mg,let_active_mev_cm2_mg,fluence_ions_cm2,fluence_uncertainty_percent,exposed_bits,xilsem,sbu_events,two_bit_mcu_events,three_bit_mcu_events,four_bit_mcu_events,source_doi,source_locator
+RADEF,20Ne,2.3,2.8,200000,10,59842000,OFF,14,0,0,0,10.1109/TNS.2025.3531510,Tables I and III
+RADEF,40Ar,7.2,8.8,900000,10,59842000,OFF,874,146,0,0,10.1109/TNS.2025.3531510,Tables I and III
+RADEF,57Fe,13.3,18.1,2150000,10,59842000,OFF,3949,1401,8,0,10.1109/TNS.2025.3531510,Tables I and III
+RADEF,83Kr,24.5,32.1,550000,10,59842000,OFF,1448,1095,41,0,10.1109/TNS.2025.3531510,Tables I and III
+TAMU,129Xe,41.8,54.3,1480000,10,59842000,OFF,3657,2828,152,5,10.1109/TNS.2025.3531510,Tables I and III
+RADEF,126Xe,48.5,62.4,300000,10,59842000,OFF,1028,1071,183,5,10.1109/TNS.2025.3531510,Tables I and III

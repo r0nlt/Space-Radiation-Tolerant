@@ -13,8 +13,9 @@
 namespace rad_ml {
 namespace physics {
 
-QuantumEnhancedRadiation::QuantumEnhancedRadiation(const SemiconductorProperties& material)
-    : material_(material), rng_(std::random_device{}())
+QuantumEnhancedRadiation::QuantumEnhancedRadiation(const SemiconductorProperties& material,
+                                                   const CircuitProperties& circuit)
+    : material_(material), circuit_(circuit), rng_(std::random_device{}())
 {
     // Initialize QFT parameters based on semiconductor properties
     qft_params_.hbar = HBAR_EV_S;
@@ -28,21 +29,99 @@ QuantumEnhancedRadiation::QuantumEnhancedRadiation(const SemiconductorProperties
     qft_params_.masses[ParticleType::HeavyIon] =
         12000.0 * 1.782662e-36;  // Approximate heavy ion mass
 
-    core::Logger::info("QuantumEnhancedRadiation initialized with " +
-                       std::to_string(material_.bandgap_ev) + " eV bandgap");
+    core::Logger::debug("QuantumEnhancedRadiation initialized with " +
+                        std::to_string(material_.bandgap_ev) + " eV bandgap");
+}
+
+double QuantumEnhancedRadiation::calculateCircuitCriticalCharge(MemoryDeviceType device_type,
+                                                                double temperature_k) const
+{
+    if (!std::isfinite(temperature_k) || temperature_k <= 0.0 ||
+        !std::isfinite(circuit_.feature_size_nm) || circuit_.feature_size_nm <= 0.0 ||
+        !std::isfinite(circuit_.reference_temperature_k) ||
+        circuit_.reference_temperature_k <= 0.0 ||
+        !std::isfinite(circuit_.qcrit_temperature_coefficient_per_k)) {
+        throw std::invalid_argument("Circuit critical-charge inputs must be finite and positive");
+    }
+
+    using Model = CriticalChargePowerLaw<double>;
+    static const Model sram_model =
+        Model::fit({{180.0, 6.70}, {130.0, 3.30}});
+
+    double critical_charge_fc = material_.critical_charge_fc;
+    switch (device_type) {
+        case MemoryDeviceType::SRAM_6T:
+            critical_charge_fc = sram_model.predict(circuit_.feature_size_nm);
+            break;
+        case MemoryDeviceType::SRAM_8T:
+            critical_charge_fc = 1.4 * sram_model.predict(circuit_.feature_size_nm);
+            break;
+        case MemoryDeviceType::DRAM:
+            critical_charge_fc *= 0.8;
+            break;
+        case MemoryDeviceType::FLASH_SLC:
+            critical_charge_fc *= 5.0;
+            break;
+        case MemoryDeviceType::FLASH_MLC:
+            critical_charge_fc *= 2.0;
+            break;
+        case MemoryDeviceType::MRAM:
+            critical_charge_fc *= 10.0;
+            break;
+        case MemoryDeviceType::FRAM:
+            critical_charge_fc *= 8.0;
+            break;
+    }
+
+    const double temperature_factor =
+        1.0 + circuit_.qcrit_temperature_coefficient_per_k *
+                  (temperature_k - circuit_.reference_temperature_k);
+    if (!std::isfinite(temperature_factor) || temperature_factor <= 0.0) {
+        throw std::invalid_argument("Circuit Qcrit temperature correction must stay positive");
+    }
+    return critical_charge_fc * temperature_factor;
+}
+
+double QuantumEnhancedRadiation::calculateClassicalChargeDeposition(double particle_energy,
+                                                                    double let) const
+{
+    if (!std::isfinite(particle_energy) || !std::isfinite(let) || particle_energy <= 0.0 ||
+        let <= 0.0 || material_.density_g_cm3 <= 0.0 ||
+        material_.sensitive_depth_um <= 0.0 || material_.pair_creation_energy_ev <= 0.0) {
+        return 0.0;
+    }
+
+    // LET [MeV cm²/mg] × density [mg/cm³] × path [cm] = deposited energy [MeV].
+    // The deposited energy cannot exceed the incident particle energy. Dividing
+    // by the mean pair-creation energy gives electron-hole pairs; multiplying
+    // by elementary charge converts them to generated charge.
+    constexpr double micrometers_to_cm = 1.0e-4;
+    constexpr double grams_to_milligrams = 1.0e3;
+    constexpr double mev_to_ev = 1.0e6;
+    constexpr double coulombs_to_femtocoulombs = 1.0e15;
+
+    const double density_mg_cm3 = material_.density_g_cm3 * grams_to_milligrams;
+    const double path_cm = material_.sensitive_depth_um * micrometers_to_cm;
+    const double let_deposited_energy_mev = let * density_mg_cm3 * path_cm;
+    const double deposited_energy_mev = std::min(let_deposited_energy_mev, particle_energy);
+    const double electron_hole_pairs =
+        deposited_energy_mev * mev_to_ev / material_.pair_creation_energy_ev;
+    return electron_hole_pairs * ELECTRON_CHARGE * coulombs_to_femtocoulombs;
 }
 
 double QuantumEnhancedRadiation::calculateQuantumChargeDeposition(double particle_energy,
                                                                   double let,
                                                                   ParticleType particle_type)
 {
-    // Step 1: Calculate classical charge deposition
-    // LET is in MeV⋅cm²/mg, convert to charge per unit path length
-    double classical_charge_fc = let * 0.278;  // Empirical conversion factor
+    // Step 1: Establish the dimensionally consistent classical baseline.
+    const double classical_charge_fc = calculateClassicalChargeDeposition(particle_energy, let);
+    if (classical_charge_fc == 0.0) {
+        return 0.0;
+    }
 
     // Step 2: Apply quantum corrections using existing QFT framework
     CrystalLattice crystal;
-    crystal.lattice_constant = material_.lattice_constant_nm * 1e-10;  // Convert to meters
+    crystal.lattice_constant = material_.lattice_constant_nm * 1e-9;  // Convert nm to meters
     crystal.barrier_height = material_.bandgap_ev;  // Use bandgap as barrier height
 
     // Create defect distribution from particle impact
@@ -109,6 +188,10 @@ double QuantumEnhancedRadiation::calculateTemperatureCriticalCharge(double base_
 double QuantumEnhancedRadiation::calculateDeviceSensitivity(MemoryDeviceType device_type,
                                                             double feature_size_nm)
 {
+    if (!std::isfinite(feature_size_nm) || feature_size_nm <= 0.0) {
+        return 0.0;
+    }
+
     // Base sensitivity factors for different device types
     double base_sensitivity = 1.0;
     switch (device_type) {
@@ -139,13 +222,16 @@ double QuantumEnhancedRadiation::calculateDeviceSensitivity(MemoryDeviceType dev
     // Use quantum confinement effects
     double quantum_size_factor = 1.0;
     if (feature_size_nm < 100.0) {
-        // Calculate quantum confinement energy
-        double confinement_energy = (HBAR_EV_S * HBAR_EV_S * M_PI * M_PI) /
-                                    (2.0 * material_.effective_mass_ratio * 9.109e-31 *
-                                     (feature_size_nm * 1e-9) * (feature_size_nm * 1e-9));
-
-        // Convert to eV and normalize
-        confinement_energy /= ELECTRON_CHARGE;
+        // Calculate particle-in-a-box confinement energy in SI units, then
+        // convert joules to eV. HBAR_EV_S cannot be mixed directly with kg/m.
+        constexpr double hbar_joule_seconds = HBAR_EV_S * ELECTRON_CHARGE;
+        constexpr double electron_mass_kg = 9.1093837015e-31;
+        const double feature_size_m = feature_size_nm * 1e-9;
+        const double confinement_energy_j =
+            (hbar_joule_seconds * hbar_joule_seconds * M_PI * M_PI) /
+            (2.0 * material_.effective_mass_ratio * electron_mass_kg * feature_size_m *
+             feature_size_m);
+        const double confinement_energy = confinement_energy_j / ELECTRON_CHARGE;
 
         // Higher confinement energy means more sensitivity
         quantum_size_factor = 1.0 + confinement_energy / material_.bandgap_ev;
@@ -158,36 +244,9 @@ double QuantumEnhancedRadiation::calculateEnhancedBitFlipProbability(double depo
                                                                      MemoryDeviceType device_type,
                                                                      double temperature)
 {
-    // Calculate temperature-corrected critical charge
-    double device_critical_charge = material_.critical_charge_fc;
-
-    // Adjust for device type
-    switch (device_type) {
-        case MemoryDeviceType::SRAM_6T:
-            device_critical_charge *= 1.0;
-            break;
-        case MemoryDeviceType::SRAM_8T:
-            device_critical_charge *= 1.4;  // Higher critical charge
-            break;
-        case MemoryDeviceType::DRAM:
-            device_critical_charge *= 0.8;  // Lower critical charge
-            break;
-        case MemoryDeviceType::FLASH_SLC:
-            device_critical_charge *= 5.0;  // Much higher critical charge
-            break;
-        case MemoryDeviceType::FLASH_MLC:
-            device_critical_charge *= 2.0;
-            break;
-        case MemoryDeviceType::MRAM:
-            device_critical_charge *= 10.0;  // Very high critical charge
-            break;
-        case MemoryDeviceType::FRAM:
-            device_critical_charge *= 8.0;
-            break;
-    }
-
-    double critical_charge =
-        calculateTemperatureCriticalCharge(device_critical_charge, temperature);
+    // Qcrit is determined only by circuit/process inputs. Particle energy and
+    // LET have already acted through deposited_charge and do not modify Qcrit.
+    const double critical_charge = calculateCircuitCriticalCharge(device_type, temperature);
 
     // Calculate probability using Weibull distribution (industry standard)
     if (deposited_charge <= 0.0 || critical_charge <= 0.0) {
@@ -273,7 +332,8 @@ uint32_t QuantumEnhancedRadiation::calculateQuantumMBUSize(double deposited_char
     // Use QFT defect clustering to determine MBU size
     // Higher charge deposition creates larger defect clusters
 
-    double base_mbu_threshold = material_.critical_charge_fc * 2.0;  // 2x critical charge for MBU
+    const double base_mbu_threshold =
+        calculateCircuitCriticalCharge(MemoryDeviceType::SRAM_6T, material_.temperature_k) * 2.0;
 
     if (deposited_charge < base_mbu_threshold) {
         return 1;  // Single bit upset
@@ -344,7 +404,9 @@ double QuantumEnhancedRadiation::calculateQuantumCollectionEfficiency(double dep
     }
 
     // Apply quantum corrections for very small charges
-    if (deposited_charge < material_.critical_charge_fc * 0.1) {
+    const double critical_charge =
+        calculateCircuitCriticalCharge(device_type, material_.temperature_k);
+    if (deposited_charge < critical_charge * 0.1) {
         // Quantum tunneling can enhance collection of small charges
         double tunneling_enhancement = calculateQuantumTunnelingProbability(
             material_.bandgap_ev * 0.5, material_.temperature_k, qft_params_, ParticleType::Proton);

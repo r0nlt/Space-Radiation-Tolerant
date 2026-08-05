@@ -490,22 +490,55 @@ add_executable(enhanced_tmr_test test/verification/enhanced_tmr_test.cpp)
 target_link_libraries(enhanced_tmr_test rad_ml_tmr rad_ml_testing)
 add_test(NAME enhanced_tmr_test COMMAND enhanced_tmr_test)
 
-add_executable(scientific_validation_test
-    test/scientific_validation/scientific_validation_test.cpp
+add_executable(critical_charge_validation_test
+    test/scientific_validation/critical_charge_validation_test.cpp
 )
-
-target_link_libraries(scientific_validation_test
-    rad_ml_qft
-    rad_ml_research
-    ${CMAKE_THREAD_LIBS_INIT}
-)
-
-target_include_directories(scientific_validation_test PRIVATE
+target_include_directories(critical_charge_validation_test PRIVATE
     ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/third_party/eigen
+)
+add_test(
+    NAME critical_charge_validation_test
+    COMMAND critical_charge_validation_test
+            ${CMAKE_SOURCE_DIR}/data/physics/qcrit_kobayashi_2009.csv
 )
 
-add_test(NAME scientific_validation_test COMMAND scientific_validation_test)
+add_executable(see_cross_section_test
+    test/scientific_validation/see_cross_section_test.cpp
+)
+target_include_directories(see_cross_section_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+add_test(
+    NAME see_cross_section_test
+    COMMAND see_cross_section_test
+            ${CMAKE_SOURCE_DIR}/data/physics/versal_vc1902_heavy_ion_2025.csv
+)
+
+add_executable(versal_event_rate_validation_test
+    test/scientific_validation/versal_event_rate_validation_test.cpp
+)
+target_include_directories(versal_event_rate_validation_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_link_libraries(versal_event_rate_validation_test PRIVATE rad_ml_testing)
+add_test(
+    NAME versal_event_rate_validation_test
+    COMMAND versal_event_rate_validation_test
+            ${CMAKE_SOURCE_DIR}/data/physics/versal_vc1902_geo_event_rates_2025.csv
+)
+
+add_executable(omere_import_validation_test
+    test/scientific_validation/omere_import_validation_test.cpp
+)
+target_include_directories(omere_import_validation_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+add_test(
+    NAME omere_import_validation_test
+    COMMAND omere_import_validation_test
+            ${CMAKE_SOURCE_DIR}/test/data/physics/omere_sample.let
+            ${CMAKE_SOURCE_DIR}/test/data/physics/omere_sample.see
+)
 
 add_executable(radiation_stress_test test/verification/radiation_stress_test.cpp)
 target_link_libraries(radiation_stress_test rad_ml_tmr rad_ml_testing)
@@ -524,6 +557,14 @@ add_executable(enhanced_quantum_integration_test test/verification/enhanced_quan
 target_link_libraries(enhanced_quantum_integration_test rad_ml_tmr rad_ml_testing rad_ml_qft)
 target_compile_definitions(enhanced_quantum_integration_test PRIVATE ENABLE_TESTING=1)
 add_test(NAME enhanced_quantum_integration_test COMMAND enhanced_quantum_integration_test)
+
+# Verify dimensional conversions and physical input handling in the
+# quantum-enhanced radiation bridge.
+add_executable(quantum_radiation_units_test
+    test/verification/quantum_radiation_units_test.cpp
+)
+target_link_libraries(quantum_radiation_units_test rad_ml_qft)
+add_test(NAME quantum_radiation_units_test COMMAND quantum_radiation_units_test)
 
 # Add the radiation intensity aggregation test
 add_executable(radiation_intensity_aggregation_test test/verification/radiation_intensity_aggregation_test.cpp)
@@ -1023,7 +1064,10 @@ add_custom_target(clean_all
     COMMAND ${CMAKE_COMMAND} -E remove -f realistic_space_validation
     COMMAND ${CMAKE_COMMAND} -E remove -f framework_verification_test
     COMMAND ${CMAKE_COMMAND} -E remove -f enhanced_tmr_test
-    COMMAND ${CMAKE_COMMAND} -E remove -f scientific_validation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f critical_charge_validation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f see_cross_section_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f versal_event_rate_validation_test
+    COMMAND ${CMAKE_COMMAND} -E remove -f omere_import_validation_test
     COMMAND ${CMAKE_COMMAND} -E remove -f radiation_stress_test
     COMMAND ${CMAKE_COMMAND} -E remove -f systematic_fault_test
     COMMAND ${CMAKE_COMMAND} -E remove -f modern_features_test

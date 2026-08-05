@@ -1,0 +1,6 @@
+feature_size_nm,critical_charge_fc,partition,evidence_type,device,source_doi,source_locator
+180,6.70,calibration,SPICE-derived,SRAM,10.1109/IRPS.2009.5173252,Table III
+130,3.30,calibration,SPICE-derived,SRAM,10.1109/IRPS.2009.5173252,Table III
+90,1.70,evaluation,SPICE-derived,SRAM,10.1109/IRPS.2009.5173252,Table III
+65,0.76,evaluation,SPICE-derived,SRAM,10.1109/IRPS.2009.5173252,Table III
+45,0.37,evaluation,SPICE-derived,SRAM,10.1109/IRPS.2009.5173252,Table III

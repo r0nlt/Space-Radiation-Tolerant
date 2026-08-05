@@ -375,6 +375,29 @@ public:
             stats_.events_by_environment[env.mission_name] = 0;
         }
     }
+
+    /**
+     * @brief Seed mission scheduling and radiation injection reproducibly
+     */
+    void setSeed(unsigned int seed) {
+        random_engine_.seed(seed);
+        simulator_->setSeed(seed ^ 0x4D495353u);
+    }
+
+    /**
+     * @brief Drive radiation injection from traceable per-bit SEE rates
+     *
+     * The configured pair is constant for this run. Run steady-GCR and
+     * worst-week published environments as separate campaigns rather than
+     * transitioning between them with one fixed rate pair.
+     */
+    void useMissionEventRates(
+        const physics::MissionEventRate<double>& single_bit_rate,
+        const physics::MissionEventRate<double>& two_bit_rate,
+        std::uint64_t reference_bit_count) {
+        simulator_->useMissionEventRates(
+            single_bit_rate, two_bit_rate, reference_bit_count);
+    }
     
     /**
      * @brief Set up mission critical memory
